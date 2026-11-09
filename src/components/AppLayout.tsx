@@ -28,8 +28,6 @@ export function AppLayout() {
         <nav className="app-nav">
           {state.status === 'authenticated' && (
             <>
-              <Link to="/wallet">지갑</Link>
-              <Link to="/transfers">송금</Link>
               <Link to="/me">{state.me.realName}님</Link>
               <button type="button" className="link-button" onClick={handleLogout} disabled={loggingOut}>
                 로그아웃

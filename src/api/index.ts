@@ -1,4 +1,4 @@
-export { ApiError, CLIENT_ERROR_CODES, isApiError, isOutcomeUnknown } from './ApiError'
+export { ApiError, CLIENT_ERROR_CODES, isApiError } from './ApiError'
 export { apiRequest, apiRequestWithStatus, setUnauthorizedListener } from './client'
 export type { ApiResult, RequestOptions } from './client'
 export { clearCsrfToken, ensureCsrfToken } from './csrf'

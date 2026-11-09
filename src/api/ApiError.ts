@@ -38,14 +38,3 @@ export class ApiError extends Error {
 export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError
 }
-
-/**
- * 서버가 처리했는지 알 수 없는 실패(연결 실패·5xx). 금전 요청은 이때 같은 멱등성 키로 다시 보내야 한다.
- * 4xx는 서버가 판단을 끝낸 응답이다.
- */
-export function isOutcomeUnknown(error: unknown): boolean {
-  if (!isApiError(error)) {
-    return true
-  }
-  return error.code === CLIENT_ERROR_CODES.NETWORK || error.status >= 500
-}
