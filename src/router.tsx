@@ -1,13 +1,20 @@
 import { createBrowserRouter } from 'react-router'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './features/auth/RequireAuth'
+import { ChargeDetailPage } from './pages/ChargeDetailPage'
+import { ChargeListPage } from './pages/ChargeListPage'
+import { ChargeNewPage } from './pages/ChargeNewPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { MyPage } from './pages/MyPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { SignupPage } from './pages/SignupPage'
+import { TransferDetailPage } from './pages/TransferDetailPage'
+import { TransferListPage } from './pages/TransferListPage'
+import { TransferNewPage } from './pages/TransferNewPage'
+import { WalletPage } from './pages/WalletPage'
 
-// 송금(4단계)·지갑(5단계) 화면은 RequireAuth 아래에 경로를 추가한다.
+// 로그인이 필요한 화면은 RequireAuth 아래에 경로를 추가한다.
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -18,7 +25,16 @@ export const router = createBrowserRouter([
       { path: 'signup', element: <SignupPage /> },
       {
         element: <RequireAuth />,
-        children: [{ path: 'me', element: <MyPage /> }],
+        children: [
+          { path: 'me', element: <MyPage /> },
+          { path: 'transfers', element: <TransferListPage /> },
+          { path: 'transfers/new', element: <TransferNewPage /> },
+          { path: 'transfers/:transferId', element: <TransferDetailPage /> },
+          { path: 'wallet', element: <WalletPage /> },
+          { path: 'wallet/charge', element: <ChargeNewPage /> },
+          { path: 'wallet/charges', element: <ChargeListPage /> },
+          { path: 'wallet/charges/:chargeId', element: <ChargeDetailPage /> },
+        ],
       },
       { path: '*', element: <NotFoundPage /> },
     ],
