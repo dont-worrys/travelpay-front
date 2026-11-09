@@ -31,6 +31,7 @@ export function AppLayout() {
               <Link to="/wallet">지갑</Link>
               <Link to="/transfers">송금</Link>
               <Link to="/payments">결제</Link>
+              <Link to="/exchange">환전</Link>
               <Link to="/merchant">가맹점</Link>
               <Link to="/me">{state.me.realName}님</Link>
               <button type="button" className="link-button" onClick={handleLogout} disabled={loggingOut}>
@@ -40,6 +41,7 @@ export function AppLayout() {
           )}
           {state.status === 'anonymous' && (
             <>
+              <Link to="/exchange-rates">환율</Link>
               <Link to="/login">로그인</Link>
               <Link to="/signup">회원가입</Link>
             </>

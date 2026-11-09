@@ -60,6 +60,35 @@ export function toAmountInput(minor: number, currency: Currency): string {
   return decimals > 0 ? `${digits.slice(0, -decimals)}.${digits.slice(-decimals)}` : digits
 }
 
+/**
+ * 서버가 주 단위 소수 문자열로 준 금액(환전 API, 예: CNY "10.5")을 최소 단위 정수로 바꾼다.
+ * 문자열로만 처리하며, 형식이 다르거나 통화 자릿수보다 소수가 길면 null.
+ */
+export function majorToMinor(value: string, currency: Currency): number | null {
+  const match = /^(\d+)(?:\.(\d+))?$/.exec(value.trim())
+  const { decimals } = CURRENCY_INFO[currency]
+  if (!match || (match[2] ?? '').length > decimals) {
+    return null
+  }
+  const minor = BigInt((match[1] ?? '0') + (match[2] ?? '').padEnd(decimals, '0'))
+  return minor > BigInt(Number.MAX_SAFE_INTEGER) ? null : Number(minor)
+}
+
+/** 주 단위 소수 문자열 금액을 `formatAmount`와 같이 표시한다. 해석할 수 없으면 원문에 통화를 붙인다. */
+export function formatMajorAmount(value: string, currency: string): string {
+  const minor = isCurrency(currency) ? majorToMinor(value, currency) : null
+  return minor === null ? `${value} ${currency}` : formatAmount(minor, currency)
+}
+
+/** 환율처럼 계산하지 않고 보여 주기만 하는 소수 문자열에 천 단위 쉼표를 넣는다(예: "1234.5" → "1,234.5"). */
+export function formatDecimalText(value: string): string {
+  const match = /^(\d+)(\.\d+)?$/.exec(value.trim())
+  if (!match) {
+    return value
+  }
+  return `${BigInt(match[1] ?? '0').toLocaleString('ko-KR')}${match[2] ?? ''}`
+}
+
 /** 최소 단위 정수를 "10,000원", "12.50위안"처럼 표시한다. */
 export function formatAmount(minor: number, currency: string): string {
   const info = isCurrency(currency) ? CURRENCY_INFO[currency] : { decimals: 0, unit: ` ${currency}` }
