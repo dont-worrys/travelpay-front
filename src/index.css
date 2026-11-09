@@ -1,8 +1,33 @@
+/*
+ * 전역 스타일 한 파일. 화면은 아래 공통 클래스를 조합해 쓰고, 특정 화면에서만 쓰는 스타일은 맨 아래 "화면별"에 둔다.
+ * 색은 :root 변수로만 지정한다.
+ */
+
+/* 기본 */
 :root {
+  --color-text: #1f2328;
+  --color-muted: #59636e;
+  --color-border: #d0d7de;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f6f8fa;
+  --color-primary: #1f6feb;
+  --color-link: #0969da;
+  --color-disabled: #8c959f;
+  --color-success: #1a7f37;
+  --color-success-bg: #dafbe1;
+  --color-info-bg: #ddf4ff;
+  --color-warn: #9a6700;
+  --color-warn-bg: #fff8c5;
+  --color-warn-border: #d4a72c;
+  --color-danger: #cf222e;
+  --color-danger-bg: #ffebe9;
+  --color-neutral-bg: #eaeef2;
+  --radius: 6px;
+
   font-family: system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
   line-height: 1.5;
-  color: #1f2328;
-  background-color: #ffffff;
+  color: var(--color-text);
+  background-color: var(--color-surface);
 }
 
 * {
@@ -13,9 +38,19 @@ body {
   margin: 0;
 }
 
+h2 {
+  margin: 24px 0 8px;
+  font-size: 1.125rem;
+}
+
+/* 레이아웃 */
 .app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .app-title {
@@ -24,34 +59,39 @@ body {
   text-decoration: none;
 }
 
-.app-main {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .app-nav {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.link-button {
-  padding: 0;
-  border: none;
-  background: none;
-  color: #0969da;
-  font: inherit;
-  cursor: pointer;
+.app-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* 제목 줄 안의 버튼 묶음 */
+.actions.inline {
+  margin-top: 0;
+}
+
+/* 폼 */
 .form {
   display: flex;
   flex-direction: column;
@@ -69,81 +109,31 @@ body {
   align-items: center;
 }
 
-.form input:not([type='checkbox']) {
+.form input:not([type='checkbox']),
+.form select {
   padding: 8px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   font: inherit;
+}
+
+.form select {
+  background: var(--color-surface);
 }
 
 .form button[type='submit'] {
   padding: 10px;
   border: none;
-  border-radius: 6px;
-  background: #1f6feb;
+  border-radius: var(--radius);
+  background: var(--color-primary);
   color: #ffffff;
   font: inherit;
   cursor: pointer;
 }
 
 .form button[type='submit']:disabled {
-  background: #8c959f;
+  background: var(--color-disabled);
   cursor: not-allowed;
-}
-
-.hint {
-  color: #59636e;
-  font-size: 0.875rem;
-}
-
-.error,
-.field-error {
-  color: #cf222e;
-}
-
-.field-error {
-  font-size: 0.875rem;
-}
-
-.notice {
-  color: #1a7f37;
-}
-
-.terms {
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-}
-
-.term + .term {
-  margin-top: 8px;
-}
-
-.terms-content {
-  max-height: 160px;
-  overflow: auto;
-  white-space: pre-wrap;
-  font: inherit;
-  font-size: 0.875rem;
-}
-
-.info {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 4px 16px;
-}
-
-.info dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-/* 공통 버튼·배치 */
-.form select {
-  padding: 8px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
-  font: inherit;
-  background: #ffffff;
 }
 
 .input-row {
@@ -157,11 +147,12 @@ body {
   min-width: 0;
 }
 
+/* 버튼·링크 */
 button.primary,
 button.secondary,
 .button-link {
   padding: 8px 14px;
-  border-radius: 6px;
+  border-radius: var(--radius);
   font: inherit;
   cursor: pointer;
   text-decoration: none;
@@ -171,14 +162,14 @@ button.secondary,
 button.primary,
 .button-link {
   border: none;
-  background: #1f6feb;
+  background: var(--color-primary);
   color: #ffffff;
 }
 
 button.secondary {
-  border: 1px solid #d0d7de;
-  background: #f6f8fa;
-  color: #1f2328;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-subtle);
+  color: var(--color-text);
 }
 
 button.primary:disabled,
@@ -187,33 +178,55 @@ button.secondary:disabled {
   cursor: not-allowed;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-link);
+  font: inherit;
+  cursor: pointer;
 }
 
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+/* 안내·오류 문구 */
+.hint {
+  color: var(--color-muted);
+  font-size: 0.875rem;
 }
 
-/* 송금 */
+.error,
+.field-error {
+  color: var(--color-danger);
+}
+
+.field-error {
+  font-size: 0.875rem;
+}
+
+.notice {
+  color: var(--color-success);
+}
+
+/* 정보 목록(dl) */
+.info {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+}
+
+.info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* 금액 */
 .amount {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
 
-.amount.sent {
-  color: #1f2328;
-}
-
+/* .amount.sent는 기본 글자색 그대로라 따로 지정하지 않는다. */
 .amount.received {
-  color: #1a7f37;
+  color: var(--color-success);
 }
 
 .amount-large {
@@ -226,41 +239,43 @@ button.secondary:disabled {
   font-variant-numeric: tabular-nums;
 }
 
+/* 상태 배지(components/StatusBadge) */
 .badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  background: #eaeef2;
-  color: #59636e;
+  background: var(--color-neutral-bg);
+  color: var(--color-muted);
 }
 
 .badge-success {
-  background: #dafbe1;
-  color: #1a7f37;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .badge-info {
-  background: #ddf4ff;
-  color: #0969da;
+  background: var(--color-info-bg);
+  color: var(--color-link);
 }
 
 .badge-warn {
-  background: #fff8c5;
-  color: #9a6700;
+  background: var(--color-warn-bg);
+  color: var(--color-warn);
 }
 
 .badge-danger {
-  background: #ffebe9;
-  color: #cf222e;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
+/* 탭 */
 .tabs {
   display: flex;
   gap: 4px;
   margin-bottom: 12px;
-  border-bottom: 1px solid #d0d7de;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .tab {
@@ -269,16 +284,17 @@ button.secondary:disabled {
   border-bottom: 2px solid transparent;
   background: none;
   font: inherit;
-  color: #59636e;
+  color: var(--color-muted);
   cursor: pointer;
 }
 
 .tab.active {
-  border-bottom-color: #1f6feb;
-  color: #1f2328;
+  border-bottom-color: var(--color-primary);
+  color: var(--color-text);
   font-weight: 600;
 }
 
+/* 내역 목록 */
 .item-list {
   margin: 0;
   padding: 0;
@@ -286,7 +302,7 @@ button.secondary:disabled {
 }
 
 .item-list li + li {
-  border-top: 1px solid #d0d7de;
+  border-top: 1px solid var(--color-border);
 }
 
 .item {
@@ -299,7 +315,7 @@ button.secondary:disabled {
 }
 
 .item:hover {
-  background: #f6f8fa;
+  background: var(--color-surface-subtle);
 }
 
 .item-main,
@@ -324,16 +340,25 @@ button.secondary:disabled {
   margin-top: 16px;
 }
 
-/* 지갑 */
-h2 {
-  margin: 24px 0 8px;
-  font-size: 1.125rem;
+/* 화면별: 회원가입 약관 */
+.terms {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
-.actions.inline {
-  margin-top: 0;
+.term + .term {
+  margin-top: 8px;
 }
 
+.terms-content {
+  max-height: 160px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+/* 화면별: 지갑 잔액 */
 .balance-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -348,20 +373,21 @@ h2 {
   flex-direction: column;
   gap: 2px;
   padding: 12px;
-  border: 1px solid #d0d7de;
-  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
 .balance-list .amount {
   font-size: 1.25rem;
 }
 
+/* 화면별: 충전 테스트 계좌 */
 .test-accounts {
   margin-bottom: 16px;
   padding: 12px;
-  border: 1px dashed #d4a72c;
-  border-radius: 6px;
-  background: #fff8c5;
+  border: 1px dashed var(--color-warn-border);
+  border-radius: var(--radius);
+  background: var(--color-warn-bg);
 }
 
 .test-accounts .hint {
@@ -375,6 +401,6 @@ h2 {
 }
 
 button.secondary.selected {
-  border-color: #1f6feb;
-  background: #ddf4ff;
+  border-color: var(--color-primary);
+  background: var(--color-info-bg);
 }
