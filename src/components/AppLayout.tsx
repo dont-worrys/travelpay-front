@@ -30,6 +30,8 @@ export function AppLayout() {
             <>
               <Link to="/wallet">지갑</Link>
               <Link to="/transfers">송금</Link>
+              <Link to="/payments">결제</Link>
+              <Link to="/merchant">가맹점</Link>
               <Link to="/me">{state.me.realName}님</Link>
               <button type="button" className="link-button" onClick={handleLogout} disabled={loggingOut}>
                 로그아웃

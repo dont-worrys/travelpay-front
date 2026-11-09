@@ -53,6 +53,13 @@ export function parseAmount(input: string, currency: Currency): ParseAmountResul
   return { ok: true, minor: Number(minor) }
 }
 
+/** 최소 단위 정수를 입력란에 넣을 주 단위 문자열(예: 1250 CNY → "12.50")로 바꾼다. `parseAmount`의 반대. */
+export function toAmountInput(minor: number, currency: Currency): string {
+  const { decimals } = CURRENCY_INFO[currency]
+  const digits = String(Math.abs(Math.trunc(minor))).padStart(decimals + 1, '0')
+  return decimals > 0 ? `${digits.slice(0, -decimals)}.${digits.slice(-decimals)}` : digits
+}
+
 /** 최소 단위 정수를 "10,000원", "12.50위안"처럼 표시한다. */
 export function formatAmount(minor: number, currency: string): string {
   const info = isCurrency(currency) ? CURRENCY_INFO[currency] : { decimals: 0, unit: ` ${currency}` }

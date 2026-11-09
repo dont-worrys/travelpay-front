@@ -9,7 +9,7 @@ export function HomePage() {
       {state.status === 'loading' && <p>로그인 상태를 확인하는 중입니다…</p>}
       {state.status === 'anonymous' && (
         <p>
-          <Link to="/login">로그인</Link>하면 송금과 지갑을 이용할 수 있습니다.
+          <Link to="/login">로그인</Link>하면 송금·결제와 지갑을 이용할 수 있습니다.
         </p>
       )}
       {state.status === 'authenticated' && (
@@ -22,7 +22,11 @@ export function HomePage() {
             <Link to="/transfers/new" className="button-link">
               송금하기
             </Link>
+            <Link to="/payments/new" className="button-link">
+              결제하기
+            </Link>
             <Link to="/transfers">송금 내역</Link>
+            <Link to="/payments">결제 내역</Link>
           </div>
         </>
       )}
