@@ -7,7 +7,6 @@ Vite + React + TypeScript. 모든 API는 Gateway(`/api/v1/**`)를 거쳐 호출�
 Node 20.19 이상이 필요합니다.
 
 ```bash
-cd frontend
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # 타입 검사 + 빌드
