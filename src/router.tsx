@@ -4,6 +4,10 @@ import { RequireAuth } from './features/auth/RequireAuth'
 import { ChargeDetailPage } from './pages/ChargeDetailPage'
 import { ChargeListPage } from './pages/ChargeListPage'
 import { ChargeNewPage } from './pages/ChargeNewPage'
+import { ExchangeDetailPage } from './pages/ExchangeDetailPage'
+import { ExchangeListPage } from './pages/ExchangeListPage'
+import { ExchangeNewPage } from './pages/ExchangeNewPage'
+import { ExchangeRatePage } from './pages/ExchangeRatePage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { MerchantEntryPage } from './pages/MerchantEntryPage'
@@ -31,6 +35,7 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'login', element: <LoginPage /> },
       { path: 'signup', element: <SignupPage /> },
+      { path: 'exchange-rates', element: <ExchangeRatePage /> },
       {
         element: <RequireAuth />,
         children: [
@@ -41,6 +46,9 @@ export const router = createBrowserRouter([
           { path: 'payments', element: <PaymentListPage /> },
           { path: 'payments/new', element: <PaymentNewPage /> },
           { path: 'payments/:paymentId', element: <PaymentDetailPage /> },
+          { path: 'exchange', element: <ExchangeNewPage /> },
+          { path: 'exchanges', element: <ExchangeListPage /> },
+          { path: 'exchanges/:orderId', element: <ExchangeDetailPage /> },
           { path: 'merchant', element: <MerchantEntryPage /> },
           { path: 'merchant/:merchantId', element: <MerchantHomePage /> },
           { path: 'merchant/:merchantId/payments/:paymentId', element: <MerchantPaymentDetailPage /> },

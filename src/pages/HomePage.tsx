@@ -9,7 +9,8 @@ export function HomePage() {
       {state.status === 'loading' && <p>로그인 상태를 확인하는 중입니다…</p>}
       {state.status === 'anonymous' && (
         <p>
-          <Link to="/login">로그인</Link>하면 송금·결제와 지갑을 이용할 수 있습니다.
+          <Link to="/login">로그인</Link>하면 송금·결제·환전과 지갑을 이용할 수 있습니다.{' '}
+          <Link to="/exchange-rates">환율 보기</Link>
         </p>
       )}
       {state.status === 'authenticated' && (
@@ -26,7 +27,11 @@ export function HomePage() {
               결제하기
             </Link>
             <Link to="/transfers">송금 내역</Link>
+            <Link to="/exchange" className="button-link">
+              환전하기
+            </Link>
             <Link to="/payments">결제 내역</Link>
+            <Link to="/exchanges">환전 내역</Link>
           </div>
         </>
       )}
