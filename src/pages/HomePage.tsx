@@ -12,20 +12,7 @@ export function HomePage() {
           <Link to="/login">로그인</Link>하면 송금과 지갑을 이용할 수 있습니다.
         </p>
       )}
-      {state.status === 'authenticated' && (
-        <>
-          <p>{state.me.realName}님, 환영합니다.</p>
-          <div className="actions">
-            <Link to="/wallet" className="button-link">
-              내 지갑
-            </Link>
-            <Link to="/transfers/new" className="button-link">
-              송금하기
-            </Link>
-            <Link to="/transfers">송금 내역</Link>
-          </div>
-        </>
-      )}
+      {state.status === 'authenticated' && <p>{state.me.realName}님, 환영합니다.</p>}
     </section>
   )
 }
