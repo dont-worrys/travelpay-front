@@ -65,7 +65,7 @@ src/
   features/transfer/    송금 API·상태
   features/payment/     결제·환불 신청 API·상태
   features/merchant/    가맹점 잔액·결제·환불 실행·정산 API, 최근 연 가맹점(localStorage)
-  features/exchange/    환율·한도·견적·환전 API·상태
+  features/exchange/    환율·한도·견적·환전·예약 환전 API·상태
   lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime)
   pages/                화면 단위 컴포넌트
   test/                 테스트 도우미(fetch 모의, 메모리 라우터)
@@ -99,13 +99,17 @@ docs/
 | `/merchant/:merchantId/settlements/:settlementId` | 정산 상세(포함된 결제) | 필요 |
 | `/exchange` | 환전(원화→외화)·재환전(외화→원화): 금액 → 견적(5분) → 신청 | 필요 |
 | `/exchanges`, `/exchanges/:orderId` | 환전 내역(전체·환전·재환전)·상세 | 필요 |
+| `/exchange-reservations/new` | 예약 환전: 목표 매매기준율·만료 기간(1·3·7·30일)을 걸면 조건에 닿을 때 서버가 환전 | 필요 |
+| `/exchange-reservations`, `/exchange-reservations/:reservationId` | 예약 내역(대기·체결·취소·만료)·상세, 대기 예약 취소, 체결 주문으로 이동 | 필요 |
 | 그 밖의 경로 | 404 안내 | 불필요 |
 
-처리 중인 송금·결제·환불·정산·환전 상세는 3초마다 최대 2분 다시 조회합니다.
+처리 중인 송금·결제·환불·정산·환전 상세는 3초마다 최대 2분 다시 조회합니다. 예약 상세는 대기가 며칠씩 이어질 수 있어 자동으로 다시 조회하지 않고 새로고침 버튼을 둡니다.
 
 ### 미구현·제약
 
 - 관리자(`MASTER`) 화면이 없습니다. 가맹점 생성, `MANUAL_REVIEW` 결제·환불·정산·환전 처리는 백엔드 API를 직접 호출합니다.
+- 예약 환전은 예약할 때 잔액을 묶지 않습니다. 체결 때 잔액이 부족하면 예약은 `EXECUTED`, 만들어진 주문은 `FAILED`입니다. 환전 내역 응답에 예약 체결 주문인지 알려 주는 값이 없어 내역에서는 보통 환전과 구분하지 않습니다.
+- 예약 만료 30일은 서버 시각 기준 상한이라, 기기 시계 차이로 거절되지 않게 1시간 일찍 만료합니다(화면에 실제 만료 시각 표시).
 - 결제자가 가맹점을 검색·확인하는 API가 없어, 가맹점 이름과 받는 통화는 결제를 시도해야 알 수 있습니다(통화가 다르면 `PAYMENT_CURRENCY_MISMATCH`).
 - 내 가맹점 목록 API가 없어 가맹점 주인은 가맹점 ID로 들어갑니다. 최근 연 ID는 이 브라우저의 localStorage에만 남습니다.
 - 정산 대상은 결제 승인 후 환불 기간 3일 + 여유 1시간이 지난 결제라, 로컬에서 바로 확인하면 `PAYMENT_NO_SETTLEMENT_TARGET`이 나옵니다.
@@ -130,6 +134,7 @@ docs/
 | 환불 실행 | `paymentId`·`amount`가 같을 때(사유만 바뀌어도 같은 키) |
 | 정산 요청 | 본문 없음. 결과를 모를 때만 같은 키 |
 | 환전 | 같은 견적(`quoteId`)일 때. 결과를 모르는 동안은 새 견적을 받지 못하게 함 |
+| 예약 환전 | 결과를 모를 때만 같은 키. 서버가 본문 전체(만료 시각 포함)를 비교하므로 제출 순간의 본문을 그대로 다시 보내고, 그동안 입력을 잠금 |
 
 ## 테스트
 
@@ -194,6 +199,32 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 - `MANUAL_REVIEW` 처리, 원장·은행 장애 상황: 관리자 화면이 없고 장애 주입이 필요해 제외했습니다.
 - 송금: 이번 범위가 아닙니다.
 - 화면 대조: 위 요청은 스크립트로 보냈습니다. 같은 계정으로 화면을 열어 잔액·내역·상태 표시를 맞춰 보는 확인은 따로 해야 합니다(브라우저에서는 로그인·환전 견적까지 확인).
+
+### 예약 환전
+
+백엔드 예약 환전(#240) 반영 뒤 같은 방식(개발 서버 프록시 → Gateway)으로 확인했습니다. 체결은 새 환율이 수집될 때 판단하므로 exchange-service를 `EXCHANGE_RATE_MODE=mock`(5초마다 수집)으로 띄웠고, 위의 구매자 계정을 썼습니다. 요청 86건(200 58 · 201 16, 의도한 오류 응답 12건)이 모두 예상대로 응답했고 서비스 로그 WARN·ERROR는 0건입니다.
+
+| 확인한 것 | 결과 |
+|---|---|
+| 체결 | KRW 5,000을 목표 867.21(당시 매매기준율 847.21)로 등록 → 다음 수집에 `EXECUTED`, 주문 `PROCESSING` → `COMPLETED`. 적용 환율 847.06, 590엔, 수수료 50원. 잔액 KRW 42,146 → 37,096, JPY 672 → 1,262 |
+| 멱등성 | 같은 키·같은 본문 재요청은 같은 예약 201, 같은 키·다른 본문은 409 `EXCHANGE_RESERVATION_IDEMPOTENCY_KEY_REUSED` |
+| 대기·취소 | JPY → KRW 예약은 조건 `AT_OR_ABOVE`, 환율 2회 수집 뒤에도 `WAITING`. 취소 → `CANCELED`(`USER_REQUESTED`). 다시 취소·체결된 예약 취소는 409 `EXCHANGE_RESERVATION_NOT_WAITING` |
+| 권한 | 다른 회원의 예약 조회·취소는 404 `EXCHANGE_RESERVATION_NOT_FOUND` |
+| 입력 검증 | 목표 환율 소수 셋째 자리·0은 400 `EXCHANGE_RESERVATION_INVALID_TARGET_RATE`, 과거·31일 뒤 만료는 400 `EXCHANGE_RESERVATION_INVALID_EXPIRY`, 최소 금액 미만 400 `EXCHANGE_INVALID_AMOUNT`, 원화 → 원화 400 `EXCHANGE_UNSUPPORTED_PAIR`. 화면 최대값(30일 − 1시간)은 201 |
+| 잔액보다 큰 예약 체결 | 100만 원 예약 → 예약 `EXECUTED`, 주문 `FAILED`(`INSUFFICIENT_BALANCE`), 잔액 변화 없음 |
+| 대기 예약 한도 | 10건까지 201, 11번째 409 `EXCHANGE_RESERVATION_TOO_MANY_WAITING` |
+| 목록 필터 | `status=WAITING·EXECUTED·CANCELED`마다 해당 상태만 응답 |
+| 만료 | 75초 뒤 만료로 등록 → 만료 스케줄러(1분 주기)가 `EXPIRED`로 변경 |
+
+발견한 문제와 원인:
+
+| 문제 | 원인 | 조치 |
+|---|---|---|
+| 예약 경로 404 | 실행 중인 Gateway가 예약 라우트(`/api/v1/exchange-reservations/**`) 추가 전 빌드 | 백엔드 dev로 gateway·exchange-service 재빌드 |
+| 재빌드 뒤에도 체결되지 않을 환경 | exchange-service가 `koreaexim` 모드로 떠 있어 환율이 평일 11~13시에만 수집됨 | `EXCHANGE_RATE_MODE=mock`, `--spring.config.name=application --spring.profiles.active=default`로 재기동 |
+| 백엔드 `.env`를 `source`할 때 `MOCK_BANK_URL: command not found` | `MOCK_BANK_URL = "..."`처럼 `=` 양옆에 공백이 있어 값이 설정되지 않음 | `MOCK_BANK_URL="http://localhost:8090"`으로 고쳐야 함(개인 `.env`, 같은 방식으로 띄운 wallet은 Mock Bank 주소를 받지 못함) |
+
+프런트 코드에서 고친 곳은 없습니다. 확인하지 못한 것은 화면 대조(목록·상세·등록 화면에서 위 상태가 그대로 보이는지)와 `koreaexim` 모드의 실제 수집 시각 체결입니다.
 
 ## 협업 규칙
 

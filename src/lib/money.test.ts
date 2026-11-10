@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatAmount, formatMajorAmount, majorToMinor, parseAmount, toAmountInput } from './money'
+import {
+  compareDecimalText,
+  formatAmount,
+  formatMajorAmount,
+  majorToMinor,
+  parseAmount,
+  parseRate,
+  toAmountInput,
+} from './money'
 
 describe('parseAmount', () => {
   it('쉼표를 빼고 최소 단위 정수로 바꾼다', () => {
@@ -36,5 +44,29 @@ describe('환전 소수 문자열 변환', () => {
   it('표시 형식은 최소 단위 표시와 같다', () => {
     expect(formatMajorAmount('10100', 'KRW')).toBe(formatAmount(10100, 'KRW'))
     expect(formatMajorAmount('10.5', 'CNY')).toBe('10.50위안')
+  })
+})
+
+describe('예약 환전 목표 환율', () => {
+  it('쉼표·앞뒤 0을 정리한 소수 문자열로 바꾼다', () => {
+    expect(parseRate('1,234.50')).toEqual({ ok: true, value: '1234.5' })
+    expect(parseRate('0830.00')).toEqual({ ok: true, value: '830' })
+    expect(parseRate('0.5')).toEqual({ ok: true, value: '0.5' })
+    expect(parseRate('9999999999.99')).toEqual({ ok: true, value: '9999999999.99' })
+  })
+
+  it('0, 소수 셋째 자리, 상한 이상, 숫자가 아닌 값을 거절한다', () => {
+    expect(parseRate('0.00').ok).toBe(false)
+    expect(parseRate('830.555').ok).toBe(false)
+    expect(parseRate('10000000000').ok).toBe(false)
+    expect(parseRate('-1').ok).toBe(false)
+    expect(parseRate('').ok).toBe(false)
+  })
+
+  it('소수 문자열을 자릿수를 맞춰 비교한다', () => {
+    expect(compareDecimalText('930', '930.00')).toBe(0)
+    expect(compareDecimalText('929.99', '930')).toBe(-1)
+    expect(compareDecimalText('930.1', '930.09')).toBe(1)
+    expect(compareDecimalText('abc', '1')).toBeNull()
   })
 })

@@ -147,3 +147,80 @@ export function fetchExchanges(query: ExchangeListQuery, signal?: AbortSignal): 
 export function fetchExchange(orderId: string, signal?: AbortSignal): Promise<ExchangeOrder> {
   return apiRequest<ExchangeOrder>(`/api/v1/exchanges/${encodeURIComponent(orderId)}`, { signal })
 }
+
+/** 예약 환전. 목표 매매기준율에 닿으면 서버가 환전 주문을 만든다. 예약할 때는 잔액을 묶지 않는다. */
+export type ReservationStatus = 'WAITING' | 'EXECUTED' | 'CANCELED' | 'EXPIRED'
+export type ReservationCancelReason = 'USER_REQUESTED' | 'WALLET_UNAVAILABLE' | 'EXECUTION_REJECTED'
+/** 원화 → 외화는 목표 이하(`AT_OR_BELOW`), 외화 → 원화는 목표 이상(`AT_OR_ABOVE`)일 때 체결. */
+export type ReservationCondition = 'AT_OR_BELOW' | 'AT_OR_ABOVE'
+
+export interface ExchangeReservationSummary {
+  reservationId: string
+  type: ExchangeType
+  status: ReservationStatus
+  cancelReason: ReservationCancelReason | null
+  fromCurrency: Currency
+  fromAmount: string
+  toCurrency: Currency
+  targetRate: string
+  rateUnit: number
+  condition: ReservationCondition
+  expiresAt: string
+  orderId: string | null
+  createdAt: string
+}
+
+export interface ExchangeReservation extends ExchangeReservationSummary {
+  walletId: string
+  /** 체결로 만든 주문의 현재 상태. 체결 전이면 null. */
+  orderStatus: ExchangeStatus | null
+  executedAt: string | null
+}
+
+export interface ReservationInput {
+  walletId: string
+  fromCurrency: Currency
+  toCurrency: Currency
+  /** 보내는 금액(주 단위 문자열). */
+  amount: string
+  /** 목표 매매기준율(환율 조회와 같은 단위, 소수 둘째 자리까지). */
+  targetRate: string
+  /** 만료 시각(UTC ISO-8601). */
+  expiresAt: string
+}
+
+/**
+ * 예약 등록(201). 같은 키·같은 본문이면 처음 예약을 돌려주고 본문이 다르면 409
+ * `EXCHANGE_RESERVATION_IDEMPOTENCY_KEY_REUSED`이므로, 재시도는 처음 본문(만료 시각 포함)을 그대로 보낸다.
+ */
+export function createReservation(input: ReservationInput, idempotencyKey: string): Promise<ExchangeReservation> {
+  return apiRequest<ExchangeReservation>('/api/v1/exchange-reservations', {
+    method: 'POST',
+    body: input,
+    idempotencyKey,
+  })
+}
+
+export function fetchReservations(
+  query: { status?: ReservationStatus; page?: number; size?: number },
+  signal?: AbortSignal,
+): Promise<PageResponse<ExchangeReservationSummary>> {
+  return apiRequest<PageResponse<ExchangeReservationSummary>>('/api/v1/exchange-reservations', {
+    query: { status: query.status, page: query.page, size: query.size },
+    signal,
+  })
+}
+
+export function fetchReservation(reservationId: string, signal?: AbortSignal): Promise<ExchangeReservation> {
+  return apiRequest<ExchangeReservation>(`/api/v1/exchange-reservations/${encodeURIComponent(reservationId)}`, {
+    signal,
+  })
+}
+
+/** 대기 중인 예약만 취소할 수 있다. 이미 체결·취소·만료됐으면 409 `EXCHANGE_RESERVATION_NOT_WAITING`. */
+export function cancelReservation(reservationId: string): Promise<ExchangeReservation> {
+  return apiRequest<ExchangeReservation>(
+    `/api/v1/exchange-reservations/${encodeURIComponent(reservationId)}/cancel`,
+    { method: 'POST' },
+  )
+}

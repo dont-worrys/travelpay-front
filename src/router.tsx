@@ -8,6 +8,9 @@ import { ExchangeDetailPage } from './pages/ExchangeDetailPage'
 import { ExchangeListPage } from './pages/ExchangeListPage'
 import { ExchangeNewPage } from './pages/ExchangeNewPage'
 import { ExchangeRatePage } from './pages/ExchangeRatePage'
+import { ExchangeReservationDetailPage } from './pages/ExchangeReservationDetailPage'
+import { ExchangeReservationListPage } from './pages/ExchangeReservationListPage'
+import { ExchangeReservationNewPage } from './pages/ExchangeReservationNewPage'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { MerchantEntryPage } from './pages/MerchantEntryPage'
@@ -49,6 +52,9 @@ export const router = createBrowserRouter([
           { path: 'exchange', element: <ExchangeNewPage /> },
           { path: 'exchanges', element: <ExchangeListPage /> },
           { path: 'exchanges/:orderId', element: <ExchangeDetailPage /> },
+          { path: 'exchange-reservations', element: <ExchangeReservationListPage /> },
+          { path: 'exchange-reservations/new', element: <ExchangeReservationNewPage /> },
+          { path: 'exchange-reservations/:reservationId', element: <ExchangeReservationDetailPage /> },
           { path: 'merchant', element: <MerchantEntryPage /> },
           { path: 'merchant/:merchantId', element: <MerchantHomePage /> },
           { path: 'merchant/:merchantId/payments/:paymentId', element: <MerchantPaymentDetailPage /> },
