@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchTransfers, type Transfer, type TransferDirection } from '../features/transfer/api'
-import { toTransferMessage } from '../features/transfer/status'
+import { amountDisplay, toTransferMessage } from '../features/transfer/status'
 import { TransferStatusBadge } from '../features/transfer/TransferStatusBadge'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
@@ -85,13 +85,14 @@ export function TransferListPage() {
         <ul className="item-list">
           {result.items.map((item) => {
             const sent = item.direction === 'SENT'
+            const amount = amountDisplay(item.direction, item.status)
             return (
               <li key={item.transferId}>
                 <Link to={`/transfers/${item.transferId}`} className="item">
                   <span className="item-main">
                     <span>{sent ? '보냄' : '받음'}</span>
-                    <span className={sent ? 'amount sent' : 'amount received'}>
-                      {sent ? '-' : '+'}
+                    <span className={amount.className}>
+                      {amount.sign}
                       {formatAmount(item.amount, item.currency)}
                     </span>
                   </span>

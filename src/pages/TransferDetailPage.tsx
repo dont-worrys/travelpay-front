@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { isApiError, toUserMessage } from '../api'
 import { cancelTransfer, fetchTransfer, type Transfer } from '../features/transfer/api'
-import { STATUS_DESCRIPTION, toTransferMessage } from '../features/transfer/status'
+import { amountDisplay, statusDescription, toTransferMessage } from '../features/transfer/status'
 import { TransferStatusBadge } from '../features/transfer/TransferStatusBadge'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
@@ -92,7 +92,8 @@ export function TransferDetailPage() {
   }
 
   const sent = transfer.direction === 'SENT'
-  const description = STATUS_DESCRIPTION[transfer.status]
+  const description = statusDescription(transfer.direction, transfer.status)
+  const amount = amountDisplay(transfer.direction, transfer.status)
 
   return (
     <section>
@@ -100,7 +101,7 @@ export function TransferDetailPage() {
       {justSent && transfer.status === 'COMPLETED' && <p className="notice">송금을 완료했습니다.</p>}
 
       <p className="amount-large">
-        {sent ? '-' : '+'}
+        {amount.sign}
         {formatAmount(transfer.amount, transfer.currency)} <TransferStatusBadge status={transfer.status} />
       </p>
       {description && <p className="hint">{description}</p>}
