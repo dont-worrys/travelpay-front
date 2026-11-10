@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
+import { homePathFor } from '../features/auth/RequireRole'
 import { useAuth } from '../features/auth/useAuth'
 
 export function AppLayout() {
@@ -22,11 +23,21 @@ export function AppLayout() {
   return (
     <div className="app">
       <header className="app-header">
-        <Link to="/" className="app-title">
+        <Link to={state.status === 'authenticated' ? homePathFor(state.me.role) : '/'} className="app-title">
           TravelPay
         </Link>
         <nav className="app-nav">
-          {state.status === 'authenticated' && (
+          {state.status === 'authenticated' && state.me.role === 'MASTER' && (
+            <>
+              <Link to="/admin/reviews">처리 대기</Link>
+              <Link to="/admin/merchants/new">가맹점 생성</Link>
+              <span>{state.me.realName}님(관리자)</span>
+              <button type="button" className="link-button" onClick={handleLogout} disabled={loggingOut}>
+                로그아웃
+              </button>
+            </>
+          )}
+          {state.status === 'authenticated' && state.me.role !== 'MASTER' && (
             <>
               <Link to="/wallet">지갑</Link>
               <Link to="/transfers">송금</Link>
