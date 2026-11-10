@@ -1,6 +1,6 @@
 # 공통 API 규칙 (프런트엔드용)
 
-백엔드 저장소(`travelpay`)의 공통 규칙 중 프런트엔드가 알아야 할 내용만 정리했습니다. 원문은 백엔드의 `docs/guide/common.md`, `docs/guide/gateway.md`, `docs/guide/user-service.md`입니다. 기능별 API 명세는 백엔드 `docs/guide/<서비스>.md`(`wallet-service`, `payment-transfer`, `payment`, `ledger-service` 등)를 기준으로 합니다. 환전은 아직 가이드 문서가 없어 exchange-service 코드를 기준으로 합니다.
+백엔드 저장소(`travelpay`)의 공통 규칙 중 프런트엔드가 알아야 할 내용만 정리했습니다. 원문은 백엔드의 `docs/guide/common.md`, `docs/guide/gateway.md`, `docs/guide/user-service.md`입니다. 기능별 API 명세는 백엔드 `docs/guide/<서비스>.md`(`wallet-service`, `payment-transfer`, `payment`, `exchange-service`, `ledger-service` 등)를 기준으로 합니다.
 
 ## 주소
 
@@ -21,7 +21,7 @@
 | `/api/v1/auth/**`, `/api/v1/terms/**`, `/api/v1/users/**`, `/api/v1/admin/users/**`, `/api/v1/admin/terms/**` | User |
 | `/api/v1/wallets/**`, `/api/v1/charges/**`, `/api/v1/admin/charges/**` | Wallet |
 | `/api/v1/payments/**`, `/api/v1/transfers/**`, `/api/v1/admin/payments/**`, `/api/v1/admin/transfers/**` | Payment |
-| `/api/v1/exchange-rates/**`, `/api/v1/exchange-limits/**`, `/api/v1/exchange-quotes/**`, `/api/v1/exchanges/**`, `/api/v1/admin/exchanges/**` | Exchange |
+| `/api/v1/exchange-rates/**`, `/api/v1/exchange-limits/**`, `/api/v1/exchange-quotes/**`, `/api/v1/exchanges/**`, `/api/v1/exchange-reservations/**`, `/api/v1/admin/exchanges/**` | Exchange |
 
 ### 로그인 없이 호출할 수 있는 API
 
@@ -127,6 +127,7 @@
 - 사용자 동작 한 번에 키 하나(UUID)를 만듭니다. 화면별로 같은 키를 다시 쓰는 조건은 README의 "금전 요청 멱등성"에 정리했습니다.
 - 타임아웃·네트워크 오류로 **재시도할 때는 같은 키**를 씁니다. 새 키로 보내면 중복 처리될 수 있습니다.
 - 5xx·타임아웃만으로 실패라고 단정하지 않습니다. 상세 조회로 결과를 확인합니다.
+- 같은 키 재요청의 응답은 처음 결과를 다시 만든 것이 아니라 그 시점의 상태입니다. 예를 들어 송금은 같은 키로 동시에 보내면 먼저 저장된 송금이 아직 처리 중이라 202 `PROCESSING`이 올 수 있으므로, 202도 상세 조회로 최종 상태를 확인합니다.
 - 공통 요청 함수의 `options.idempotencyKey`로 넘깁니다.
 
 ## CORS (Gateway)

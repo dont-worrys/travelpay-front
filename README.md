@@ -85,11 +85,12 @@ docs/
 | `/login` | 로그인 → `redirect` 경로로 이동 | 불필요 |
 | `/exchange-rates` | 환율(기준·살 때·팔 때) | 불필요 |
 | `/me` | 내 정보(송금받을 회원 ID 복사) | 필요 |
+| `/account/password` | 비밀번호 변경(일반회원·관리자 공통). 성공하면 CSRF 토큰 재발급 | 필요 |
 | `/wallet` | 내 지갑: 지갑 없으면 개설(`PENDING`이면 이어서 개설), 통화별 잔액, 최근 충전 5건 | 필요 |
 | `/wallet/charge` | 원화 충전(은행·계좌번호). 계좌 예금주가 회원 실명과 같아야 함 | 필요 |
 | `/wallet/charges`, `/wallet/charges/:chargeId` | 충전 내역·상세. 상세는 끝날 때까지 2초마다 최대 2분 다시 조회 | 필요 |
 | `/transfers/new` | 송금하기: 수취인 확인 → 금액·통화·메모 → 확인 → 송금 | 필요 |
-| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회, `REQUESTED`는 취소 가능 | 필요 |
+| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회, `REQUESTED`는 취소 가능. 받은 송금은 완료된 것만 `+`로 표시 | 필요 |
 | `/payments/new` | 결제하기: 가맹점 ID·통화·금액·결제 내용 → 확인 → 결제. `?merchantId=&currency=&amount=&paymentInfo=`로 미리 채움(가맹점 결제 링크) | 필요 |
 | `/payments`, `/payments/:paymentId` | 결제 내역·상세. 상세에서 환불 신청(승인 후 3일 안)·신청 취소 | 필요 |
 | `/merchant` | 가맹점 관리 입구: 가맹점 ID 입력(내 가맹점 목록 API가 없음), 최근 연 가맹점 | 필요 |
@@ -197,7 +198,7 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 
 - 정산 실행(`PAID`): 결제 승인 후 3일 1시간이 지나야 대상이 생깁니다. 로컬에서는 대상 없음 응답까지만 확인했습니다.
 - `MANUAL_REVIEW` 처리, 원장·은행 장애 상황: 관리자 화면이 없고 장애 주입이 필요해 제외했습니다.
-- 송금: 이번 범위가 아닙니다.
+- 송금: 아래 [송금](#송금) 절에서 따로 확인했습니다.
 - 화면 대조: 위 요청은 스크립트로 보냈습니다. 같은 계정으로 화면을 열어 잔액·내역·상태 표시를 맞춰 보는 확인은 따로 해야 합니다(브라우저에서는 로그인·환전 견적까지 확인).
 
 ### 예약 환전
@@ -225,6 +226,41 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 | 백엔드 `.env`를 `source`할 때 `MOCK_BANK_URL: command not found` | `MOCK_BANK_URL = "..."`처럼 `=` 양옆에 공백이 있어 값이 설정되지 않음 | `MOCK_BANK_URL="http://localhost:8090"`으로 고쳐야 함(개인 `.env`, 같은 방식으로 띄운 wallet은 Mock Bank 주소를 받지 못함) |
 
 프런트 코드에서 고친 곳은 없습니다. 확인하지 못한 것은 화면 대조(목록·상세·등록 화면에서 위 상태가 그대로 보이는지)와 `koreaexim` 모드의 실제 수집 시각 체결입니다.
+
+### 송금
+
+위 E2E에서 빠졌던 송금을 같은 방식(개발 서버 프록시 → Gateway, 프런트 `features/transfer/api.ts`와 같은 본문·헤더)으로 확인했습니다. 송금인(실명 유재석, 004 계좌로 30,000원 충전)·수취인(박지현)·지갑 없는 회원·제3자 4명을 새로 가입시켰고, 수취인 정지·해제에는 관리자 계정을 썼습니다. 요청 109건(200 65 · 201 11 · 202 5 · 204 2, 의도한 오류 응답 26건), 확인 항목 55개가 모두 예상대로였고 서비스 로그 ERROR는 0건입니다.
+
+| 확인한 것 | 결과 |
+|---|---|
+| 수취인 확인 | 200 `receiverName` `박*현`, `transferable: true`. 응답 필드는 `receiverId`·`receiverName`·`transferable`뿐(지갑 정보 없음) |
+| 수취인 확인 오류 | 본인 400 `TRANSFER_SELF_TRANSFER`, 지갑 없는 회원·없는 회원 404 `TRANSFER_RECEIVER_NOT_FOUND`, UUID가 아닌 값 400 `COMMON_INVALID_REQUEST` |
+| 송금 | 10,000원 201 `COMPLETED`, `direction` `SENT`. 응답에 지갑 ID·멱등성 키 없음. 잔액 송금인 30,000 → 20,000, 수취인 0 → 10,000 |
+| 멱등성 | 같은 키·같은 본문은 201 같은 `transferId`. 메모 앞뒤 공백만 다른 본문도 같은 송금(서버가 메모를 정규화해 비교). 금액이 다르면 409 `TRANSFER_IDEMPOTENCY_KEY_REUSED`. 재요청 뒤 잔액 변화 없음 |
+| 같은 키 동시 5건 | 송금 1건만 생성(201 1 · 202 4). 202 응답은 먼저 저장된 송금의 그 시점 상태 `PROCESSING`이었고 최종 `COMPLETED`, 잔액은 한 번만 이동 |
+| 입력 검증 | `Idempotency-Key` 없음 400 `TRANSFER_INVALID_IDEMPOTENCY_KEY`, 본인 400 `TRANSFER_SELF_TRANSFER`, 금액 0·메모 101자 400 `COMMON_INVALID_REQUEST`, USD 400 `TRANSFER_UNSUPPORTED_CURRENCY` |
+| 지갑 없음 | 받는 쪽 422 `TRANSFER_RECEIVER_UNAVAILABLE`, 보내는 쪽 422 `TRANSFER_SENDER_WALLET_UNAVAILABLE` |
+| 잔액 부족 | 100만 원 422 `TRANSFER_INSUFFICIENT_BALANCE`, 같은 키 재요청도 같은 422. 잔액 0인 JPY 송금도 같은 422. 거절된 송금은 `FAILED`로 내역에 남고 잔액 변화 없음 |
+| 내역 | 보낸 내역 4건(`COMPLETED` 2 · `FAILED` 2) 최신순, 받은 내역은 전부 `RECEIVED`. `size=200`은 100으로 조회, `direction=BOTH`·`page=-1`은 400 |
+| 상세 | 송금인 200 `SENT`, 수취인 200 `RECEIVED`, 제3자·없는 ID 404 `TRANSFER_NOT_FOUND` |
+| 취소 | `COMPLETED`·`FAILED` 송금 취소 409 `COMMON_CONFLICT`, 수취인의 취소 404 `TRANSFER_NOT_FOUND` |
+| 수취인 정지 | 관리자가 정지하면 수취인 확인 404 `TRANSFER_RECEIVER_NOT_FOUND`, 송금 422 `TRANSFER_RECEIVER_UNAVAILABLE`. 해제하면 다시 송금 가능. 정지된 회원의 기존 세션은 해제 뒤에도 401이라 다시 로그인해야 함 |
+| 로그아웃 | 204 → 송금 내역 401 `COMMON_UNAUTHORIZED` |
+
+서비스 로그 WARN 19건은 모두 의도한 상황입니다. payment-service 16건은 같은 키 동시 요청에서 나중 요청의 DB 중복 키(`23505`)를 Hibernate가 남긴 것이고(서버는 먼저 저장된 송금으로 응답), wallet-service 3건은 지갑 없는 회원 조회입니다.
+
+발견한 것:
+
+| 내용 | 영향 | 조치 |
+|---|---|---|
+| 수취인의 받은 내역·상세에 실패(`FAILED`) 송금도 보임 | 화면이 받은 송금을 모두 `+금액`(입금 색)으로 표시하고, 상세 안내도 송금인 기준 문구("잔액이 빠지지 않았습니다", "다시 송금하지 마세요")라 수취인이 입금으로 오해할 수 있었음 | 프런트 수정: 받은 송금은 `COMPLETED`일 때만 `+`·입금 색, 그 밖은 부호 없이 표시. 상세 안내를 보낸 분·받는 분별로 나눔(`features/transfer/status.ts`) |
+| 관리자(`MASTER`) 세션으로 `GET /api/v1/transfers`가 200 | 지갑 API는 관리자에게 403인데 송금 API는 역할을 막지 않음. 관리자 화면에는 송금 메뉴가 없어 프런트 영향은 없음 | 백엔드에 공유 |
+
+프런트 코드는 위 수취인 표시만 고쳤습니다. 확인하지 못한 것:
+
+- `REQUESTED` 송금 취소 성공: 원장 연동 뒤 새 송금은 `PROCESSING`으로 시작해 지금은 `REQUESTED`를 만들 수 없습니다.
+- `PROCESSING`이 이어지는 경우와 `MANUAL_REVIEW`: 원장 장애 주입이 필요해 제외했습니다(관리자 `MANUAL_REVIEW` 처리 E2E와 함께 확인할 예정).
+- 화면 대조: 요청은 스크립트로 보냈습니다. 같은 계정으로 송금 화면을 열어 위 상태·잔액이 그대로 보이는지는 따로 확인해야 합니다.
 
 ## 협업 규칙
 
