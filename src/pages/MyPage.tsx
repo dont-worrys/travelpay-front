@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { useAuth } from '../features/auth/useAuth'
 
 /** 내 정보. 송금을 받으려면 회원 ID를 보내는 분에게 알려 준다. */
@@ -40,6 +41,11 @@ export function MyPage() {
           <span className="hint">송금을 받으려면 보내는 분에게 이 회원 ID를 알려 주세요.</span>
         </dd>
       </dl>
+      <div className="actions">
+        <Link to="/account/password" className="button-link">
+          비밀번호 변경
+        </Link>
+      </div>
     </section>
   )
 }

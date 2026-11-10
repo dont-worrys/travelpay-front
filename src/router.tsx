@@ -25,6 +25,7 @@ import { MyPage } from './pages/MyPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PaymentDetailPage } from './pages/PaymentDetailPage'
 import { PaymentListPage } from './pages/PaymentListPage'
+import { PasswordChangePage } from './pages/PasswordChangePage'
 import { PaymentNewPage } from './pages/PaymentNewPage'
 import { SettlementDetailPage } from './pages/SettlementDetailPage'
 import { SettlementListPage } from './pages/SettlementListPage'
@@ -73,6 +74,8 @@ export const router = createBrowserRouter([
       {
         element: <RequireAuth />,
         children: [
+          // 일반회원·관리자 공통
+          { path: 'account/password', element: <PasswordChangePage /> },
           {
             path: 'admin',
             element: <RequireRole role="MASTER" />,
