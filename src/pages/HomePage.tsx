@@ -1,8 +1,12 @@
-import { Link } from 'react-router'
+import { Link, Navigate } from 'react-router'
 import { useAuth } from '../features/auth/useAuth'
 
 export function HomePage() {
   const { state } = useAuth()
+  if (state.status === 'authenticated' && state.me.role === 'MASTER') {
+    // 관리자는 일반회원 화면을 쓰지 않는다.
+    return <Navigate to="/admin" replace />
+  }
   return (
     <section>
       <h1>TravelPay</h1>

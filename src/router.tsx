@@ -1,6 +1,11 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './features/auth/RequireAuth'
+import { RequireRole } from './features/auth/RequireRole'
+import { AdminHomePage } from './pages/admin/AdminHomePage'
+import { AdminMerchantNewPage } from './pages/admin/AdminMerchantNewPage'
+import { AdminReviewDetailPage } from './pages/admin/AdminReviewDetailPage'
+import { AdminReviewListPage } from './pages/admin/AdminReviewListPage'
 import { ChargeDetailPage } from './pages/ChargeDetailPage'
 import { ChargeListPage } from './pages/ChargeListPage'
 import { ChargeNewPage } from './pages/ChargeNewPage'
@@ -29,7 +34,33 @@ import { TransferListPage } from './pages/TransferListPage'
 import { TransferNewPage } from './pages/TransferNewPage'
 import { WalletPage } from './pages/WalletPage'
 
-// 로그인이 필요한 화면은 RequireAuth 아래에 경로를 추가한다.
+/** 일반회원 화면. 관리자(`MASTER`)에게는 제공하지 않는다. */
+const userRoutes: RouteObject[] = [
+  { path: 'me', element: <MyPage /> },
+  { path: 'transfers', element: <TransferListPage /> },
+  { path: 'transfers/new', element: <TransferNewPage /> },
+  { path: 'transfers/:transferId', element: <TransferDetailPage /> },
+  { path: 'payments', element: <PaymentListPage /> },
+  { path: 'payments/new', element: <PaymentNewPage /> },
+  { path: 'payments/:paymentId', element: <PaymentDetailPage /> },
+  { path: 'exchange', element: <ExchangeNewPage /> },
+  { path: 'exchanges', element: <ExchangeListPage /> },
+  { path: 'exchanges/:orderId', element: <ExchangeDetailPage /> },
+  { path: 'exchange-reservations', element: <ExchangeReservationListPage /> },
+  { path: 'exchange-reservations/new', element: <ExchangeReservationNewPage /> },
+  { path: 'exchange-reservations/:reservationId', element: <ExchangeReservationDetailPage /> },
+  { path: 'merchant', element: <MerchantEntryPage /> },
+  { path: 'merchant/:merchantId', element: <MerchantHomePage /> },
+  { path: 'merchant/:merchantId/payments/:paymentId', element: <MerchantPaymentDetailPage /> },
+  { path: 'merchant/:merchantId/settlements', element: <SettlementListPage /> },
+  { path: 'merchant/:merchantId/settlements/:settlementId', element: <SettlementDetailPage /> },
+  { path: 'wallet', element: <WalletPage /> },
+  { path: 'wallet/charge', element: <ChargeNewPage /> },
+  { path: 'wallet/charges', element: <ChargeListPage /> },
+  { path: 'wallet/charges/:chargeId', element: <ChargeDetailPage /> },
+]
+
+// 로그인이 필요한 화면은 RequireAuth 아래, 역할에 맞는 RequireRole 아래에 경로를 추가한다.
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -42,28 +73,17 @@ export const router = createBrowserRouter([
       {
         element: <RequireAuth />,
         children: [
-          { path: 'me', element: <MyPage /> },
-          { path: 'transfers', element: <TransferListPage /> },
-          { path: 'transfers/new', element: <TransferNewPage /> },
-          { path: 'transfers/:transferId', element: <TransferDetailPage /> },
-          { path: 'payments', element: <PaymentListPage /> },
-          { path: 'payments/new', element: <PaymentNewPage /> },
-          { path: 'payments/:paymentId', element: <PaymentDetailPage /> },
-          { path: 'exchange', element: <ExchangeNewPage /> },
-          { path: 'exchanges', element: <ExchangeListPage /> },
-          { path: 'exchanges/:orderId', element: <ExchangeDetailPage /> },
-          { path: 'exchange-reservations', element: <ExchangeReservationListPage /> },
-          { path: 'exchange-reservations/new', element: <ExchangeReservationNewPage /> },
-          { path: 'exchange-reservations/:reservationId', element: <ExchangeReservationDetailPage /> },
-          { path: 'merchant', element: <MerchantEntryPage /> },
-          { path: 'merchant/:merchantId', element: <MerchantHomePage /> },
-          { path: 'merchant/:merchantId/payments/:paymentId', element: <MerchantPaymentDetailPage /> },
-          { path: 'merchant/:merchantId/settlements', element: <SettlementListPage /> },
-          { path: 'merchant/:merchantId/settlements/:settlementId', element: <SettlementDetailPage /> },
-          { path: 'wallet', element: <WalletPage /> },
-          { path: 'wallet/charge', element: <ChargeNewPage /> },
-          { path: 'wallet/charges', element: <ChargeListPage /> },
-          { path: 'wallet/charges/:chargeId', element: <ChargeDetailPage /> },
+          {
+            path: 'admin',
+            element: <RequireRole role="MASTER" />,
+            children: [
+              { index: true, element: <AdminHomePage /> },
+              { path: 'reviews', element: <AdminReviewListPage /> },
+              { path: 'reviews/:kind/:targetId', element: <AdminReviewDetailPage /> },
+              { path: 'merchants/new', element: <AdminMerchantNewPage /> },
+            ],
+          },
+          { element: <RequireRole role="USER" />, children: userRoutes },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
