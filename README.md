@@ -11,6 +11,8 @@ Node 20.19 이상이 필요합니다.
 ```bash
 npm install
 npm run dev        # http://localhost:5173
+npm run build      # 타입 검사 + 빌드
+npm test           # 테스트 타입 검사 + Vitest(jsdom) 컴포넌트·단위 테스트
 npm run build      # 타입 검사 + 빌드 (dist/)
 npm run typecheck  # 타입 검사만
 npm test           # 컴포넌트 테스트 (아래 "테스트" 참고)
@@ -46,6 +48,8 @@ GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173
 `gradlew bootRun`을 Gradle 데몬으로 실행하면 터미널 환경 변수가 전달되지 않을 수 있습니다. IntelliJ 실행 구성의 Environment variables에 넣거나 `--no-daemon`으로 실행합니다. 프록시가 Gateway에 연결하지 못하면 화면에는 "서버에 연결하지 못했습니다"가 나오고 개발 서버 터미널에 `ECONNREFUSED`가 찍힙니다.
 
 로컬 Mock Bank 시드 계좌(충전 테스트): `004`/`12340101234567` 예금주 유재석(성공), `020`/`1002123456789` 유재석(5,000원 초과 시 은행 잔액 부족), `088`/`110123456789` 박지현. 회원 실명이 예금주와 같아야 합니다. 개발 서버에서는 충전 화면의 **테스트 계좌** 버튼으로 채울 수 있습니다(목록: `src/features/wallet/testAccounts.ts`).
+
+`503 COMMON_SERVICE_UNAVAILABLE`은 해당 서비스가 Eureka에 없을 때 납니다. 서비스가 꺼져 있거나(예: 환율·환전은 exchange-service), Gateway보다 늦게 떠서 Gateway가 아직 목록을 갱신하지 않은 경우(기동 후 1분 안팎)입니다. 앱을 처음 열 때 콘솔에 찍히는 `GET /api/v1/users/me 401`은 로그인 상태 확인이라 정상입니다.
 
 ## 폴더 구조
 
