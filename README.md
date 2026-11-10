@@ -10,6 +10,7 @@ Node 20.19 이상이 필요합니다.
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # 타입 검사 + 빌드
+npm test           # 테스트 타입 검사 + Vitest(jsdom) 컴포넌트·단위 테스트
 ```
 
 ### Gateway 설정
@@ -23,6 +24,8 @@ GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
 `gradlew bootRun`을 Gradle 데몬으로 실행하면 터미널 환경 변수가 전달되지 않을 수 있습니다. IntelliJ 실행 구성의 Environment variables에 넣거나 `--no-daemon`으로 실행하세요.
+
+`503 COMMON_SERVICE_UNAVAILABLE`은 해당 서비스가 Eureka에 없을 때 납니다. 서비스가 꺼져 있거나(예: 환율·환전은 exchange-service), Gateway보다 늦게 떠서 Gateway가 아직 목록을 갱신하지 않은 경우(기동 후 1분 안팎)입니다. 앱을 처음 열 때 콘솔에 찍히는 `GET /api/v1/users/me 401`은 로그인 상태 확인이라 정상입니다.
 
 ## 폴더 구조
 
