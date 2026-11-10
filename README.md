@@ -135,14 +135,65 @@ docs/
 
 Vitest + Testing Library 컴포넌트 테스트가 `src/**/*.test.ts(x)`에 있습니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
 
-테스트 의존성은 아직 `package.json`에 없습니다. 처음 한 번 설치합니다.
+테스트 의존성(Vitest·jsdom·Testing Library)은 `devDependencies`에 있어 `npm install`로 함께 설치됩니다.
 
 ```bash
-npm install -D vitest jsdom @testing-library/react @testing-library/dom @testing-library/user-event @testing-library/jest-dom
 npm test   # tsc -p tsconfig.test.json && vitest run
 ```
 
 테스트 파일은 `tsconfig.app.json`에서 제외해 앱 빌드에 들어가지 않고, `tsconfig.test.json`으로 따로 타입 검사합니다.
+
+## Gateway 경유 E2E 검증 (2026-11-10)
+
+로컬 전체 서비스를 띄우고, 개발 서버 프록시(`localhost:5173` → Gateway `8080`)를 거쳐 프런트 `features/*/api.ts`와 같은 요청 본문·헤더(`Csrf-Token`, `Idempotency-Key`, `Origin: http://localhost:5173`)로 주요 흐름을 한 번에 이어서 실행했습니다.
+
+- 환경: Eureka·Gateway·User·Wallet·Payment·Exchange·Ledger·Mock Bank, Docker 인프라(postgres·redis-session·redis-cache·kafka). Exchange는 `EXCHANGE_RATE_MODE=mock`
+- 계정: 검증용으로 새로 가입한 구매자(실명 유재석)·가맹점 주인(박지현)·관리자 3개. 관리자는 최초 MASTER를 만드는 API가 없어 로컬 DB에서 역할을 `MASTER`로 바꿨습니다.
+- 요청 70건: 200 51 · 201 12 · 202 1 · 204 1, 의도한 오류 응답 5건(아래 표). 예상하지 못한 4xx·5xx 0건, 서비스 로그 ERROR 0건
+
+| 단계 | 요청 | 결과 |
+|---|---|---|
+| 회원가입·로그인 | 약관 조회 → `POST /users` 201 → 로그인 200 → CSRF 재발급 → `GET /users/me` 200 | 관리자 계정 `role`이 `MASTER`로 조회됨 |
+| 지갑 | `POST /wallets` 201 → `GET /wallets/me`·`/balances` | `ACTIVE`, KRW·JPY·CNY 잔액 0 |
+| 충전 | `POST /charges` 50,000원(004 계좌) 202 → 상태 조회 | `COMPLETED`, KRW 0 → 50,000 |
+| 환전 | 한도 조회 → 견적 KRW 10,000 → JPY 1,177(수수료 100원) 201 → `POST /exchanges` 200, 같은 키 재요청은 같은 주문 | `COMPLETED`, KRW 50,000 → 39,900, JPY 0 → 1,177 |
+| 재환전 | 견적 JPY 500 → KRW 4,246(수수료 5엔) 201 → 신청 200 | `RE_EXCHANGE` `COMPLETED`, KRW 44,146, JPY 672 |
+| 가맹점 생성 | 관리자 `POST /payments/merchants`(KRW, 주인 = 박지현) 201 | `ACTIVE`, 주인 잔액 조회 200(0원) |
+| 결제 | 3,000원·2,000원 각 201 `APPROVED`, 같은 키 재요청은 같은 결제 | 구매자 KRW 44,146 → 39,146, 가맹점 0 → 5,000 |
+| 환불 실행 | 결제1 환불 신청 200(`REFUND_REQUESTED`) → 주인 환불 실행 200 | `REFUNDED`, 환불 `COMPLETED` 3,000 |
+| 환불 거절 | 결제2 신청 → 취소(`CANCELLED`) → 재신청 → 주인 거절 200 | `APPROVED` 유지, 신청 결과 `REJECTED` |
+| 환불 후 잔액 | | 구매자 KRW 42,146(+3,000), 가맹점 2,000 |
+| 정산 미리보기 | 주인 `GET .../settlements/preview` 200 | 대기 1건 2,000원, `nextAvailableAt` = 결제 승인 + 3일 1시간 |
+| 로그아웃 | `POST /auth/logout` 204 → `GET /users/me` | 401 |
+
+의도한 오류 응답(화면 문구는 `features/*/status.ts`에 있음):
+
+| 확인한 것 | 응답 |
+|---|---|
+| 사용한 견적으로 새 키 환전 신청 | 409 `EXCHANGE_QUOTE_ALREADY_USED` |
+| 주인이 아닌 회원의 가맹점 잔액 조회 | 404 `PAYMENT_MERCHANT_NOT_FOUND`(존재를 숨김) |
+| 지갑이 없는 주인의 정산 요청 | 422 `PAYMENT_SETTLEMENT_WALLET_NOT_AVAILABLE` |
+| 주인 지갑 개설 후 정산 요청 | 422 `PAYMENT_NO_SETTLEMENT_TARGET`(승인 후 3일 1시간 전이라 대상 없음) |
+| 로그아웃 후 내 정보 | 401 `COMMON_UNAUTHORIZED` |
+
+### 발견한 문제와 원인
+
+| 문제 | 원인 | 조치 |
+|---|---|---|
+| 환율·환전 경로 503 `COMMON_SERVICE_UNAVAILABLE` | exchange-service 미실행 | 서비스 실행. 프런트 수정 없음 |
+| Gateway 기동 직후 약 40초 동안 503 | Gateway가 User보다 먼저 떠서 Eureka 목록이 갱신되기 전 | Eureka → User → 업무 서비스 → Gateway 순서로 기동하거나 1분 기다림 |
+| exchange mock 모드 기동 실패(`defaultMidRates` 바인딩 오류) | 백엔드 `.env`의 `SPRING_CONFIG_NAME=application-prod`가 켜져 있어 운영 설정을 읽음 | 로컬은 `--spring.config.name=application --spring.profiles.active=default`로 실행 |
+| 수출입은행 환율이 7일 지나면 견적 거절 | `koreaexim`은 평일 11~13시에만 수집 | 로컬 검증은 `EXCHANGE_RATE_MODE=mock` |
+| 정산 요청이 대상 없음이 아니라 지갑 오류로 응답 | 서버가 주인 지갑을 대상 결제보다 먼저 확인(명세대로) | 가맹점 주인도 지갑을 개설해야 정산 가능. 프런트 안내 문구 있음 |
+
+프런트 코드에서 고친 곳은 없습니다.
+
+### 확인하지 못한 것
+
+- 정산 실행(`PAID`): 결제 승인 후 3일 1시간이 지나야 대상이 생깁니다. 로컬에서는 대상 없음 응답까지만 확인했습니다.
+- `MANUAL_REVIEW` 처리, 원장·은행 장애 상황: 관리자 화면이 없고 장애 주입이 필요해 제외했습니다.
+- 송금: 이번 범위가 아닙니다.
+- 화면 대조: 위 요청은 스크립트로 보냈습니다. 같은 계정으로 화면을 열어 잔액·내역·상태 표시를 맞춰 보는 확인은 따로 해야 합니다(브라우저에서는 로그인·환전 견적까지 확인).
 
 ## 협업 규칙
 
