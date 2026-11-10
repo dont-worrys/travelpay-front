@@ -38,6 +38,11 @@ export interface SignupResult {
   loginRequired: boolean
 }
 
+export interface PasswordChangeInput {
+  currentPassword: string
+  newPassword: string
+}
+
 export interface LoginInput {
   loginEmail: string
   password: string
@@ -58,6 +63,14 @@ export function login(input: LoginInput): Promise<{ userId: string; role: UserRo
 
 export function logout(): Promise<void> {
   return apiRequest<void>('/api/v1/auth/logout', { method: 'POST' })
+}
+
+/**
+ * 본인 비밀번호 변경(204). 대상은 서버가 세션으로 정하므로 본문에 회원 ID를 넣지 않는다.
+ * 성공하면 서버가 세션 ID를 바꾸고 CSRF 토큰을 지우므로 호출한 쪽에서 토큰을 버려야 한다.
+ */
+export function changePassword(input: PasswordChangeInput): Promise<void> {
+  return apiRequest<void>('/api/v1/users/me/password', { method: 'PATCH', body: input })
 }
 
 export function fetchMe(signal?: AbortSignal): Promise<MyInfo> {

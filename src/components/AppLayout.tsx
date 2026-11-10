@@ -32,6 +32,7 @@ export function AppLayout() {
               <Link to="/admin/reviews">처리 대기</Link>
               <Link to="/admin/merchants/new">가맹점 생성</Link>
               <span>{state.me.realName}님(관리자)</span>
+              <Link to="/account/password">비밀번호 변경</Link>
               <button type="button" className="link-button" onClick={handleLogout} disabled={loggingOut}>
                 로그아웃
               </button>
