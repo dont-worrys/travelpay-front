@@ -67,6 +67,11 @@ describe('AdminReviewDetailPage', () => {
     const [request] = api.calls('POST', RESOLVE_PATH)
     expect(request?.body).toEqual({ memo: '원장 반영 확인' })
     expect(request?.headers['Idempotency-Key']).toBeUndefined()
+    // 처리 완료 후 이 결제의 처리 기록으로 이동할 수 있다.
+    expect(screen.getByRole('link', { name: '처리 기록 보기' })).toHaveAttribute(
+      'href',
+      `/admin/resolutions/payment/${PAYMENT_ID}`,
+    )
   })
 
   it('원장 보정이 필요한 건은 처리 버튼을 보여 주지 않는다', async () => {

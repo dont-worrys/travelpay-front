@@ -2,10 +2,19 @@ import { createBrowserRouter, type RouteObject } from 'react-router'
 import { AppLayout } from './components/AppLayout'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { RequireRole } from './features/auth/RequireRole'
+import { AdminChargeListPage } from './pages/admin/AdminChargeListPage'
+import { AdminChargeReviewPage } from './pages/admin/AdminChargeReviewPage'
 import { AdminHomePage } from './pages/admin/AdminHomePage'
 import { AdminMerchantNewPage } from './pages/admin/AdminMerchantNewPage'
+import { AdminOverdueRefundListPage } from './pages/admin/AdminOverdueRefundListPage'
+import { AdminReconciliationDetailPage } from './pages/admin/AdminReconciliationDetailPage'
+import { AdminReconciliationListPage } from './pages/admin/AdminReconciliationListPage'
+import { AdminResolutionDetailPage } from './pages/admin/AdminResolutionDetailPage'
+import { AdminResolutionListPage } from './pages/admin/AdminResolutionListPage'
 import { AdminReviewDetailPage } from './pages/admin/AdminReviewDetailPage'
 import { AdminReviewListPage } from './pages/admin/AdminReviewListPage'
+import { AdminTransferDetailPage } from './pages/admin/AdminTransferDetailPage'
+import { AdminTransferListPage } from './pages/admin/AdminTransferListPage'
 import { ChargeDetailPage } from './pages/ChargeDetailPage'
 import { ChargeListPage } from './pages/ChargeListPage'
 import { ChargeNewPage } from './pages/ChargeNewPage'
@@ -84,6 +93,15 @@ export const router = createBrowserRouter([
               { path: 'reviews', element: <AdminReviewListPage /> },
               { path: 'reviews/:kind/:targetId', element: <AdminReviewDetailPage /> },
               { path: 'merchants/new', element: <AdminMerchantNewPage /> },
+              { path: 'transfers', element: <AdminTransferListPage /> },
+              { path: 'transfers/:transferId', element: <AdminTransferDetailPage /> },
+              { path: 'charges', element: <AdminChargeListPage /> },
+              { path: 'charges/reconciliations', element: <AdminReconciliationListPage /> },
+              { path: 'charges/reconciliations/:runId', element: <AdminReconciliationDetailPage /> },
+              { path: 'charges/:chargeId/review', element: <AdminChargeReviewPage /> },
+              { path: 'resolutions', element: <AdminResolutionListPage /> },
+              { path: 'resolutions/:domain/:targetId', element: <AdminResolutionDetailPage /> },
+              { path: 'refund-requests/overdue', element: <AdminOverdueRefundListPage /> },
             ],
           },
           { element: <RequireRole role="USER" />, children: userRoutes },

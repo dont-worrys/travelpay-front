@@ -298,3 +298,98 @@ export function resolveExchangeReview(orderId: string, memo: string) {
     body: resolveBody(memo),
   })
 }
+
+// ---- 처리 기록·지연 환불 신청 ----
+
+/** 결제·환불 처리 기록(`payment_review_resolutions`). 한 줄에 모든 정보가 있어 단건 조회는 없다. */
+export interface PaymentResolutionRecord {
+  resolutionId: string
+  paymentId: string
+  /** 환불 처리 기록일 때만. */
+  refundId: string | null
+  reviewReason: string
+  ledgerStatus: string
+  ledgerTransactionId: string | null
+  toStatus: string
+  actorId: string
+  description: string
+  memo: string | null
+  createdAt: string
+}
+
+export interface SettlementResolutionRecord {
+  resolutionId: string
+  settlementId: string
+  reviewReason: string
+  ledgerStatus: string
+  ledgerTransactionId: string | null
+  toStatus: string
+  actorId: string
+  description: string
+  memo: string | null
+  createdAt: string
+}
+
+export interface ExchangeResolutionRecord {
+  historyId: string
+  orderId: string
+  actorId: string
+  fromStatus: string
+  toStatus: string
+  /** 처리 근거: `LEDGER_POSTED`·`LEDGER_REJECTED`·`LEDGER_NOT_FOUND`. */
+  resolutionReason: string
+  reviewReason: string | null
+  failureReason: string | null
+  ledgerTransactionId: string | null
+  memo: string | null
+  resolvedAt: string
+}
+
+/** 최신순, `size` 최대 100. `paymentId`는 그 결제와 그 결제의 환불 기록을 모두 돌려준다. */
+export function fetchPaymentResolutions(
+  query: { type?: 'PAYMENT' | 'REFUND'; actorId?: string; paymentId?: string; page?: number; size?: number },
+  signal?: AbortSignal,
+) {
+  return apiRequest<PageResponse<PaymentResolutionRecord>>('/api/v1/admin/payments/resolutions', {
+    query: { ...query },
+    signal,
+  })
+}
+
+export function fetchSettlementResolutions(
+  query: { actorId?: string; settlementId?: string; page?: number; size?: number },
+  signal?: AbortSignal,
+) {
+  return apiRequest<PageResponse<SettlementResolutionRecord>>('/api/v1/admin/payments/settlements/resolutions', {
+    query: { ...query },
+    signal,
+  })
+}
+
+export function fetchExchangeResolutions(
+  query: { actorId?: string; orderId?: string; page?: number; size?: number },
+  signal?: AbortSignal,
+) {
+  return apiRequest<PageResponse<ExchangeResolutionRecord>>('/api/v1/admin/exchanges/resolutions', {
+    query: { ...query },
+    signal,
+  })
+}
+
+/** 신청 후 3일 넘게 가맹점이 처리하지 않은 환불 신청. 오래된 순, `size` 최대 100. */
+export interface OverdueRefundRequest {
+  paymentId: string
+  userId: string
+  merchantId: string
+  amount: number
+  currency: Currency
+  requestedAt: string
+  requestReason: string | null
+}
+
+export function fetchOverdueRefundRequests(query: { page?: number; size?: number }, signal?: AbortSignal) {
+  return apiRequest<PageResponse<OverdueRefundRequest>>('/api/v1/admin/payments/refund-requests/overdue', {
+    query: { ...query },
+    signal,
+  })
+}

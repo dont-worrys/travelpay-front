@@ -1,31 +1,19 @@
-import { Fragment, useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../../api'
 import type { LedgerEntry } from '../../features/admin/api'
+import { FieldList } from '../../features/admin/FieldList'
 import {
   REVIEW_CONFIG,
   isLedgerLookupUnavailable,
   isReviewKind,
   toAdminMessage,
   type ReviewDetailView,
-  type ReviewField,
+  type ReviewResolved,
 } from '../../features/admin/reviews'
 import { formatAmount } from '../../lib/money'
 
 const MEMO_MAX = 255
-
-function FieldList({ fields }: { fields: ReviewField[] }) {
-  return (
-    <dl className="info">
-      {fields.map((field) => (
-        <Fragment key={field.label}>
-          <dt>{field.label}</dt>
-          <dd>{field.code ? <code>{field.value}</code> : field.value}</dd>
-        </Fragment>
-      ))}
-    </dl>
-  )
-}
 
 function EntryList({ title, entries }: { title: string; entries: LedgerEntry[] | null }) {
   if (!entries || entries.length === 0) {
@@ -73,7 +61,7 @@ export function AdminReviewDetailPage() {
   const [resolveError, setResolveError] = useState<string | null>(null)
   /** 처리 응답을 받지 못한 상태. 새로고침으로 상태를 확인하거나 다시 처리한다. */
   const [uncertain, setUncertain] = useState(false)
-  const [resolved, setResolved] = useState<ReviewField[] | null>(null)
+  const [resolved, setResolved] = useState<ReviewResolved | null>(null)
 
   useEffect(() => {
     if (!kind) {
@@ -125,8 +113,7 @@ export function AdminReviewDetailPage() {
     setSubmitting(true)
     setResolveError(null)
     try {
-      const fields = await config.resolve(targetId, memo)
-      setResolved(fields)
+      setResolved(await config.resolve(targetId, memo))
       setUncertain(false)
     } catch (cause) {
       // 원장 조회 실패(503)는 서버가 처리하지 않았다고 알려 준 것이라 결과 모름이 아니다.
@@ -149,8 +136,11 @@ export function AdminReviewDetailPage() {
       <section>
         <h1>{config.label} 처리 완료</h1>
         <p className="notice">처리했습니다. 처리 기록에 관리자 ID와 메모가 남습니다.</p>
-        <FieldList fields={resolved} />
+        <FieldList fields={resolved.fields} />
         <div className="actions">
+          <Link to={resolved.recordPath} className="button-link">
+            처리 기록 보기
+          </Link>
           <Link to={listLink}>처리 대기 목록</Link>
         </div>
       </section>
