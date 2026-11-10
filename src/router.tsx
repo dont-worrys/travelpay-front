@@ -5,6 +5,7 @@ import { RequireRole } from './features/auth/RequireRole'
 import { AdminChargeListPage } from './pages/admin/AdminChargeListPage'
 import { AdminChargeReviewPage } from './pages/admin/AdminChargeReviewPage'
 import { AdminHomePage } from './pages/admin/AdminHomePage'
+import { AdminMemberListPage } from './pages/admin/AdminMemberListPage'
 import { AdminMerchantNewPage } from './pages/admin/AdminMerchantNewPage'
 import { AdminOverdueRefundListPage } from './pages/admin/AdminOverdueRefundListPage'
 import { AdminReconciliationDetailPage } from './pages/admin/AdminReconciliationDetailPage'
@@ -13,6 +14,8 @@ import { AdminResolutionDetailPage } from './pages/admin/AdminResolutionDetailPa
 import { AdminResolutionListPage } from './pages/admin/AdminResolutionListPage'
 import { AdminReviewDetailPage } from './pages/admin/AdminReviewDetailPage'
 import { AdminReviewListPage } from './pages/admin/AdminReviewListPage'
+import { AdminTermsListPage } from './pages/admin/AdminTermsListPage'
+import { AdminTermsNewPage } from './pages/admin/AdminTermsNewPage'
 import { AdminTransferDetailPage } from './pages/admin/AdminTransferDetailPage'
 import { AdminTransferListPage } from './pages/admin/AdminTransferListPage'
 import { ChargeDetailPage } from './pages/ChargeDetailPage'
@@ -102,6 +105,9 @@ export const router = createBrowserRouter([
               { path: 'resolutions', element: <AdminResolutionListPage /> },
               { path: 'resolutions/:domain/:targetId', element: <AdminResolutionDetailPage /> },
               { path: 'refund-requests/overdue', element: <AdminOverdueRefundListPage /> },
+              { path: 'users', element: <AdminMemberListPage /> },
+              { path: 'terms', element: <AdminTermsListPage /> },
+              { path: 'terms/new', element: <AdminTermsNewPage /> },
             ],
           },
           { element: <RequireRole role="USER" />, children: userRoutes },

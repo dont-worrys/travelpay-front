@@ -386,6 +386,12 @@ const ADMIN_MESSAGES: Record<string, string> = {
   RECONCILIATION_RUN_NOT_FOUND: '충전 대사 실행을 찾을 수 없습니다.',
   RECONCILIATION_RESULT_NOT_FOR_CHARGE: '이 충전의 대사 결과가 아닙니다. 대사 결과 ID를 확인해 주세요.',
   RECONCILIATION_RESULT_ALREADY_RESOLVED: '이미 처리된 대사 결과입니다. 대사 결과 ID를 비우거나 확인해 주세요.',
+  USER_NOT_FOUND: '회원을 찾을 수 없습니다. 목록을 다시 검색해 주세요.',
+  USER_MASTER_PROTECTION_CONFLICT: '본인 계정은 정지할 수 없습니다. 다른 관리자에게 요청해 주세요.',
+  USER_CLOSED_ACCOUNT_UNCHANGEABLE: '종료된 계정은 정지하거나 해제할 수 없습니다.',
+  USER_TERMS_EFFECTIVE_AT_NOT_FUTURE: '시행 시각은 지금보다 1분 이상 뒤여야 합니다. 시행 시각을 다시 정해 주세요.',
+  USER_TERMS_VERSION_CONFLICT:
+    '같은 약관 코드에 같은 버전이나 같은 시행 시각이 이미 있습니다. 약관 목록에서 확인한 뒤 버전·시행 시각을 바꿔 주세요.',
 }
 
 /** 서버가 처리하지 않았다고 확정해 준 503(원장 조회 실패). 결과 모름과 구분한다. */
