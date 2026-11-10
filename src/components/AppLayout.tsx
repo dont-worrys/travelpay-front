@@ -33,6 +33,8 @@ export function AppLayout() {
               <Link to="/admin/transfers">송금</Link>
               <Link to="/admin/charges">충전</Link>
               <Link to="/admin/resolutions">처리 기록</Link>
+              <Link to="/admin/users">회원</Link>
+              <Link to="/admin/terms">약관</Link>
               <Link to="/admin/merchants/new">가맹점 생성</Link>
               <span>{state.me.realName}님(관리자)</span>
               <Link to="/account/password">비밀번호 변경</Link>

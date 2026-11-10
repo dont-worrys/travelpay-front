@@ -110,7 +110,8 @@ h2 {
 }
 
 .form input:not([type='checkbox']),
-.form select {
+.form select,
+.form textarea {
   padding: 8px;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);

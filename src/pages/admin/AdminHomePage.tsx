@@ -102,6 +102,8 @@ export function AdminHomePage() {
         <Link to="/admin/charges">충전 관리</Link>
         <Link to="/admin/charges/reconciliations">충전 대사</Link>
         <Link to="/admin/resolutions">처리 기록</Link>
+        <Link to="/admin/users">회원 관리</Link>
+        <Link to="/admin/terms">약관 관리</Link>
         <Link to="/admin/merchants/new" className="button-link">
           가맹점 생성
         </Link>
