@@ -89,6 +89,55 @@ export function formatDecimalText(value: string): string {
   return `${BigInt(match[1] ?? '0').toLocaleString('ko-KR')}${match[2] ?? ''}`
 }
 
+/** 예약 환전 목표 환율의 소수 자릿수와 상한(서버와 같음: 0 초과, 10^10 미만). */
+const RATE_DECIMALS = 2
+const RATE_MAX_WHOLE_DIGITS = 10
+
+export type ParseRateResult = { ok: true; value: string } | { ok: false; message: string }
+
+/**
+ * 목표 환율 입력(예: "1,234.5")을 서버에 보낼 소수 문자열("1234.5")로 바꾼다. 문자열로만 검사하며 계산하지 않는다.
+ */
+export function parseRate(input: string): ParseRateResult {
+  const text = input.trim().replace(/,/g, '')
+  if (!text) {
+    return { ok: false, message: '목표 환율을 입력해 주세요.' }
+  }
+  const match = /^(\d+)(?:\.(\d+))?$/.exec(text)
+  if (!match) {
+    return { ok: false, message: '숫자만 입력해 주세요.' }
+  }
+  const whole = (match[1] ?? '0').replace(/^0+(?=\d)/, '')
+  const fraction = (match[2] ?? '').replace(/0+$/, '')
+  if (fraction.length > RATE_DECIMALS) {
+    return { ok: false, message: `소수점 아래 ${RATE_DECIMALS}자리까지 입력할 수 있습니다.` }
+  }
+  if (whole.length > RATE_MAX_WHOLE_DIGITS) {
+    return { ok: false, message: '목표 환율이 너무 큽니다.' }
+  }
+  if (/^0*$/.test(whole + fraction)) {
+    return { ok: false, message: '0보다 큰 환율을 입력해 주세요.' }
+  }
+  return { ok: true, value: fraction ? `${whole}.${fraction}` : whole }
+}
+
+/**
+ * 음이 아닌 소수 문자열 두 개를 비교한다(-1·0·1). 화면 안내용이며, 형식이 다르면 null.
+ * 자릿수를 맞춘 정수로 비교해 부동소수점을 쓰지 않는다.
+ */
+export function compareDecimalText(a: string, b: string): -1 | 0 | 1 | null {
+  const pattern = /^(\d+)(?:\.(\d+))?$/
+  const ma = pattern.exec(a.trim())
+  const mb = pattern.exec(b.trim())
+  if (!ma || !mb) {
+    return null
+  }
+  const scale = Math.max((ma[2] ?? '').length, (mb[2] ?? '').length)
+  const left = BigInt((ma[1] ?? '0') + (ma[2] ?? '').padEnd(scale, '0'))
+  const right = BigInt((mb[1] ?? '0') + (mb[2] ?? '').padEnd(scale, '0'))
+  return left === right ? 0 : left < right ? -1 : 1
+}
+
 /** 최소 단위 정수를 "10,000원", "12.50위안"처럼 표시한다. */
 export function formatAmount(minor: number, currency: string): string {
   const info = isCurrency(currency) ? CURRENCY_INFO[currency] : { decimals: 0, unit: ` ${currency}` }

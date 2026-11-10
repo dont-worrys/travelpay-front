@@ -32,6 +32,7 @@ export function HomePage() {
             </Link>
             <Link to="/payments">결제 내역</Link>
             <Link to="/exchanges">환전 내역</Link>
+            <Link to="/exchange-reservations">예약 환전</Link>
           </div>
         </>
       )}

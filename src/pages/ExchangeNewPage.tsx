@@ -296,6 +296,7 @@ export function ExchangeNewPage() {
         <div className="actions inline">
           <Link to="/exchange-rates">환율 보기</Link>
           <Link to="/exchanges">환전 내역</Link>
+          <Link to="/exchange-reservations/new">예약 환전</Link>
         </div>
       </div>
 
