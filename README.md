@@ -223,7 +223,7 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 ### 확인하지 못한 것
 
 - 정산 실행(`PAID`): 결제 승인 후 3일 1시간이 지나야 대상이 생깁니다. 로컬에서는 대상 없음 응답까지만 확인했습니다.
-- `MANUAL_REVIEW` 처리, 원장·은행 장애 상황: 관리자 화면이 없고 장애 주입이 필요해 제외했습니다.
+- `MANUAL_REVIEW` 처리, 원장 장애 상황: 아래 [관리자 MANUAL_REVIEW 처리](#관리자-manual_review-처리) 절에서 원장을 내려 따로 확인했습니다. 은행 장애는 확인하지 않았습니다.
 - 송금: 아래 [송금](#송금) 절에서 따로 확인했습니다.
 - 화면 대조: 위 요청은 스크립트로 보냈습니다. 같은 계정으로 화면을 열어 잔액·내역·상태 표시를 맞춰 보는 확인은 따로 해야 합니다(브라우저에서는 로그인·환전 견적까지 확인).
 
@@ -285,7 +285,7 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 프런트 코드는 위 수취인 표시만 고쳤습니다. 확인하지 못한 것:
 
 - `REQUESTED` 송금 취소 성공: 원장 연동 뒤 새 송금은 `PROCESSING`으로 시작해 지금은 `REQUESTED`를 만들 수 없습니다.
-- `PROCESSING`이 이어지는 경우와 `MANUAL_REVIEW`: 원장 장애 주입이 필요해 제외했습니다(관리자 `MANUAL_REVIEW` 처리 E2E와 함께 확인할 예정).
+- `PROCESSING`이 이어지는 경우와 `MANUAL_REVIEW`: 아래 [관리자 MANUAL_REVIEW 처리](#관리자-manual_review-처리) 절에서 확인했습니다(원장 중지 중 202 `PROCESSING` → 약 8분 뒤 `MANUAL_REVIEW` → 운영자 확정 → `COMPLETED`).
 - 화면 대조: 요청은 스크립트로 보냈습니다. 같은 계정으로 송금 화면을 열어 위 상태·잔액이 그대로 보이는지는 따로 확인해야 합니다.
 
 ### 관리자 자금 운영
@@ -305,7 +305,7 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 
 처음에 대사 기간을 2일로 보내 400을 받았습니다. 서버 규칙(기간 1일 이하, 끝은 지금보다 5분 이전)대로였고, 화면 안내와 400 문구에 이 규칙을 넣었습니다. 확인하지 못한 것:
 
-- 송금 미리보기 성공·확정, 충전 보정 성공: 로컬에 `MANUAL_REVIEW` 송금이 없고, 충전 보정은 실제 상태를 바꿔 실행하지 않았습니다. 미리보기 → 확정, 원장 변경 409 → 다시 미리보기, 결과 모름 재전송(송금 같은 본문, 충전 같은 키)은 컴포넌트 테스트로 확인했습니다.
+- 송금 미리보기 성공·확정, 충전 보정 성공: 이 확인 때는 로컬에 데이터가 없었습니다. 이후 [관리자 MANUAL_REVIEW 처리](#관리자-manual_review-처리) 절에서 원장을 내려 만든 송금으로 미리보기 → 확정(기록 없음 → `PROCESSING`)을 확인했습니다. 원장 변경 409 → 다시 미리보기, 충전 같은 키 재전송은 컴포넌트 테스트로만 확인했습니다.
 - 처리 기록·지연 환불 신청이 있는 화면: 로컬 데이터가 0건이라 목록이 빈 경우만 확인했습니다.
 - 화면 대조: 요청은 스크립트로 보냈습니다. 관리자 계정으로 화면을 열어 확인하는 일은 따로 해야 합니다.
 
@@ -327,6 +327,30 @@ npm test   # tsc -p tsconfig.test.json && vitest run
 
 - 종료(`CLOSED`) 계정 정지·해제 409 `USER_CLOSED_ACCOUNT_UNCHANGEABLE`: 계정을 종료하는 API가 없어 컴포넌트 테스트로만 확인했습니다.
 - 화면 대조: 요청은 스크립트로 보냈습니다. 관리자 계정으로 화면을 열어 확인하는 일은 따로 해야 합니다.
+
+### 관리자 MANUAL_REVIEW 처리
+
+원장(ledger-service)을 약 10분 내려 실제 `MANUAL_REVIEW` 데이터를 만들고, 원장을 다시 띄운 뒤 관리자 API로 처리했습니다. 관리자·가맹점 주인 계정과 새로 가입한 결제자(충전용 Mock 은행 시드 계좌 예금주와 같은 이름)·수취인 1명씩을 썼습니다.
+
+| 구분 | 확인 내용 | 결과 |
+|---|---|---|
+| 원장 중지 중 요청 | 결제 201 `PENDING`(같은 키 재요청 같은 결제), 가맹점 환불 실행 200(결제 `REFUND_PENDING`·환불 `REQUESTED`), 송금 202 `PROCESSING`, 충전 202. 환전은 주문을 만들지 않고 503 `EXCHANGE_LEDGER_UNAVAILABLE`, 잔액 조회 503 `WALLET_LEDGER_UNAVAILABLE` | 예상대로 |
+| `MANUAL_REVIEW` 전환 | 결제·환불·송금은 결과 모름 5회 뒤 약 7분 56초, 충전은 약 7분 32초에 `MANUAL_REVIEW`. 결제·환불·송금 `reviewReason` `RETRY_EXHAUSTED`. 관리자 목록 4종에 모두 표시 | 예상대로 |
+| 원장 조회 실패 | 결제·환불 상세 200 `ledgerLookupFailed: true`·`expected: null`, 처리 503 `PAYMENT_LEDGER_LOOKUP_UNAVAILABLE`. 송금 미리보기 503. 충전 확인 200 `blockers: ["원장 조회 불가"]`·가능한 조치 없음. 거절 뒤 상태는 모두 `MANUAL_REVIEW` 그대로 | 예상대로 |
+| 결제 | 원장 기록 없음(`NOT_FOUND`) → 예상 `DECLINED`, 처리 200 `DECLINED`, 다시 처리 409 `PAYMENT_NOT_MANUAL_REVIEW`. 결제자 조회에 거절 사유 "결제 처리 시간이 초과되어 취소되었습니다." 처리 기록 1건 | 예상대로 |
+| 환불 | 원장 기록 없음 → 예상 `REQUESTED`(재시도), 처리 200 → 스케줄러 재전송으로 환불 `COMPLETED`·결제 `REFUNDED`. 결제 ID로 처리 기록 조회 시 환불 기록 포함 | 예상대로 |
+| 송금 | 미리보기 `found: false`·`expectedStatus: PROCESSING`, 확정 200 `PROCESSING`, 같은 본문 재확정 200, 재전송으로 `COMPLETED`. 이력에 운영자 확정(`MANUAL_REVIEW` → `PROCESSING`, 사유·운영자 ID) | 예상대로 |
+| 충전 | 원장 재기동 뒤 확인: 은행 출금 `SUCCEEDED`, 원장 `NOT_FOUND`. 원장 없음은 전환 10분 뒤(`notFoundConfirmedAt`)부터 확정으로 보아 그 전에는 5개 조치 모두 이유와 함께 불가 | 예상대로. 보정 실행은 미검증(아래) |
+| 잔액 | 결제자 97,000 → 98,000(결제 거절 0, 환불 +3,000, 송금 −2,000), 수취인 0 → 2,000. 충전 5,000은 보정하지 않아 미반영(은행 출금만 성공, 충전 `MANUAL_REVIEW`로 남음) | 일치 |
+
+같은 건 재처리는 처리 뒤 다시 보내는 방식으로 확인했습니다(동시에 보내는 경쟁 상황은 만들지 않음). 확인하지 못한 것:
+
+- 송금 `TRANSFER_RESOLUTION_MISMATCH`: 미리보기와 다른 값으로 `FAILED` 확정을 보냈으나 원장 거래 ID가 없어 형식 검사 400 `COMMON_INVALID_REQUEST`가 먼저 났습니다. 송금이 이미 처리돼 다시 만들려면 원장을 또 내려야 해서 컴포넌트 테스트 확인으로 둡니다.
+- 정산 `MANUAL_REVIEW`: 승인 후 3일 1시간이 지나야 정산 대상이 생겨 로컬에서 만들 수 없습니다.
+- 환전 `MANUAL_REVIEW`: 원장 장애 때는 지갑이 잔액을 못 읽어 주문을 만들지 않고, 처리 중 주문이 `MANUAL_REVIEW`가 되려면 24시간이 지나거나 원장이 400·409를 돌려줘야 합니다.
+- 원장 반영(`POSTED`) 경로(결제 승인 확정, 송금 `COMPLETED` 확정, 충전 `CONFIRM_COMPLETED`): 원장에 반영된 뒤 응답만 사라지는 상황이 필요해 원장 중지로는 만들 수 없습니다.
+- 충전 보정 실행(`RESUME_CREDIT`)과 관리자 화면(브라우저) 처리 흐름: 가상계좌 문제로 별도 이슈에서 확인합니다. 확인용 충전 1건(5,000원)이 로컬에 `MANUAL_REVIEW`로 남아 있습니다.
+- 위 항목은 컴포넌트 테스트(`AdminReviewDetailPage`, 관리자 자금 운영 테스트)로만 확인했습니다.
 
 ## 협업 규칙
 
