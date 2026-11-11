@@ -95,6 +95,14 @@ export function ExchangeDetailPage() {
       )}
 
       <dl className="info">
+        {order.reservationId && (
+          <>
+            <dt>구분</dt>
+            <dd>
+              예약 체결 주문 · <Link to={`/exchange-reservations/${order.reservationId}`}>예약 상세 보기</Link>
+            </dd>
+          </>
+        )}
         <dt>보낸 금액</dt>
         <dd>{formatMajorAmount(order.fromAmount, order.fromCurrency)}</dd>
         <dt>수수료</dt>
