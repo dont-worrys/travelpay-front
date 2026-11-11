@@ -44,6 +44,10 @@ export function MerchantEntryPage() {
     <section>
       <h1>가맹점 관리</h1>
       <p className="hint">내가 주인인 가맹점의 결제·환불 신청·정산을 관리합니다.</p>
+      <p className="hint">
+        가맹점 ID는 가맹점을 만든 관리자에게 받습니다. 정산금은 내 지갑으로 들어오니, 지갑이 없다면{' '}
+        <Link to="/wallet">내 지갑</Link>에서 먼저 만들어 주세요.
+      </p>
 
       {recent.length > 0 && (
         <>
