@@ -1,4 +1,4 @@
-import { apiBaseUrl } from './config'
+import { API_DISABLED_MESSAGE, apiBaseUrl, apiDisabled } from './config'
 
 /** `GET /api/v1/auth/csrf` 응답. 헤더 이름은 서버가 정한 값을 그대로 쓴다. */
 export interface CsrfToken {
@@ -39,6 +39,9 @@ export function clearCsrfToken(): void {
 }
 
 async function requestCsrfToken(): Promise<CsrfToken> {
+  if (apiDisabled) {
+    throw new Error(API_DISABLED_MESSAGE)
+  }
   // 순환 의존을 피하려고 공통 요청 함수 대신 fetch를 직접 쓴다.
   const response = await fetch(`${apiBaseUrl}/api/v1/auth/csrf`, {
     method: 'GET',
