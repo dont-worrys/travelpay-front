@@ -29,7 +29,7 @@ const MERCHANT_MESSAGES: Record<string, string> = {
   PAYMENT_REFUND_NOT_REQUESTED: '고객이 환불을 신청한 결제가 아닙니다. 고객이 신청을 취소했을 수 있습니다.',
   PAYMENT_SETTLEMENT_NOT_FOUND: '정산을 찾을 수 없습니다.',
   PAYMENT_SETTLEMENT_IDEMPOTENCY_KEY_REUSED: '요청을 처리하지 못했습니다. 페이지를 새로고침한 뒤 다시 시도해 주세요.',
-  PAYMENT_SETTLEMENT_WALLET_NOT_AVAILABLE: '정산 받을 지갑이 없거나 사용할 수 없습니다. 내 지갑 상태를 확인해 주세요.',
+  PAYMENT_SETTLEMENT_WALLET_NOT_AVAILABLE: '정산 받을 지갑이 없거나 사용할 수 없습니다. 내 지갑 화면에서 지갑을 만들거나 상태를 확인한 뒤 다시 요청해 주세요.',
   PAYMENT_NO_SETTLEMENT_TARGET: '지금 정산할 결제가 없습니다.',
 }
 

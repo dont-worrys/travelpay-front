@@ -96,7 +96,7 @@ docs/
 | `/merchant` | 가맹점 관리 입구: 가맹점 ID 입력(내 가맹점 목록 API가 없음), 최근 연 가맹점 | 필요 |
 | `/merchant/:merchantId` | 가맹점 잔액, 정산 요약, 결제 링크 복사, 받은 결제(환불 신청 탭) | 필요 |
 | `/merchant/:merchantId/payments/:paymentId` | 고객 환불 신청 처리: 환불 실행(부분·전액) 또는 거절 | 필요 |
-| `/merchant/:merchantId/settlements` | 정산 미리보기·요청·내역 | 필요 |
+| `/merchant/:merchantId/settlements` | 정산 미리보기·요청·내역. 정산 받을 지갑이 필요하다는 안내와 내 지갑 링크 | 필요 |
 | `/merchant/:merchantId/settlements/:settlementId` | 정산 상세(포함된 결제) | 필요 |
 | `/exchange` | 환전(원화→외화)·재환전(외화→원화): 금액 → 견적(5분) → 신청 | 필요 |
 | `/exchanges`, `/exchanges/:orderId` | 환전 내역(전체·환전·재환전)·상세. 예약으로 체결된 주문(응답 `reservationId`가 있음)은 내역에 "예약 체결" 배지, 상세에 예약 상세 링크 | 필요 |
@@ -110,7 +110,7 @@ docs/
 |---|---|
 | `/admin` | 처리 대기 건수(결제·환불·정산·환전·송금·충전), 지연 환불 신청 건수, 관리 기능 입구 |
 | `/admin/reviews`, `/admin/reviews/:kind/:id` | 결제·환불·정산·환전 `MANUAL_REVIEW` 목록(사유 필터)·상세. 서버가 원장을 조회해 정한 결과로 처리하고, 처리 뒤 처리 기록으로 이동 |
-| `/admin/merchants/new` | 가맹점 생성. 원장 계정을 못 만들면(202 `PENDING`) 원장 계정 재시도 |
+| `/admin/merchants/new` | 가맹점 생성. 원장 계정을 못 만들면(202 `PENDING`) 원장 계정 재시도. 정산금이 주인 회원 지갑으로 들어가므로 주인이 지갑을 먼저 만들어야 한다는 안내를 입력·결과 화면에 표시 |
 | `/admin/transfers`, `/admin/transfers/:transferId` | 전체 송금 목록(상태·회원·정렬)·상세(`reviewReason`·`failureReason`·`attemptCount`, 지갑 ID)·상태 변경 이력. `MANUAL_REVIEW`는 미리보기 → 확정 |
 | `/admin/charges` | 전체 충전 목록(상태·회원). 관리자 단건 조회 API가 없어 항목을 목록에 모두 표시하고, `MANUAL_REVIEW`만 보정 화면으로 이동 |
 | `/admin/charges/:chargeId/review` | 충전 보정: 지금 은행 출금·환불·원장 사실, 가능한 조치와 불가 이유 → 조치·사유(·대사 결과 ID)로 보정 |

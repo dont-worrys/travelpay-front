@@ -14,6 +14,12 @@ const MERCHANT_STATUS_LABEL: Record<MerchantStatus, string> = {
   SUSPENDED: '정지(결제 불가, 정산 가능)',
 }
 
+// 정산금은 주인 회원 지갑으로 들어가는데 지갑은 가입 때 자동으로 생기지 않는다(없으면 정산 요청이 거절된다).
+const SETTLEMENT_WALLET_FORM_HINT =
+  '정산금은 주인 회원의 지갑으로 들어갑니다. 지갑이 없어도 가맹점은 만들 수 있지만, 주인 회원이 내 지갑 화면에서 지갑을 먼저 만들어야 정산을 요청할 수 있습니다.'
+const SETTLEMENT_WALLET_RESULT_HINT =
+  '정산금은 이 회원의 지갑으로 들어갑니다. 지갑이 없다면 정산 전에 내 지갑 화면에서 먼저 만들도록 안내해 주세요.'
+
 /**
  * 가맹점 생성. 원장 계정까지 만들어지면 201 `ACTIVE`, 원장 호출이 실패하면 202 `PENDING`이고 재시도로 `ACTIVE`가 된다.
  * 생성 요청은 멱등성 키가 없어, 결과를 모를 때 다시 보내면 가맹점이 두 개 생길 수 있다.
@@ -104,6 +110,8 @@ export function AdminMerchantNewPage() {
           <dt>주인 회원 ID</dt>
           <dd>
             <code>{merchant.ownerUserId}</code>
+            <br />
+            <span className="hint">{SETTLEMENT_WALLET_RESULT_HINT}</span>
           </dd>
           <dt>상태</dt>
           <dd>{MERCHANT_STATUS_LABEL[merchant.status] ?? merchant.status}</dd>
@@ -158,6 +166,7 @@ export function AdminMerchantNewPage() {
           />
           {ownerInvalid && <span className="field-error">회원 ID 형식(UUID)이 아닙니다.</span>}
           <span className="hint">활성 상태의 일반회원이어야 합니다. 회원은 내 정보 화면에서 회원 ID를 볼 수 있습니다.</span>
+          <span className="hint">{SETTLEMENT_WALLET_FORM_HINT}</span>
         </label>
         {error && (
           <p className="error" role="alert">

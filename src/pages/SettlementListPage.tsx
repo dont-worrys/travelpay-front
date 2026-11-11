@@ -125,6 +125,9 @@ export function SettlementListPage() {
         환불 기간(승인 후 3일)이 지난 결제를 모아 가맹점 주인 회원 지갑으로 보냅니다. 부분 환불된 결제는 남은 금액만
         정산됩니다.
       </p>
+      <p className="hint">
+        정산을 받으려면 지갑이 있어야 합니다. 아직 없다면 <Link to="/wallet">내 지갑</Link>에서 먼저 만들어 주세요.
+      </p>
 
       <h2>지금 정산할 수 있는 금액</h2>
       {previewError && (
