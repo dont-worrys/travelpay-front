@@ -88,6 +88,11 @@ export interface ExchangeOrder {
   rateDate: string
   requestedAt: string
   settledAt: string | null
+  /**
+   * 예약 체결로 만들어진 주문이면 그 예약 ID, 일반 환전이면 null.
+   * 이 필드가 없는 예전 서버에서도 동작하도록 없으면 일반 환전으로 본다.
+   */
+  reservationId?: string | null
 }
 
 export interface ExchangeOrderSummary {
@@ -102,6 +107,11 @@ export interface ExchangeOrderSummary {
   totalDebitAmount: string
   requestedAt: string
   settledAt: string | null
+  /**
+   * 예약 체결로 만들어진 주문이면 그 예약 ID, 일반 환전이면 null.
+   * 이 필드가 없는 예전 서버에서도 동작하도록 없으면 일반 환전으로 본다.
+   */
+  reservationId?: string | null
 }
 
 export interface ExchangeListQuery {

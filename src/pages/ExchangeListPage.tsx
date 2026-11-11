@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
+import { StatusBadge } from '../components/StatusBadge'
 import { fetchExchanges, type ExchangeOrderSummary, type ExchangeType } from '../features/exchange/api'
 import { ExchangeStatusBadge } from '../features/exchange/ExchangeStatusBadge'
 import { EXCHANGE_TYPE_LABEL, toExchangeMessage } from '../features/exchange/status'
@@ -88,6 +89,12 @@ export function ExchangeListPage() {
                 <span className="item-main">
                   <span>
                     {EXCHANGE_TYPE_LABEL[item.type]} {item.fromCurrency} → {item.toCurrency}
+                    {item.reservationId && (
+                      <>
+                        {' '}
+                        <StatusBadge label="예약 체결" tone="neutral" />
+                      </>
+                    )}
                   </span>
                   <span className="amount received">+{formatMajorAmount(item.toAmount, item.toCurrency)}</span>
                 </span>
