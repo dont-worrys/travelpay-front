@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SHOW_TEST_ACCOUNTS?: string
   /** 로컬 DB에만 넣은 Mock Bank 계좌 `은행코드:계좌번호:예금주`. 테스트 계좌 버튼 끝에 '로컬 전용'으로 붙는다. */
   readonly VITE_LOCAL_TEST_ACCOUNT?: string
+  /** 'true'면 API 요청을 보내지 않는다. `vite.config.ts`가 Vercel Preview 빌드에서만 켠다(직접 설정 불가). */
+  readonly VITE_API_DISABLED?: string
 }
 
 interface ImportMeta {

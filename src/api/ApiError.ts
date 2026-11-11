@@ -4,6 +4,8 @@ import type { FieldErrorDetail } from './types'
 export const CLIENT_ERROR_CODES = {
   NETWORK: 'CLIENT_NETWORK_ERROR',
   UNEXPECTED_RESPONSE: 'CLIENT_UNEXPECTED_RESPONSE',
+  /** Preview 배포처럼 API 호출을 막은 빌드. 요청을 보내지 않았으므로 결과 모름이 아니다. */
+  API_DISABLED: 'CLIENT_API_DISABLED',
 } as const
 
 /**

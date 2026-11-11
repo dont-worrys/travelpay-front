@@ -1,5 +1,5 @@
 import { ApiError, CLIENT_ERROR_CODES } from './ApiError'
-import { apiBaseUrl } from './config'
+import { API_DISABLED_MESSAGE, apiBaseUrl, apiDisabled } from './config'
 import { clearCsrfToken, ensureCsrfToken, peekCsrfToken } from './csrf'
 import type { ApiErrorBody } from './types'
 
@@ -58,6 +58,9 @@ export async function apiRequestWithStatus<T>(
 }
 
 async function send(path: string, method: HttpMethod, options: RequestOptions): Promise<Response> {
+  if (apiDisabled) {
+    throw new ApiError(0, CLIENT_ERROR_CODES.API_DISABLED, API_DISABLED_MESSAGE)
+  }
   const headers: Record<string, string> = { Accept: 'application/json' }
   if (options.body !== undefined) {
     headers['Content-Type'] = 'application/json'
