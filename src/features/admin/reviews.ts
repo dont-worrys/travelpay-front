@@ -61,6 +61,20 @@ export interface ReviewDetailView {
   entries: { expected: LedgerEntry[] | null; actual: LedgerEntry[] | null } | null
 }
 
+/** 처리 기록 화면의 도메인. 결제와 환불은 처리 기록 API가 같다. */
+export type RecordDomain = 'payment' | 'settlement' | 'exchange'
+
+/** 처리 대상의 처리 기록 화면 경로. 결제·환불은 결제 ID, 정산은 정산 ID, 환전은 주문 ID로 모은다. */
+export function resolutionRecordPath(domain: RecordDomain, targetId: string): string {
+  return `/admin/resolutions/${domain}/${encodeURIComponent(targetId)}`
+}
+
+export interface ReviewResolved {
+  fields: ReviewField[]
+  /** 이 처리가 남은 처리 기록 화면. */
+  recordPath: string
+}
+
 interface ReviewKindConfig {
   label: string
   /** 처리 대상 이름(문장용). */
@@ -68,16 +82,16 @@ interface ReviewKindConfig {
   reasons: Record<string, string>
   list: (query: ReviewQuery, signal?: AbortSignal) => Promise<PageResponse<ReviewRow>>
   detail: (id: string, signal?: AbortSignal) => Promise<ReviewDetailView>
-  /** 처리 후 결과를 화면에 보여 줄 항목으로 돌려준다. */
-  resolve: (id: string, memo: string) => Promise<ReviewField[]>
+  /** 처리 후 결과를 화면에 보여 줄 항목과 처리 기록 경로로 돌려준다. */
+  resolve: (id: string, memo: string) => Promise<ReviewResolved>
 }
 
-const PAYMENT_REASONS: Record<string, string> = {
+export const PAYMENT_REASONS: Record<string, string> = {
   RETRY_EXHAUSTED: '결과 확인 재시도 한도 초과',
   LEDGER_REQUEST_NOT_ACCEPTED: '원장이 요청을 받지 않음(400·409)',
 }
 
-const EXCHANGE_REASONS: Record<string, string> = {
+export const EXCHANGE_REASONS: Record<string, string> = {
   LEDGER_BAD_REQUEST: '원장 요청 형식 오류(400)',
   LEDGER_CONFLICT: '같은 주문의 다른 원장 거래(409)',
   LEDGER_MALFORMED_RESPONSE: '해석할 수 없는 원장 응답',
@@ -85,19 +99,19 @@ const EXCHANGE_REASONS: Record<string, string> = {
   LEDGER_UNCONFIRMED_TOO_LONG: '24시간 넘게 결과 미확인',
 }
 
-const LEDGER_STATUS_LABEL: Record<string, string> = {
+export const LEDGER_STATUS_LABEL: Record<string, string> = {
   POSTED: '반영됨',
   REJECTED: '거절됨',
   NOT_FOUND: '기록 없음',
 }
 
-const EXCHANGE_RESOLUTION_LABEL: Record<string, string> = {
+export const EXCHANGE_RESOLUTION_LABEL: Record<string, string> = {
   LEDGER_POSTED: '원장 반영 확인',
   LEDGER_REJECTED: '원장 거절 확인',
   LEDGER_NOT_FOUND: '원장 기록 없음',
 }
 
-function labelOf(map: Record<string, { label: string }>, value: string | null): string | null {
+export function labelOf(map: Record<string, { label: string }>, value: string | null): string | null {
   if (!value) {
     return null
   }
@@ -170,10 +184,13 @@ export const REVIEW_CONFIG: Record<ReviewKind, ReviewKindConfig> = {
         entries: null,
       })),
     resolve: (id, memo) =>
-      resolvePaymentReview(id, memo).then((result) => [
-        { label: '결제 상태', value: labelOf(PAYMENT_STATUS, result.paymentStatus) ?? '-' },
-        ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId),
-      ]),
+      resolvePaymentReview(id, memo).then((result) => ({
+        fields: [
+          { label: '결제 상태', value: labelOf(PAYMENT_STATUS, result.paymentStatus) ?? '-' },
+          ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId),
+        ],
+        recordPath: resolutionRecordPath('payment', result.paymentId),
+      })),
   },
   refund: {
     label: '환불',
@@ -216,11 +233,14 @@ export const REVIEW_CONFIG: Record<ReviewKind, ReviewKindConfig> = {
         entries: null,
       })),
     resolve: (id, memo) =>
-      resolveRefundReview(id, memo).then((result) => [
-        { label: '환불 상태', value: labelOf(REFUND_STATUS, result.status) ?? '-' },
-        { label: '결제 상태', value: labelOf(PAYMENT_STATUS, result.paymentStatus) ?? '-' },
-        ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId),
-      ]),
+      resolveRefundReview(id, memo).then((result) => ({
+        fields: [
+          { label: '환불 상태', value: labelOf(REFUND_STATUS, result.status) ?? '-' },
+          { label: '결제 상태', value: labelOf(PAYMENT_STATUS, result.paymentStatus) ?? '-' },
+          ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId),
+        ],
+        recordPath: resolutionRecordPath('payment', result.paymentId),
+      })),
   },
   settlement: {
     label: '정산',
@@ -263,7 +283,10 @@ export const REVIEW_CONFIG: Record<ReviewKind, ReviewKindConfig> = {
         if (result.failureReason) {
           fields.push({ label: '실패 사유', value: result.failureReason })
         }
-        return [...fields, ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId)]
+        return {
+          fields: [...fields, ...ledgerResultFields(result.ledgerStatus, result.ledgerTransactionId)],
+          recordPath: resolutionRecordPath('settlement', result.settlementId),
+        }
       }),
   },
   exchange: {
@@ -330,7 +353,7 @@ export const REVIEW_CONFIG: Record<ReviewKind, ReviewKindConfig> = {
         if (result.ledgerTransactionId) {
           fields.push({ label: '원장 거래 ID', value: result.ledgerTransactionId, code: true })
         }
-        return fields
+        return { fields, recordPath: resolutionRecordPath('exchange', result.orderId) }
       }),
   },
 }
@@ -350,6 +373,25 @@ const ADMIN_MESSAGES: Record<string, string> = {
   EXCHANGE_ORDER_NOT_FOUND: '환전 주문을 찾을 수 없습니다.',
   PAYMENT_MERCHANT_OWNER_NOT_FOUND: '주인으로 지정할 활성 회원을 찾을 수 없습니다. 회원 ID를 확인해 주세요.',
   PAYMENT_MERCHANT_NOT_FOUND: '가맹점을 찾을 수 없습니다.',
+  TRANSFER_NOT_FOUND: '송금을 찾을 수 없습니다.',
+  TRANSFER_RESOLUTION_MISMATCH:
+    '미리보기 뒤 원장 결과가 바뀌어 확정하지 않았습니다(상태 그대로). 미리보기를 다시 확인한 뒤 확정해 주세요.',
+  CHARGE_NOT_FOUND: '충전을 찾을 수 없습니다.',
+  CHARGE_NOT_IN_MANUAL_REVIEW: '수동 확인 상태의 충전이 아닙니다. 이미 보정됐을 수 있으니 충전 목록에서 상태를 확인해 주세요.',
+  CHARGE_RESOLUTION_REJECTED: '지금 은행·원장 사실로는 이 보정을 할 수 없어 반영하지 않았습니다. 다시 확인한 뒤 조치를 골라 주세요.',
+  CHARGE_RESOLUTION_SOURCE_UNAVAILABLE: '은행·원장 거래를 확인하지 못해 반영하지 않았습니다(상태 그대로). 잠시 후 다시 확인해 주세요.',
+  CHARGE_RESOLUTION_IDEMPOTENCY_CONFLICT: '이전 보정 요청과 내용이 달라 처리하지 않았습니다. 화면을 새로고침한 뒤 다시 시도해 주세요.',
+  RECONCILIATION_ALREADY_RUNNING: '이미 실행 중인 충전 대사가 있습니다. 끝난 뒤 다시 실행해 주세요.',
+  RECONCILIATION_PERIOD_NOT_READY: '대사할 닫힌 기간이 아직 없습니다. 기간을 지정하거나 잠시 후 실행해 주세요.',
+  RECONCILIATION_RUN_NOT_FOUND: '충전 대사 실행을 찾을 수 없습니다.',
+  RECONCILIATION_RESULT_NOT_FOR_CHARGE: '이 충전의 대사 결과가 아닙니다. 대사 결과 ID를 확인해 주세요.',
+  RECONCILIATION_RESULT_ALREADY_RESOLVED: '이미 처리된 대사 결과입니다. 대사 결과 ID를 비우거나 확인해 주세요.',
+  USER_NOT_FOUND: '회원을 찾을 수 없습니다. 목록을 다시 검색해 주세요.',
+  USER_MASTER_PROTECTION_CONFLICT: '본인 계정은 정지할 수 없습니다. 다른 관리자에게 요청해 주세요.',
+  USER_CLOSED_ACCOUNT_UNCHANGEABLE: '종료된 계정은 정지하거나 해제할 수 없습니다.',
+  USER_TERMS_EFFECTIVE_AT_NOT_FUTURE: '시행 시각은 지금보다 1분 이상 뒤여야 합니다. 시행 시각을 다시 정해 주세요.',
+  USER_TERMS_VERSION_CONFLICT:
+    '같은 약관 코드에 같은 버전이나 같은 시행 시각이 이미 있습니다. 약관 목록에서 확인한 뒤 버전·시행 시각을 바꿔 주세요.',
 }
 
 /** 서버가 처리하지 않았다고 확정해 준 503(원장 조회 실패). 결과 모름과 구분한다. */
