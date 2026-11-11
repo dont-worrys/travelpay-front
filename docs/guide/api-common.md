@@ -1,6 +1,6 @@
 # 공통 API 규칙 (프런트엔드용)
 
-백엔드 저장소(`travelpay`)의 공통 규칙 중 프런트엔드가 알아야 할 내용만 정리했습니다. 원문은 백엔드의 `docs/guide/common.md`, `docs/guide/gateway.md`, `docs/guide/user-service.md`입니다. 기능별 API 명세는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다.
+백엔드 저장소(`travelpay`)의 공통 규칙 중 프런트엔드가 알아야 할 내용만 정리했습니다. 원문은 백엔드의 `docs/guide/common.md`, `docs/guide/gateway.md`, `docs/guide/user-service.md`입니다. 기능별 API 명세는 백엔드 `docs/guide/<서비스>.md`(`wallet-service`, `payment-transfer`, `payment`, `exchange-service`, `ledger-service` 등)를 기준으로 합니다.
 
 ## 주소
 
@@ -14,12 +14,14 @@
 
 ### Gateway 라우트
 
+백엔드 `gateway/src/main/resources/application.yml`의 `routes` 기준입니다.
+
 | 경로 | 서비스 |
 |---|---|
 | `/api/v1/auth/**`, `/api/v1/terms/**`, `/api/v1/users/**`, `/api/v1/admin/users/**`, `/api/v1/admin/terms/**` | User |
-| `/api/v1/wallets/**`, `/api/v1/charges/**` | Wallet |
-| `/api/v1/payments/**`, `/api/v1/transfers/**`, `/api/v1/admin/transfers/**` | Payment |
-| `/api/v1/exchange-rates/**`, `/api/v1/exchange-limits/**`, `/api/v1/exchange-quotes/**`, `/api/v1/exchanges/**` | Exchange |
+| `/api/v1/wallets/**`, `/api/v1/charges/**`, `/api/v1/admin/charges/**` | Wallet |
+| `/api/v1/payments/**`, `/api/v1/transfers/**`, `/api/v1/admin/payments/**`, `/api/v1/admin/transfers/**` | Payment |
+| `/api/v1/exchange-rates/**`, `/api/v1/exchange-limits/**`, `/api/v1/exchange-quotes/**`, `/api/v1/exchanges/**`, `/api/v1/exchange-reservations/**`, `/api/v1/admin/exchanges/**` | Exchange |
 
 ### 로그인 없이 호출할 수 있는 API
 
@@ -39,7 +41,8 @@
 - **ID**: UUID 문자열
 - **JSON 필드**: camelCase
 - **Enum 값**: 대문자 snake_case (예: `ACTIVE`, `MANUAL_REVIEW`)
-- **금액**: 통화별 최소 단위의 정수. 화면 표시용 변환만 하고 계산에 소수(`number`의 소수점 연산)를 쓰지 않습니다. 다른 통화끼리 더하거나 비교하지 않습니다.
+- **금액**: 통화별 최소 단위의 정수(KRW 원, JPY 엔, CNY 펀). 화면 표시용 변환만 하고 계산에 소수(`number`의 소수점 연산)를 쓰지 않습니다. 다른 통화끼리 더하거나 비교하지 않습니다.
+  - 예외: 환전 API(환율·한도·견적·환전)는 금액·환율을 주 단위 소수 문자열(예: CNY `"10.50"`)로 주고받습니다. `src/lib/money.ts`의 `majorToMinor`·`formatMajorAmount`로 문자열 변환만 하고, 환율은 계산 없이 표시만 합니다.
 - **시간**: ISO-8601 문자열. 서버는 UTC로 저장하며, 화면에서 KST로 바꿔 보여 줍니다.
 
 ## 공통 응답
@@ -119,11 +122,12 @@
 
 ## 멱등성 (`Idempotency-Key`)
 
-송금·결제·충전처럼 금전이 움직이는 POST는 `Idempotency-Key` 헤더가 필요합니다.
+충전·송금·결제·환불 실행·정산 요청·환전처럼 금전이 움직이는 POST는 `Idempotency-Key` 헤더가 필요합니다. 견적 발급, 환불 신청·취소·거절처럼 돈이 움직이지 않는 요청에는 붙이지 않습니다.
 
-- 사용자 동작 한 번에 키 하나(UUID)를 만듭니다.
+- 사용자 동작 한 번에 키 하나(UUID)를 만듭니다. 화면별로 같은 키를 다시 쓰는 조건은 [개발 가이드의 "금전 요청 멱등성"](development.md#금전-요청-멱등성)에 정리했습니다.
 - 타임아웃·네트워크 오류로 **재시도할 때는 같은 키**를 씁니다. 새 키로 보내면 중복 처리될 수 있습니다.
 - 5xx·타임아웃만으로 실패라고 단정하지 않습니다. 상세 조회로 결과를 확인합니다.
+- 같은 키 재요청의 응답은 처음 결과를 다시 만든 것이 아니라 그 시점의 상태입니다. 예를 들어 송금은 같은 키로 동시에 보내면 먼저 저장된 송금이 아직 처리 중이라 202 `PROCESSING`이 올 수 있으므로, 202도 상세 조회로 최종 상태를 확인합니다.
 - 공통 요청 함수의 `options.idempotencyKey`로 넘깁니다.
 
 ## CORS (Gateway)
@@ -141,7 +145,10 @@
 
 ## 로컬 개발 환경
 
-1. 백엔드: `docker compose up -d postgres redis-session` 후 Eureka → User → 필요한 업무 서비스 → Gateway 순서로 실행
+1. 백엔드: Docker 인프라를 띄운 뒤 Eureka → User → 필요한 업무 서비스 → Gateway 순서로 실행합니다. 기능별 인프라는 백엔드 `docs/guide/local-settings.md`를 따릅니다.
+   - 회원·로그인: `docker compose up -d postgres redis-session`
+   - 충전·송금·결제: 위에 `kafka` 추가, wallet·ledger·mock-bank·payment 실행
+   - 환전: 위에 `redis-cache` 추가, exchange 실행
 2. Gateway 실행 시 환경 변수 지정:
    ```text
    GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173

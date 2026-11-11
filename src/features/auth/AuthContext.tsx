@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { clearCsrfToken, ensureCsrfToken, isApiError, setUnauthorizedListener } from '../../api'
 import * as authApi from './api'
-import type { LoginInput, MyInfo } from './api'
+import type { LoginInput, MyInfo, PasswordChangeInput } from './api'
 
 export type AuthState =
   | { status: 'loading'; me: null }
@@ -12,6 +12,8 @@ export interface AuthContextValue {
   state: AuthState
   login: (input: LoginInput) => Promise<void>
   logout: () => Promise<void>
+  /** 비밀번호를 바꾼다. 성공하면 세션 ID가 바뀌므로 CSRF 토큰을 새로 받는다. */
+  changePassword: (input: PasswordChangeInput) => Promise<void>
   /** 내 정보를 다시 읽는다. 401이면 로그아웃 상태가 된다. */
   refresh: () => Promise<void>
 }
@@ -75,9 +77,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const changePassword = useCallback(async (input: PasswordChangeInput) => {
+    try {
+      await authApi.changePassword(input)
+    } finally {
+      // 성공이면 이전 토큰은 무효다. 실패(특히 결과 모름)여도 세션이 바뀌었을 수 있으니 버려 둔다.
+      clearCsrfToken()
+    }
+    // 변경은 이미 끝났으므로 토큰 재발급이 실패해도 오류로 돌려주지 않는다(다음 변경 요청 때 다시 받는다).
+    await ensureCsrfToken().catch(() => undefined)
+  }, [])
+
   const refresh = useCallback(() => loadMe(), [loadMe])
 
-  const value = useMemo(() => ({ state, login, logout, refresh }), [state, login, logout, refresh])
+  const value = useMemo(
+    () => ({ state, login, logout, changePassword, refresh }),
+    [state, login, logout, changePassword, refresh],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

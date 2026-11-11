@@ -1,59 +1,39 @@
-# TravelPay 프런트엔드
+# TravelPay 프론트엔드
 
-Vite + React + TypeScript. 모든 API는 Gateway(`/api/v1/**`)를 거쳐 호출합니다.
+여행자용 지갑 서비스 TravelPay의 웹 화면입니다. 회원가입·로그인, 지갑·원화 충전, 회원 간 송금, 가맹점 결제·환불, 가맹점 정산, 환율 조회·환전·예약 환전과 관리자(`MASTER`) 화면을 제공합니다.
 
-## 실행
+Vite + React 19 + TypeScript, 라우팅은 react-router 7입니다. 모든 API는 Gateway(`/api/v1/**`)를 거쳐 호출합니다. 백엔드는 별도 저장소(`travelpay`)입니다.
 
-Node 20.19 이상이 필요합니다.
+## 빠른 시작
+
+Node 20.19 이상이 필요합니다. 화면을 실제로 쓰려면 백엔드(Gateway와 필요한 서비스)가 떠 있어야 합니다. 처음이면 **[처음 실행하기](docs/getting-started.md)**를 순서대로 따라 합니다.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm run build      # 타입 검사 + 빌드
+cp .env.example .env.local
+npm run dev        # http://localhost:5173 (Gateway 기본 주소 http://127.0.0.1:8080)
+npm test           # 백엔드 없이 도는 컴포넌트·단위 테스트
+npm run build      # 타입 검사 + 빌드 (dist/)
 ```
 
-### Gateway 설정
+## 문서
 
-개발 서버는 `/api` 요청을 Gateway(기본 `http://127.0.0.1:8080`)로 넘깁니다. 주소를 바꾸려면 `.env.example`을 `.env.local`로 복사해 `API_PROXY_TARGET`을 고칩니다.
-
-프록시는 브라우저의 `Origin: http://localhost:5173`을 그대로 넘깁니다. Gateway는 목록에 없는 출처의 요청을 `403 COMMON_FORBIDDEN`으로 거절하므로, Gateway를 띄울 때 아래 환경 변수를 지정합니다.
-
-```text
-GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173
-```
-
-`gradlew bootRun`을 Gradle 데몬으로 실행하면 터미널 환경 변수가 전달되지 않을 수 있습니다. IntelliJ 실행 구성의 Environment variables에 넣거나 `--no-daemon`으로 실행하세요.
-
-## 폴더 구조
-
-```text
-src/
-  main.tsx            진입점 (AuthProvider + RouterProvider)
-  router.tsx          경로 정의. 로그인이 필요한 화면은 RequireAuth 아래에 둔다
-  api/                공통 요청 함수
-  features/auth/      로그인 상태, 인증 API, 로그인 필요 경로 보호
-  components/         공통 레이아웃
-  pages/              화면 단위 컴포넌트
-```
-
-### 공통 요청 함수 (`src/api`)
-
-- `apiRequest(path, options)`: 성공이면 `data`만 돌려주고, 실패면 `ApiError(status, code, message, details)`를 던진다. 204는 `undefined`
-- `apiRequestWithStatus`: HTTP 상태가 필요할 때(예: 송금 201/202 구분)
-- 세션 쿠키: 모든 요청에 `credentials: 'include'`
-- CSRF: `GET /api/v1/auth/csrf`로 받은 토큰을 메모리에 두고, POST·PUT·PATCH·DELETE 전에 없으면 받아서 서버가 알려 준 헤더 이름(`headerName`)으로 붙인다. `403 COMMON_CSRF_INVALID`면 토큰을 새로 받아 한 번만 다시 보낸다(CSRF 검사는 업무 처리 전에 거절하므로 안전)
-- 로그인·로그아웃 뒤에는 세션 ID가 바뀌므로 토큰을 버리고 다시 받는다(`AuthContext`가 처리)
-- `Idempotency-Key`: `options.idempotencyKey`로 넘긴다. 재시도할 때는 같은 값을 쓴다
-- 401을 받으면 로그인 상태를 지우고, 보호된 화면은 로그인 화면(`/login?redirect=원래경로`)으로 보낸다. `redirect`는 앱 내부 경로만 허용한다
-- 화면 문구: `toUserMessage(error)` — 공통 장애 코드만 바꾸고 나머지는 서버의 한국어 `error.message`를 쓴다
-
-### 화면 (3단계까지)
-
-| 경로 | 화면 | 로그인 |
+| 구분 | 문서 | 내용 |
 |---|---|---|
-| `/` | 홈 | 불필요 |
-| `/signup` | 회원가입(약관 조회·동의, 필드별 오류 표시) → 로그인 화면으로 이동 | 불필요 |
-| `/login` | 로그인 → `redirect` 경로로 이동 | 불필요 |
-| `/me` | 내 정보 | 필요 |
+| 시작 | [처음 실행하기](docs/getting-started.md) | 설치, 환경 변수, 백엔드 띄우는 순서, 테스트 계좌, 관리자 계정, 자주 나는 문제 |
+| 가이드 | [화면 목록](docs/guide/screens.md) | 일반회원·관리자 화면 경로와 동작, 미구현·제약 |
+| | [개발 가이드](docs/guide/development.md) | 폴더 구조, API 호출·금액·CSRF 규칙, 금전 요청 멱등성 |
+| | [공통 API 규칙](docs/guide/api-common.md) | 응답 형식, 오류 코드, 세션·CSRF, 멱등성, CORS |
+| | [테스트·검증 가이드](docs/guide/testing.md) | 테스트 실행·범위·작성 방법, PR 전 확인 순서 |
+| 검증 기록 | [Gateway 경유 E2E](docs/verification/gateway-e2e.md) | 기능별 Gateway 경유 확인 결과, 발견한 문제, 확인하지 못한 것 |
+| | [브라우저 화면 확인](docs/verification/browser-check.md) | 브라우저로 직접 확인한 범위 |
+| | [로컬 검증 데이터](docs/verification/test-data.md) | 충전 보정·관리자 화면 확인용 데이터와 만드는 방법 |
+| 규칙 | [브랜치](docs/convention/branch.md)·[커밋](docs/convention/commit.md)·[이슈·PR](docs/convention/issue-pr.md) | 협업 규칙 |
 
-이후 단계에서 추가: `features/transfer`, `features/wallet`, `lib/`(금액 최소 단위 변환, 멱등성 키 생성)
+기능별 API 명세와 오류 코드는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다.
+
+## 협업 규칙
+
+- [브랜치](docs/convention/branch.md): 작업 브랜치는 `dev`에서 만들고 PR도 `dev`로 보냅니다.
+- [커밋](docs/convention/commit.md): `type: 설명` 형식, 스코프 없음
+- [이슈·PR](docs/convention/issue-pr.md): `.github/ISSUE_TEMPLATE/`, `.github/pull_request_template.md`
