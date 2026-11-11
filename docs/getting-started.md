@@ -26,7 +26,7 @@ npm test                       # 백엔드 없이 돌아감. 통과하면 설치
 | 이름 | 용도 |
 |---|---|
 | `API_PROXY_TARGET` | 개발 서버가 `/api`를 넘길 Gateway 주소. 비우면 `http://127.0.0.1:8080`. 브라우저 코드에는 들어가지 않음 |
-| `VITE_API_BASE_URL` | 배포처럼 Gateway가 다른 출처일 때 API 기준 주소. 개발 서버에서는 비워 둠 |
+| `VITE_API_BASE_URL` | 배포처럼 Gateway가 다른 출처일 때 API 기준 주소. 개발 서버에서는 비워 둠. 운영 값은 Vercel Production에만 `https://api.travelpay.store`([배포](guide/deployment.md)) |
 | `VITE_SHOW_TEST_ACCOUNTS` | `true`면 배포 빌드에서도 충전 화면에 Mock Bank 테스트 계좌 버튼 표시(개발 서버는 항상 표시) |
 | `VITE_LOCAL_TEST_ACCOUNT` | 로컬 Mock Bank DB에만 직접 넣은 계좌를 테스트 계좌 버튼에 "로컬 전용"으로 추가. 형식 `은행코드:계좌번호:예금주`. 실명이 들어가므로 `.env.local`에만 둠 |
 
