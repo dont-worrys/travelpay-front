@@ -93,7 +93,7 @@ export function AdminReconciliationDetailPage() {
     )
   }
   if (!detail) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const { results } = detail
@@ -127,7 +127,7 @@ export function AdminReconciliationDetailPage() {
         </label>
       </div>
 
-      {results.items.length === 0 && <p className="hint">어긋남 결과가 없습니다.</p>}
+      {results.items.length === 0 && <p className="hint empty">어긋남 결과가 없습니다.</p>}
       {results.items.length > 0 && (
         <ul className="item-list">
           {results.items.map((item) => (

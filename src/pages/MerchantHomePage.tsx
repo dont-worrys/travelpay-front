@@ -127,7 +127,7 @@ export function MerchantHomePage() {
           {balanceError}
         </p>
       )}
-      {!balance && !balanceError && <p>불러오는 중입니다…</p>}
+      {!balance && !balanceError && <p className="loading">불러오는 중입니다…</p>}
       {balance && <p className="amount-large">{formatAmount(balance.balance, balance.currency)}</p>}
       {preview && (
         <p className="hint">
@@ -171,9 +171,9 @@ export function MerchantHomePage() {
           {paymentsError}
         </p>
       )}
-      {!payments && !paymentsError && <p>불러오는 중입니다…</p>}
+      {!payments && !paymentsError && <p className="loading">불러오는 중입니다…</p>}
       {payments && payments.items.length === 0 && (
-        <p className="hint">{status === 'REFUND_REQUESTED' ? '처리할 환불 신청이 없습니다.' : '결제가 없습니다.'}</p>
+        <p className="hint empty">{status === 'REFUND_REQUESTED' ? '처리할 환불 신청이 없습니다.' : '결제가 없습니다.'}</p>
       )}
 
       {payments && payments.items.length > 0 && (

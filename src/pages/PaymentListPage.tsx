@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { HistoryTabs } from '../components/HistoryTabs'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchPayments, type PaymentStatus, type PaymentSummary } from '../features/payment/api'
@@ -52,6 +53,7 @@ export function PaymentListPage() {
 
   return (
     <section>
+      <HistoryTabs />
       <div className="title-row">
         <h1>결제 내역</h1>
         <Link to="/payments/new" className="button-link">
@@ -79,8 +81,8 @@ export function PaymentListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">결제 내역이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">결제 내역이 없습니다.</p>}
 
       {result && result.items.length > 0 && (
         <ul className="item-list">

@@ -6,9 +6,11 @@
 src/
   main.tsx              진입점 (AuthProvider + RouterProvider)
   router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다
-  index.css             전역 스타일(공통 클래스 + 화면별 구역, 색은 :root 변수)
+  index.css             전역 스타일(공통 클래스 + 화면별 구역, 색·글씨 크기·배율은 :root 변수, 규칙은 docs/convention/style.md)
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
-  components/           공통 레이아웃(AppLayout), 상태 배지(StatusBadge)
+  components/           공통 레이아웃(AppLayout: 사이드바·상단 바·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
+                        통화 배지(CurrencyMark), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
+                        환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분)
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
   features/wallet/      지갑·잔액·충전 API, 충전 상태·은행 목록, 테스트 계좌
   features/transfer/    송금 API·상태

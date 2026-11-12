@@ -135,7 +135,7 @@ export function SettlementListPage() {
           {previewError}
         </p>
       )}
-      {!preview && !previewError && <p>불러오는 중입니다…</p>}
+      {!preview && !previewError && <p className="loading">불러오는 중입니다…</p>}
       {preview && (
         <>
           <p className="amount-large">{formatAmount(preview.available.amount, preview.currency)}</p>
@@ -193,8 +193,8 @@ export function SettlementListPage() {
           {listError}
         </p>
       )}
-      {!result && !listError && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">정산 내역이 없습니다.</p>}
+      {!result && !listError && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">정산 내역이 없습니다.</p>}
       {result && result.items.length > 0 && (
         <ul className="item-list">
           {result.items.map((item) => (

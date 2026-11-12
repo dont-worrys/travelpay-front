@@ -164,8 +164,8 @@ export function AdminResolutionListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">조건에 맞는 처리 기록이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">조건에 맞는 처리 기록이 없습니다.</p>}
       {result && result.items.length > 0 && (
         <ul className="item-list">
           {result.items.map((item) => (

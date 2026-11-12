@@ -28,7 +28,7 @@ export function MerchantPaymentDetailPage() {
     )
   }
   if (!payment) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const remaining = remainingAmount(payment)

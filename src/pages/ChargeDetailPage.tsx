@@ -65,14 +65,14 @@ export function ChargeDetailPage() {
     )
   }
   if (!charge) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const description = charge.status === 'FAILED' ? charge.failureMessage : CHARGE_DESCRIPTION[charge.status]
   const processing = !isFinalCharge(charge.status)
 
   return (
-    <section>
+    <section className="receipt">
       <h1>충전 상세</h1>
       {justRequested && charge.status === 'COMPLETED' && <p className="notice">충전을 완료했습니다.</p>}
 

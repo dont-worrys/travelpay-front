@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { HistoryTabs } from '../components/HistoryTabs'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchTransfers, type Transfer, type TransferDirection } from '../features/transfer/api'
@@ -51,6 +52,7 @@ export function TransferListPage() {
 
   return (
     <section>
+      <HistoryTabs />
       <div className="title-row">
         <h1>송금 내역</h1>
         <Link to="/transfers/new" className="button-link">
@@ -78,8 +80,8 @@ export function TransferListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">송금 내역이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">송금 내역이 없습니다.</p>}
 
       {result && result.items.length > 0 && (
         <ul className="item-list">

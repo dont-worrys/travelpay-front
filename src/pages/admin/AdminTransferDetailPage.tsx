@@ -253,7 +253,7 @@ export function AdminTransferDetailPage() {
     )
   }
   if (!transfer) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const isReview = transfer.status === 'MANUAL_REVIEW'
@@ -365,8 +365,8 @@ export function AdminTransferDetailPage() {
 
       <h2>상태 변경 이력</h2>
       {historyError && <p className="error">{historyError}</p>}
-      {!history && !historyError && <p>불러오는 중입니다…</p>}
-      {history && history.length === 0 && <p className="hint">운영자 확정 이력이 없습니다.</p>}
+      {!history && !historyError && <p className="loading">불러오는 중입니다…</p>}
+      {history && history.length === 0 && <p className="hint empty">운영자 확정 이력이 없습니다.</p>}
       {history && history.length > 0 && (
         <ul className="item-list">
           {history.map((item) => (

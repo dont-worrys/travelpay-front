@@ -9,14 +9,14 @@ export const PAYMENT_STATUS: Record<PaymentStatus, { label: string; tone: BadgeT
   REFUND_REQUESTED: { label: '환불 신청', tone: 'warn' },
   REFUND_PENDING: { label: '환불 중', tone: 'info' },
   REFUNDED: { label: '환불 완료', tone: 'neutral' },
-  MANUAL_REVIEW: { label: '확인 중', tone: 'warn' },
+  MANUAL_REVIEW: { label: '확인 중', tone: 'review' },
 }
 
 export const REFUND_STATUS: Record<RefundStatus, { label: string; tone: BadgeTone }> = {
   REQUESTED: { label: '처리 중', tone: 'info' },
   COMPLETED: { label: '완료', tone: 'success' },
   DECLINED: { label: '거절', tone: 'danger' },
-  MANUAL_REVIEW: { label: '확인 중', tone: 'warn' },
+  MANUAL_REVIEW: { label: '확인 중', tone: 'review' },
 }
 
 export const REFUND_REQUEST_LABEL: Record<RefundRequestResult, string> = {

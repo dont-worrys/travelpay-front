@@ -14,7 +14,7 @@ export const EXCHANGE_STATUS: Record<ExchangeStatus, { label: string; tone: Badg
   PROCESSING: { label: '처리 중', tone: 'info' },
   COMPLETED: { label: '완료', tone: 'success' },
   FAILED: { label: '실패', tone: 'danger' },
-  MANUAL_REVIEW: { label: '확인 중', tone: 'warn' },
+  MANUAL_REVIEW: { label: '확인 중', tone: 'review' },
 }
 
 export const EXCHANGE_TYPE_LABEL: Record<ExchangeType, string> = {

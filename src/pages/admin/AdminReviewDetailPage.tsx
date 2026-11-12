@@ -161,7 +161,7 @@ export function AdminReviewDetailPage() {
     )
   }
   if (!detail) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const canResolve = !detail.ledgerLookupFailed && detail.expected?.resolvable === true

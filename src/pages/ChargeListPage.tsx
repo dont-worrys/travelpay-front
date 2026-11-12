@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { HistoryTabs } from '../components/HistoryTabs'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchCharges, type Charge } from '../features/wallet/api'
@@ -36,6 +37,7 @@ export function ChargeListPage() {
 
   return (
     <section>
+      <HistoryTabs />
       <div className="title-row">
         <h1>충전 내역</h1>
         <Link to="/wallet/charge" className="button-link">
@@ -48,8 +50,8 @@ export function ChargeListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">충전 내역이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">충전 내역이 없습니다.</p>}
 
       {result && result.items.length > 0 && (
         <ul className="item-list">

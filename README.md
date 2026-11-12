@@ -32,6 +32,7 @@ npm run build      # 타입 검사 + 빌드 (dist/)
 | | [브라우저 화면 확인](docs/verification/browser-check.md) | 브라우저로 직접 확인한 범위 |
 | | [로컬 검증 데이터](docs/verification/test-data.md) | 충전 보정·관리자 화면 확인용 데이터와 만드는 방법 |
 | 규칙 | [브랜치](docs/convention/branch.md)·[커밋](docs/convention/commit.md)·[이슈·PR](docs/convention/issue-pr.md) | 협업 규칙 |
+| | [스타일 가이드](docs/convention/style.md) | 디자인 토큰·글씨 크기·레이아웃·화면별 UI 규칙 |
 
 기능별 API 명세와 오류 코드는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다.
 
