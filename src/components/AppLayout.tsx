@@ -32,6 +32,7 @@ export function AppLayout() {
               <Link to="/admin/reviews">처리 대기</Link>
               <Link to="/admin/transfers">송금</Link>
               <Link to="/admin/charges">충전</Link>
+              <Link to="/admin/payments">결제</Link>
               <Link to="/admin/resolutions">처리 기록</Link>
               <Link to="/admin/users">회원</Link>
               <Link to="/admin/terms">약관</Link>

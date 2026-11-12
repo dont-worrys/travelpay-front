@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../../api'
 import { fetchOverdueRefundRequests, type OverdueRefundRequest } from '../../features/admin/api'
 import { elapsedSince, isAbortError, pageParam } from '../../features/admin/input'
@@ -11,8 +11,8 @@ import { formatAmount } from '../../lib/money'
 const PAGE_SIZE = 100
 
 /**
- * 고객이 환불을 신청한 뒤 3일 넘게 가맹점이 처리하지 않은 신청(오래된 순). 조회만 하며,
- * 경과 시간은 브라우저 시각 기준이다.
+ * 고객이 환불을 신청한 뒤 3일 넘게 가맹점이 처리하지 않은 신청(오래된 순). 항목에서 관리자 결제 상세로 가서
+ * 환불을 대신 실행하거나 거절할 수 있다. 경과 시간은 브라우저 시각 기준이다.
  */
 export function AdminOverdueRefundListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -49,7 +49,8 @@ export function AdminOverdueRefundListPage() {
         </button>
       </div>
       <p className="hint">
-        신청 후 3일 넘게 가맹점이 처리하지 않은 환불 신청입니다(오래된 순). 가맹점 주인에게 처리를 요청해 주세요.
+        신청 후 3일 넘게 가맹점이 처리하지 않은 환불 신청입니다(오래된 순). 가맹점 주인에게 처리를 요청하거나,
+        상세에서 관리자가 직접 환불을 실행하거나 거절할 수 있습니다.
       </p>
       {result && <p>총 {result.totalElements}건</p>}
 
@@ -76,6 +77,7 @@ export function AdminOverdueRefundListPage() {
                 <span className="hint">
                   결제 <code>{item.paymentId}</code>
                 </span>
+                <Link to={`/admin/merchants/${item.merchantId}/payments/${item.paymentId}`}>상세·처리</Link>
               </span>
               <span className="item-sub">
                 <span className="hint">
