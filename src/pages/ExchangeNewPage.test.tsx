@@ -54,7 +54,7 @@ function setup(placeExchange: Parameters<typeof mockFetch>[0][string]) {
 }
 
 async function requestQuote(user: ReturnType<typeof userEvent.setup>, amount: string) {
-  await screen.findByText(/살 때 940.5원/)
+  await screen.findByText(/매매기준율 930원/)
   await user.type(screen.getByPlaceholderText('0'), amount)
   await user.click(screen.getByRole('button', { name: '견적 받기' }))
   await screen.findByRole('heading', { name: '환전 확인' })
@@ -64,7 +64,7 @@ describe('ExchangeNewPage', () => {
   it('한도를 벗어난 금액은 견적을 요청하지 않는다', async () => {
     const user = userEvent.setup()
     const api = setup(() => ok({}))
-    await screen.findByText(/살 때 940.5원/)
+    await screen.findByText(/매매기준율 930원/)
 
     await user.type(screen.getByPlaceholderText('0'), '500')
     await user.click(screen.getByRole('button', { name: '견적 받기' }))
@@ -87,6 +87,15 @@ describe('ExchangeNewPage', () => {
     expect(screen.getByText('1,063엔')).toBeInTheDocument()
     expect(screen.getByText('10,100원')).toBeInTheDocument()
     expect(screen.getByText(/100엔당 940.5원/)).toBeInTheDocument()
+    expect(screen.getByText(/수수료율 1%/)).toBeInTheDocument()
+  })
+
+  it('견적 전에는 살 때 환율이 아니라 매매기준율과 고정 수수료 1%를 참고로 보여 준다', async () => {
+    setup(() => ok({}))
+
+    expect(await screen.findByText(/100엔당 매매기준율 930원 \(기준일 2026-11-09\), 수수료 1%/)).toBeInTheDocument()
+    expect(screen.queryByText(/살 때/)).not.toBeInTheDocument()
+    expect(await screen.findByText(/수수료\(1%\)는 보내는 통화로/)).toBeInTheDocument()
   })
 
   it('5xx 뒤 다시 시도하면 같은 견적·같은 키로 보낸다', async () => {

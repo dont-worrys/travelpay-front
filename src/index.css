@@ -230,6 +230,24 @@ button.secondary:disabled {
   color: var(--color-success);
 }
 
+/* 환율 전일 대비: 상승 빨강, 하락 파랑, 변동 없음 회색(팀 지정) */
+.rate-change {
+  margin-left: 6px;
+  font-size: 0.875rem;
+}
+
+.rate-change.up {
+  color: var(--color-danger);
+}
+
+.rate-change.down {
+  color: var(--color-link);
+}
+
+.rate-change.flat {
+  color: var(--color-muted);
+}
+
 .amount-large {
   display: flex;
   flex-wrap: wrap;
