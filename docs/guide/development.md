@@ -13,10 +13,11 @@ src/
   features/wallet/      지갑·잔액·충전 API, 충전 상태·은행 목록, 테스트 계좌
   features/transfer/    송금 API·상태
   features/payment/     결제·환불 신청 API·상태
-  features/merchant/    가맹점 잔액·결제·환불 실행·정산 API, 최근 연 가맹점(localStorage)
-  features/exchange/    환율·한도·견적·환전·예약 환전 API·상태
+  features/merchant/    가맹점 잔액·결제·환불 실행·정산 API, 최근 연 가맹점(localStorage),
+                        환불 실행·거절 공통 UI(RefundActions, 가맹점·관리자 화면 공용), 결제 상세 조회 훅(useMerchantPayment)
+  features/exchange/    환율·한도·견적·환전·예약 환전 API·상태, 전일 대비·수수료율 표시(rateDisplay)
   features/admin/       관리자 API(가맹점·MANUAL_REVIEW·송금·충전·대사·처리 기록·회원·약관), 처리 대기·처리 기록 화면용 변환
-  lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime)
+  lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime), 주기 조회 훅(useAutoRefresh)
   pages/                화면 단위 컴포넌트
   test/                 테스트 도우미(fetch 모의, 메모리 라우터)
 docs/
@@ -43,7 +44,7 @@ docs/
 |---|---|
 | 충전·송금 | 본문 전체가 같을 때 |
 | 결제 | `merchantId`·`currency`·`amount`가 같을 때(결제 내용만 바뀌어도 같은 키) |
-| 환불 실행 | `paymentId`·`amount`가 같을 때(사유만 바뀌어도 같은 키) |
+| 환불 실행 | `paymentId`·`amount`가 같을 때(사유만 바뀌어도 같은 키). 가맹점·관리자(대리 실행·직접 환불) 공통 |
 | 정산 요청 | 본문 없음. 결과를 모를 때만 같은 키 |
 | 환전 | 같은 견적(`quoteId`)일 때. 결과를 모르는 동안은 새 견적을 받지 못하게 함 |
 | 예약 환전 | 결과를 모를 때만 같은 키. 서버가 본문 전체(만료 시각 포함)를 비교하므로 제출 순간의 본문을 그대로 다시 보내고, 그동안 입력을 잠금 |
