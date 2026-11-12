@@ -9,7 +9,7 @@ import {
   type MismatchType,
   type ReconciliationRunDetail,
 } from '../../features/admin/treasuryApi'
-import { MISMATCH_LABEL, runStatusBadge } from '../../features/admin/treasuryStatus'
+import { MISMATCH_LABEL, RECONCILIATION_SUM_NOTE, runStatusBadge } from '../../features/admin/treasuryStatus'
 import { formatDateTime } from '../../lib/datetime'
 
 const PAGE_SIZE = 20
@@ -110,6 +110,7 @@ export function AdminReconciliationDetailPage() {
         <StatusBadge {...runStatusBadge(detail.run.status)} />
       </p>
       <FieldList fields={runFields(detail)} />
+      <p className="hint">{RECONCILIATION_SUM_NOTE}</p>
 
       <h2>어긋남 결과</h2>
       <div className="form">

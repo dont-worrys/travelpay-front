@@ -24,3 +24,6 @@ export const MISMATCH_LABEL: Record<MismatchType, string> = {
 export function runStatusBadge(status: string): { label: string; tone: BadgeTone } {
   return RUN_STATUS[status as ReconciliationRunStatus] ?? { label: status, tone: 'neutral' }
 }
+
+/** 대사 요약 아래 안내. 어긋남에는 충전이 없는 은행·원장 거래도 들어가 대상·일치·어긋남·보류 합계가 맞지 않을 수 있다. */
+export const RECONCILIATION_SUM_NOTE = '어긋남에는 충전 없는 은행·원장 거래도 포함되어 합계가 맞지 않을 수 있습니다.'

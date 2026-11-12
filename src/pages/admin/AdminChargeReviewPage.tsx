@@ -29,6 +29,9 @@ const ACTION_LABEL: Record<ChargeResolutionAction, string> = {
   RESUME_REFUND: '은행 환불 단계로 재개',
 }
 
+/** 재개(RESUME_CREDIT·RESUME_REFUND) 뒤 충전 상태. 서버 복구 스케줄러가 이어서 처리한다. */
+const RESUMED_STATUSES = new Set<string>(['CREDIT_PROCESSING', 'REFUND_PROCESSING'])
+
 const LOOKUP_LABEL: Record<string, string> = {
   FOUND: '있음',
   NOT_FOUND: '없음',
@@ -177,10 +180,26 @@ export function AdminChargeReviewPage() {
   }
 
   if (resolved) {
+    // 재개는 충전을 처리 단계로 되돌릴 뿐 끝난 것이 아니다. 단건 조회 API가 없고 완료 시점도 정해져 있지 않아
+    // 이 화면에서 다시 조회하지 않고, 결과는 관리자 충전 목록에서 확인하게 한다.
+    const resumed = RESUMED_STATUSES.has(resolved.resultStatus)
     return (
       <section>
-        <h1>충전 보정 완료</h1>
-        <p className="notice">보정했습니다. 보정 기록에 처리 담당자와 사유, 확인한 은행·원장 사실이 남습니다.</p>
+        <h1>{resumed ? '충전 처리 재개' : '충전 보정 완료'}</h1>
+        {resumed ? (
+          <>
+            <p className="notice">
+              충전을 {chargeStatusText(resolved.resultStatus)} 단계로 되돌렸습니다. 서버가 처리 중이며 완료 시점은 정해져
+              있지 않습니다.
+            </p>
+            <p className="hint">
+              결과는 충전 목록에서 확인해 주세요. 처리가 끝나면 이 상태 목록에서 빠지고 완료(COMPLETED)·환불
+              완료(REFUNDED) 또는 다시 확인 중(MANUAL_REVIEW)이 됩니다. 보정 기록에는 처리 담당자와 사유가 남습니다.
+            </p>
+          </>
+        ) : (
+          <p className="notice">보정했습니다. 보정 기록에 처리 담당자와 사유, 확인한 은행·원장 사실이 남습니다.</p>
+        )}
         <FieldList
           fields={[
             { label: '조치', value: ACTION_LABEL[resolved.action] ?? resolved.action },
@@ -196,7 +215,13 @@ export function AdminChargeReviewPage() {
           ]}
         />
         <div className="actions">
-          <Link to="/admin/charges">충전 목록</Link>
+          {resumed ? (
+            <Link to={`/admin/charges?status=${resolved.resultStatus}`}>
+              충전 목록에서 확인({CHARGE_STATUS[resolved.resultStatus]?.label ?? resolved.resultStatus})
+            </Link>
+          ) : (
+            <Link to="/admin/charges">충전 목록</Link>
+          )}
         </div>
       </section>
     )

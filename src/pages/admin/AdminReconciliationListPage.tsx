@@ -10,7 +10,7 @@ import {
   type ReconciliationRunStatus,
 } from '../../features/admin/treasuryApi'
 import { StatusBadge } from '../../components/StatusBadge'
-import { RUN_STATUS, runStatusBadge } from '../../features/admin/treasuryStatus'
+import { RECONCILIATION_SUM_NOTE, RUN_STATUS, runStatusBadge } from '../../features/admin/treasuryStatus'
 import { formatDateTime } from '../../lib/datetime'
 
 const PAGE_SIZE = 20
@@ -138,6 +138,7 @@ export function AdminReconciliationListPage() {
           <Link to={`/admin/charges/reconciliations/${lastRun.runId}`}>결과 보기</Link>
         </p>
       )}
+      {lastRun && <p className="hint">{RECONCILIATION_SUM_NOTE}</p>}
 
       <h2>실행 기록</h2>
       <div className="form">
