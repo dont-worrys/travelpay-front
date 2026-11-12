@@ -2,13 +2,27 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
 import { useAuth } from '../features/auth/useAuth'
-import { createCharge, type ChargeCreateInput } from '../features/wallet/api'
-import { BANKS, bankName, toWalletMessage } from '../features/wallet/status'
+import { AmountPresets } from '../components/AmountPresets'
+import { createCharge, type ChargeCreateInput, type ChargeStatus } from '../features/wallet/api'
+import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
+import { BANKS, bankName, CHARGE_DESCRIPTION, toWalletMessage } from '../features/wallet/status'
 import { SHOW_TEST_ACCOUNTS, TEST_ACCOUNTS, type TestAccount } from '../features/wallet/testAccounts'
 import { newIdempotencyKey } from '../lib/idempotency'
 import { formatAmount, parseAmount } from '../lib/money'
 
 const ACCOUNT_PATTERN = /^\d{10,20}$/
+
+/**
+ * 정상 처리 단계 안내(정적). 지금 충전의 실제 상태가 아니라 순서를 설명하는 것이라 진행 표시를 하지 않는다.
+ * 실제 상태는 충전 상세에서 서버 응답으로 보여 준다.
+ */
+const CHARGE_STEPS: { status: ChargeStatus; label: string; description: string }[] = [
+  { status: 'REQUESTED', label: '접수', description: CHARGE_DESCRIPTION.REQUESTED ?? '' },
+  { status: 'BANK_PROCESSING', label: '은행 출금', description: CHARGE_DESCRIPTION.BANK_PROCESSING ?? '' },
+  { status: 'CREDIT_PROCESSING', label: '지갑 적립', description: CHARGE_DESCRIPTION.CREDIT_PROCESSING ?? '' },
+  { status: 'COMPLETED', label: '완료', description: '지갑 잔액에 반영되었습니다.' },
+]
+const LEGEND_STATUSES: ChargeStatus[] = ['COMPLETED', 'BANK_PROCESSING', 'MANUAL_REVIEW', 'FAILED']
 
 /** 같은 본문으로 다시 보낼 때만 같은 멱등성 키를 쓴다. */
 interface PendingRequest {
@@ -92,7 +106,7 @@ export function ChargeNewPage() {
   }
 
   return (
-    <section>
+    <section className="page-wide">
       <h1>충전하기</h1>
       <p className="hint">
         내 은행 계좌에서 출금해 지갑에 원화(KRW)로 넣습니다. 계좌 예금주가 회원 이름({realName})과 같아야 합니다.
@@ -123,7 +137,9 @@ export function ChargeNewPage() {
           )}
         </div>
       )}
-      <form className="form" onSubmit={handleSubmit} noValidate>
+      <div className="charge-grid">
+      <form className="form card" onSubmit={handleSubmit} noValidate>
+        <h2>원화(KRW) 지갑 충전</h2>
         <label>
           금액
           <div className="input-row">
@@ -139,6 +155,7 @@ export function ChargeNewPage() {
           {amountInput && parsedAmount.ok && <span className="hint">{formatAmount(parsedAmount.minor, 'KRW')}</span>}
           {fieldErrors.amount && <span className="field-error">{fieldErrors.amount}</span>}
         </label>
+        <AmountPresets value={amountInput} onChange={setAmountInput} />
 
         <label>
           은행
@@ -175,16 +192,39 @@ export function ChargeNewPage() {
             않습니다. 내용을 바꾸면 새 충전으로 처리되니 먼저 <Link to="/wallet/charges">충전 내역</Link>을 확인해 주세요.
           </p>
         )}
+        {!uncertain && parsedAmount.ok && (
+          <p className="hint">
+            {bankName(bankCode)} 계좌에서 {formatAmount(parsedAmount.minor, 'KRW')}을 출금해 충전합니다.
+          </p>
+        )}
         <button type="submit" disabled={submitting || !amountInput || !accountInput}>
-          {submitting
-            ? '요청 중…'
-            : uncertain
-              ? '다시 시도'
-              : parsedAmount.ok
-                ? `${bankName(bankCode)}에서 ${formatAmount(parsedAmount.minor, 'KRW')} 충전`
-                : '충전하기'}
+          {submitting ? '요청 중…' : uncertain ? '다시 시도' : '충전하기'}
         </button>
       </form>
+
+      <aside className="info-box" aria-labelledby="charge-steps-title">
+        <h2 id="charge-steps-title">충전 처리 단계</h2>
+        <ol className="step-guide">
+          {CHARGE_STEPS.map((step) => (
+            <li key={step.status}>
+              <strong>
+                {step.label} <span className="hint">({step.status})</span>
+              </strong>
+              {step.description}
+            </li>
+          ))}
+        </ol>
+        <p className="hint">
+          지갑에 넣지 못하면 출금한 금액을 계좌로 돌려드리고, 자동 처리가 멈추면 운영자가 확인합니다. 진행 상황은{' '}
+          <Link to="/wallet/charges">충전 내역</Link>에서 확인할 수 있습니다.
+        </p>
+        <div className="badge-legend" aria-label="충전 상태 표시">
+          {LEGEND_STATUSES.map((status) => (
+            <ChargeStatusBadge key={status} status={status} />
+          ))}
+        </div>
+      </aside>
+      </div>
     </section>
   )
 }

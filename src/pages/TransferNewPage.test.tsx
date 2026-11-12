@@ -64,12 +64,14 @@ async function fillAndConfirm(user: ReturnType<typeof userEvent.setup>, amount: 
   await user.type(await screen.findByPlaceholderText(/^예: /), RECEIVER_ID)
   await user.click(screen.getByRole('button', { name: '확인' }))
   expect(await screen.findByText('받는 분: 박*현')).toBeInTheDocument()
+  expect(screen.getByText('송금 가능')).toHaveClass('badge', 'badge-completed')
   await user.type(screen.getByPlaceholderText('0'), amount)
   if (memo) {
     await user.type(screen.getByLabelText(/메모/), memo)
   }
   await user.click(screen.getByRole('button', { name: '다음' }))
   expect(await screen.findByRole('heading', { name: '송금 확인' })).toBeInTheDocument()
+  expect(screen.getByText('0원 (보내는 금액만 빠집니다)')).toBeInTheDocument()
 }
 
 describe('TransferNewPage', () => {

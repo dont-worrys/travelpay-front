@@ -10,7 +10,7 @@ export const CHARGE_STATUS: Record<ChargeStatus, { label: string; tone: BadgeTon
   COMPLETED: { label: '완료', tone: 'success' },
   FAILED: { label: '실패', tone: 'danger' },
   REFUNDED: { label: '환불됨', tone: 'neutral' },
-  MANUAL_REVIEW: { label: '확인 중', tone: 'warn' },
+  MANUAL_REVIEW: { label: '확인 중', tone: 'review' },
 }
 
 export const CHARGE_DESCRIPTION: Partial<Record<ChargeStatus, string>> = {

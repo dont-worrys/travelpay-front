@@ -88,6 +88,7 @@ describe('ExchangeNewPage', () => {
     expect(screen.getByText('10,100원')).toBeInTheDocument()
     expect(screen.getByText(/100엔당 940.5원/)).toBeInTheDocument()
     expect(screen.getByText(/수수료율 1%/)).toBeInTheDocument()
+    expect(screen.getByText(/^\d:\d{2} 남음$/)).toHaveClass('badge', 'badge-processing')
   })
 
   it('견적 전에는 살 때 환율이 아니라 매매기준율과 고정 수수료 1%를 참고로 보여 준다', async () => {

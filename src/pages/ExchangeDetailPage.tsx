@@ -71,7 +71,7 @@ export function ExchangeDetailPage() {
     )
   }
   if (!order) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const description = EXCHANGE_DESCRIPTION[order.status]
@@ -79,7 +79,7 @@ export function ExchangeDetailPage() {
   const unitLabel = `${order.rateUnit.toLocaleString('ko-KR')}${CURRENCY_INFO[foreign].unit}`
 
   return (
-    <section>
+    <section className="receipt">
       <h1>{EXCHANGE_TYPE_LABEL[order.type]} 상세</h1>
       {justExchanged && order.status === 'COMPLETED' && <p className="notice">환전을 완료했습니다.</p>}
 

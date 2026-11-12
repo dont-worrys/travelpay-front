@@ -2,7 +2,7 @@
 
 ## 테스트
 
-Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(28파일 155건, 2026-11-12). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
+Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(31파일 164건, 2026-11-12). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
 
 테스트 의존성(Vitest·jsdom·Testing Library)은 `devDependencies`에 있어 `npm install`로 함께 설치됩니다. 테스트 파일은 `tsconfig.app.json`에서 제외해 앱 빌드에 들어가지 않고, `tsconfig.test.json`으로 따로 타입 검사합니다.
 
@@ -22,11 +22,12 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 | 공통 요청 | `api/client.test.ts` | GET에는 CSRF를 받지 않음, 변경 요청에 토큰 1회 발급·첨부, 허용 헤더(`Accept`·`Content-Type`·`Csrf-Token`·`Idempotency-Key`)만 사용, `COMMON_CSRF_INVALID` 403이면 새 토큰·같은 키로 1회 재전송, 그 밖 403은 재전송 없음, `details` 필드별 메시지, 연결 실패·5xx는 결과 모름, 공통 형식 아닌 응답, 204, 401 리스너, 요청 취소 |
 | 멱등성 키 | `lib/idempotency.test.ts` | UUID v4 형식, `randomUUID`가 없는 환경의 대체 생성 |
 | 금액 | `lib/money.test.ts` | 입력 → 최소 단위 정수, 환전 주 단위 문자열 변환 |
+| 공통 화면 부품 | `components/AmountPresets.test.tsx`·`RateTicker.test.tsx` | 금액 칩 더하기(빈 입력은 0부터), 거래내역 탭 링크·현재 화면 표시, 환율 티커 통화 선택(다시 조회 안 함)·실패 시 숨김(레이아웃 밖에서는 직접 조회) |
 | 주기 조회 | `lib/useAutoRefresh.test.ts` | 5초 주기, 앞 조회 중 새 조회 안 함, 실패 시 마지막 값 유지, 탭 숨김 중단·재개, `enabled` 전환, 화면을 떠나면 요청 취소 |
 | 로그인·역할 | `features/auth/RequireRole.test.tsx` | 비로그인 → `/login?redirect=`, 일반회원 ↔ 관리자 경로 분리, 열린 리다이렉트 차단 |
 | 테스트 계좌 | `features/wallet/testAccounts.test.ts` | `VITE_LOCAL_TEST_ACCOUNT` 형식 해석 |
 | 금전 요청 화면 | `ChargeNewPage`·`TransferNewPage`·`PaymentNewPage`·`ExchangeNewPage`·`ExchangeReservationNewPage` | 보내는 본문(최소 단위, 사용자 ID 없음), 결과 모름이면 같은 키 재전송, 서버가 비교하는 내용을 바꾸거나 4xx 뒤에는 새 키 |
-| 일반회원 화면 | `PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시·송금 실패 사유별 안내, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
+| 일반회원 화면 | `HomePage`·`PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 홈 원화 잔액 영역·자주 쓰는 기능 링크·보유 통화·오늘의 환율, 지갑 없음, 환율 실패 시 구역 숨김, 비로그인은 요청 없음, 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시·송금 실패 사유별 안내, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
 | 관리자 화면 | `pages/admin/*.test.tsx` 10개 | MANUAL_REVIEW 처리, 송금 미리보기 → 확정, 충전 보정 키 규칙·재개 안내, 충전 목록 회원 복사·필터·잘못된 userId, 대사 합계 안내, 처리 기록, 회원 정지·세션 종료, 약관 등록, 가맹점 생성 안내, 지연 환불 대리 실행·거절·직접 환불(키·오류 코드), 가맹점 결제 조회 |
 
 테스트가 없는 화면(목록·상세 조회 위주, 가입·로그인 등)은 [Gateway 경유 E2E](../verification/gateway-e2e.md)와 [브라우저 화면 확인](../verification/browser-check.md)으로 봤습니다.

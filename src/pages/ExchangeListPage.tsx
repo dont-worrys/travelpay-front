@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { HistoryTabs } from '../components/HistoryTabs'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { StatusBadge } from '../components/StatusBadge'
@@ -51,6 +52,7 @@ export function ExchangeListPage() {
 
   return (
     <section>
+      <HistoryTabs />
       <div className="title-row">
         <h1>환전 내역</h1>
         <Link to="/exchange" className="button-link">
@@ -78,8 +80,8 @@ export function ExchangeListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">환전 내역이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">환전 내역이 없습니다.</p>}
 
       {result && result.items.length > 0 && (
         <ul className="item-list">

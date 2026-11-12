@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { StatusBadge } from '../components/StatusBadge'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
 import {
@@ -251,7 +252,13 @@ export function ExchangeNewPage() {
             {unitLabel}당 {formatDecimalText(quote.appliedRate)}원 (기준일 {quote.rateDate})
           </dd>
           <dt>견적 유효 시간</dt>
-          <dd>{remainingMs <= 0 ? '만료됨' : formatRemaining(remainingMs)}</dd>
+          <dd>
+            {remainingMs <= 0 ? (
+              <StatusBadge label="만료됨" tone="danger" />
+            ) : (
+              <StatusBadge label={`${formatRemaining(remainingMs)} 남음`} tone="info" />
+            )}
+          </dd>
         </dl>
 
         {error && (

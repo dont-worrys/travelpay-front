@@ -10,6 +10,7 @@ import {
   type Charge,
   type Wallet,
 } from '../features/wallet/api'
+import { CURRENCY_TEXT, CurrencyMark } from '../components/CurrencyMark'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
 import { toWalletMessage } from '../features/wallet/status'
 import { formatDateTime } from '../lib/datetime'
@@ -86,7 +87,7 @@ export function WalletPage() {
   }
 
   if (loaded.kind === 'loading') {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
   if (loaded.kind === 'error') {
     return (
@@ -143,7 +144,6 @@ export function WalletPage() {
         </div>
       </div>
 
-      <h2>잔액</h2>
       {balanceError && (
         <p className="error" role="alert">
           {balanceError}{' '}
@@ -153,40 +153,58 @@ export function WalletPage() {
         </p>
       )}
       {balances && (
-        <ul className="balance-list">
-          {balances.map((item) => (
-            <li key={item.currency}>
-              <span className="hint">{CURRENCY_INFO[item.currency]?.label ?? item.currency}</span>
-              <span className="amount">{formatAmount(item.balance, item.currency)}</span>
-            </li>
-          ))}
-        </ul>
+        <section className="page-section" aria-labelledby="wallet-currencies">
+          <div className="section-head">
+            <h2 id="wallet-currencies">보유 통화</h2>
+          </div>
+          <ul className="panel row-list">
+            {balances.map((item) => (
+              <li key={item.currency} className="currency-row">
+                <CurrencyMark currency={item.currency} />
+                <span className="currency-name">
+                  <strong>{CURRENCY_TEXT[item.currency]?.name ?? CURRENCY_INFO[item.currency]?.label}</strong>
+                  <span>{CURRENCY_TEXT[item.currency]?.use}</span>
+                </span>
+                <span className="currency-amount">
+                  <strong>{formatAmount(item.balance, item.currency)}</strong>
+                  {item.currency === 'KRW' ? (
+                    <Link to="/wallet/charge">충전</Link>
+                  ) : (
+                    <Link to={`/exchange?type=RE_EXCHANGE&currency=${item.currency}`}>원화로 환전</Link>
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="section-note">충전은 원화(KRW)만 할 수 있습니다.</p>
+        </section>
       )}
-      <p className="hint">충전은 원화(KRW)만 할 수 있습니다.</p>
 
-      <div className="title-row">
-        <h2>최근 충전</h2>
-        <Link to="/wallet/charges">전체 보기</Link>
-      </div>
-      {charges.length === 0 && <p className="hint">충전 내역이 없습니다.</p>}
-      {charges.length > 0 && (
-        <ul className="item-list">
-          {charges.map((charge) => (
-            <li key={charge.chargeId}>
-              <Link to={`/wallet/charges/${charge.chargeId}`} className="item">
-                <span className="item-main">
-                  <span>충전</span>
-                  <span className="amount received">+{formatAmount(charge.amount, charge.currency)}</span>
-                </span>
-                <span className="item-sub">
-                  <span className="hint">{formatDateTime(charge.createdAt)}</span>
-                  <ChargeStatusBadge status={charge.status} />
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <section className="page-section" aria-labelledby="wallet-charges">
+        <div className="section-head">
+          <h2 id="wallet-charges">최근 충전</h2>
+          <Link to="/wallet/charges">전체 보기</Link>
+        </div>
+        {charges.length === 0 && <p className="hint empty">충전 내역이 없습니다.</p>}
+        {charges.length > 0 && (
+          <ul className="panel item-list">
+            {charges.map((charge) => (
+              <li key={charge.chargeId}>
+                <Link to={`/wallet/charges/${charge.chargeId}`} className="item">
+                  <span className="item-main">
+                    <span>충전</span>
+                    <span className="amount received">+{formatAmount(charge.amount, charge.currency)}</span>
+                  </span>
+                  <span className="item-sub">
+                    <span className="hint">{formatDateTime(charge.createdAt)}</span>
+                    <ChargeStatusBadge status={charge.status} />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </section>
   )
 }

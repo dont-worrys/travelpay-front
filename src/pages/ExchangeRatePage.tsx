@@ -1,4 +1,5 @@
 import { Link } from 'react-router'
+import { CurrencyMark } from '../components/CurrencyMark'
 import { useAuth } from '../features/auth/useAuth'
 import { fetchExchangeRates } from '../features/exchange/api'
 import { formatFeeRate, PRE_QUOTE_FEE_RATE, RateChange } from '../features/exchange/rateDisplay'
@@ -44,8 +45,8 @@ export function ExchangeRatePage() {
         </p>
       )}
       {error != null && rates && <p className="hint">최신 환율을 불러오지 못해 마지막으로 받은 환율을 보여 줍니다.</p>}
-      {!rates && error == null && <p>불러오는 중입니다…</p>}
-      {rates && rates.length === 0 && <p className="hint">제공 중인 환율이 없습니다.</p>}
+      {!rates && error == null && <p className="loading">불러오는 중입니다…</p>}
+      {rates && rates.length === 0 && <p className="hint empty">제공 중인 환율이 없습니다.</p>}
 
       {rates && rates.length > 0 && (
         <ul className="item-list">
@@ -55,7 +56,8 @@ export function ExchangeRatePage() {
               <li key={rate.currency}>
                 <div className="item">
                   <span className="item-main">
-                    <strong>
+                    <strong className="rate-title">
+                      <CurrencyMark currency={rate.currency} small />
                       {CURRENCY_INFO[rate.currency].label} · {unitLabel}당
                     </strong>
                     <span className="amount">

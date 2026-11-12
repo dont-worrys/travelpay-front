@@ -7,7 +7,7 @@ export const SETTLEMENT_STATUS: Record<SettlementStatus, { label: string; tone: 
   REQUESTED: { label: '처리 중', tone: 'info' },
   PAID: { label: '입금 완료', tone: 'success' },
   FAILED: { label: '실패', tone: 'danger' },
-  MANUAL_REVIEW: { label: '확인 중', tone: 'warn' },
+  MANUAL_REVIEW: { label: '확인 중', tone: 'review' },
 }
 
 export const SETTLEMENT_DESCRIPTION: Partial<Record<SettlementStatus, string>> = {

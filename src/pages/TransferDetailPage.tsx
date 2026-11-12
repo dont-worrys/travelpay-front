@@ -88,7 +88,7 @@ export function TransferDetailPage() {
     )
   }
   if (!transfer) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const sent = transfer.direction === 'SENT'
@@ -96,7 +96,7 @@ export function TransferDetailPage() {
   const amount = amountDisplay(transfer.direction, transfer.status)
 
   return (
-    <section>
+    <section className="receipt">
       <h1>송금 상세</h1>
       {justSent && transfer.status === 'COMPLETED' && <p className="notice">송금을 완료했습니다.</p>}
 

@@ -67,7 +67,7 @@ export function AdminResolutionDetailPage() {
           {error}
         </p>
       )}
-      {!records && !error && <p>불러오는 중입니다…</p>}
+      {!records && !error && <p className="loading">불러오는 중입니다…</p>}
       {records && records.length === 0 && (
         <p className="hint">처리 기록이 없습니다. 방금 처리했다면 잠시 후 새로고침해 주세요.</p>
       )}

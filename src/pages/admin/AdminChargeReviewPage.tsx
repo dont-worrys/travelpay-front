@@ -241,7 +241,7 @@ export function AdminChargeReviewPage() {
     )
   }
   if (!review) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const locked = submitting || pending !== null
@@ -310,7 +310,7 @@ export function AdminChargeReviewPage() {
               </label>
             )
           })}
-          {review.availableActions.length === 0 && <p className="hint">지금 가능한 조치가 없습니다.</p>}
+          {review.availableActions.length === 0 && <p className="hint empty">지금 가능한 조치가 없습니다.</p>}
         </div>
         <label>
           보정 사유 (필수, {REASON_MAX}자 이하 · 상태 이력에 남음)

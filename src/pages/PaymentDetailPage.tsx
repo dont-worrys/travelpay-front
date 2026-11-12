@@ -146,7 +146,7 @@ export function PaymentDetailPage() {
     )
   }
   if (!payment) {
-    return <p>불러오는 중입니다…</p>
+    return <p className="loading">불러오는 중입니다…</p>
   }
 
   const description = PAYMENT_DESCRIPTION[payment.status]
@@ -156,7 +156,7 @@ export function PaymentDetailPage() {
   const request = payment.refundRequest
 
   return (
-    <section>
+    <section className="receipt">
       <h1>결제 상세</h1>
       {justPaid && payment.status === 'APPROVED' && <p className="notice">결제를 완료했습니다.</p>}
 

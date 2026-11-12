@@ -160,8 +160,8 @@ export function AdminReconciliationListPage() {
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint">대사 실행 기록이 없습니다.</p>}
+      {!result && !error && <p className="loading">불러오는 중입니다…</p>}
+      {result && result.items.length === 0 && <p className="hint empty">대사 실행 기록이 없습니다.</p>}
       {result && result.items.length > 0 && (
         <ul className="item-list">
           {result.items.map((run) => (

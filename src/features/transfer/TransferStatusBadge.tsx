@@ -8,7 +8,7 @@ const TONE: Record<TransferStatus, BadgeTone> = {
   COMPLETED: 'success',
   FAILED: 'danger',
   CANCELLED: 'neutral',
-  MANUAL_REVIEW: 'warn',
+  MANUAL_REVIEW: 'review',
 }
 
 export function TransferStatusBadge({ status }: { status: TransferStatus }) {

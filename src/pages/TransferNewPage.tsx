@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { StatusBadge } from '../components/StatusBadge'
+import { AmountPresets } from '../components/AmountPresets'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
 import { useAuth } from '../features/auth/useAuth'
@@ -171,6 +173,8 @@ export function TransferNewPage() {
           </dd>
           <dt>금액</dt>
           <dd className="amount">{formatAmount(parsedAmount.minor, currency)}</dd>
+          <dt>수수료</dt>
+          <dd>0원 (보내는 금액만 빠집니다)</dd>
           <dt>메모</dt>
           <dd>{memo.trim() || '-'}</dd>
         </dl>
@@ -230,7 +234,11 @@ export function TransferNewPage() {
           </div>
           {recipientError && <span className="field-error">{recipientError}</span>}
           {fieldErrors.receiverId && <span className="field-error">{fieldErrors.receiverId}</span>}
-          {recipient?.transferable && <span className="notice">받는 분: {recipient.receiverName}</span>}
+          {recipient?.transferable && (
+            <span className="recipient-check">
+              <span>받는 분: {recipient.receiverName}</span> <StatusBadge label="송금 가능" tone="success" />
+            </span>
+          )}
           {recipient && !recipient.transferable && (
             <span className="field-error">{recipient.receiverName}님은 지금 송금을 받을 수 없습니다.</span>
           )}
@@ -273,6 +281,7 @@ export function TransferNewPage() {
           )}
           {fieldErrors.amount && <span className="field-error">{fieldErrors.amount}</span>}
         </label>
+        {currency === 'KRW' && <AmountPresets value={amountInput} onChange={setAmountInput} />}
 
         <label>
           메모 (선택)
