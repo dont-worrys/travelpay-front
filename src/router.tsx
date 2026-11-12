@@ -7,7 +7,9 @@ import { AdminChargeReviewPage } from './pages/admin/AdminChargeReviewPage'
 import { AdminHomePage } from './pages/admin/AdminHomePage'
 import { AdminMemberListPage } from './pages/admin/AdminMemberListPage'
 import { AdminMerchantNewPage } from './pages/admin/AdminMerchantNewPage'
+import { AdminMerchantPaymentListPage } from './pages/admin/AdminMerchantPaymentListPage'
 import { AdminOverdueRefundListPage } from './pages/admin/AdminOverdueRefundListPage'
+import { AdminPaymentDetailPage } from './pages/admin/AdminPaymentDetailPage'
 import { AdminReconciliationDetailPage } from './pages/admin/AdminReconciliationDetailPage'
 import { AdminReconciliationListPage } from './pages/admin/AdminReconciliationListPage'
 import { AdminResolutionDetailPage } from './pages/admin/AdminResolutionDetailPage'
@@ -105,6 +107,8 @@ export const router = createBrowserRouter([
               { path: 'resolutions', element: <AdminResolutionListPage /> },
               { path: 'resolutions/:domain/:targetId', element: <AdminResolutionDetailPage /> },
               { path: 'refund-requests/overdue', element: <AdminOverdueRefundListPage /> },
+              { path: 'payments', element: <AdminMerchantPaymentListPage /> },
+              { path: 'merchants/:merchantId/payments/:paymentId', element: <AdminPaymentDetailPage /> },
               { path: 'users', element: <AdminMemberListPage /> },
               { path: 'terms', element: <AdminTermsListPage /> },
               { path: 'terms/new', element: <AdminTermsNewPage /> },
