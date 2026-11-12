@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { fetchExchange, type ExchangeOrder } from '../features/exchange/api'
 import { ExchangeStatusBadge } from '../features/exchange/ExchangeStatusBadge'
+import { formatFeeRate } from '../features/exchange/rateDisplay'
 import {
   EXCHANGE_DESCRIPTION,
   EXCHANGE_TYPE_LABEL,
@@ -106,7 +107,9 @@ export function ExchangeDetailPage() {
         <dt>보낸 금액</dt>
         <dd>{formatMajorAmount(order.fromAmount, order.fromCurrency)}</dd>
         <dt>수수료</dt>
-        <dd>{formatMajorAmount(order.feeAmount, order.fromCurrency)}</dd>
+        <dd>
+          {formatMajorAmount(order.feeAmount, order.fromCurrency)} (수수료율 {formatFeeRate(order.feeRate)})
+        </dd>
         <dt>지갑에서 빠진 금액</dt>
         <dd className="amount">{formatMajorAmount(order.totalDebitAmount, order.fromCurrency)}</dd>
         <dt>적용 환율</dt>

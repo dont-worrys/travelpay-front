@@ -7,11 +7,11 @@ import {
   fetchExchangeRates,
   FOREIGN_CURRENCIES,
   type ExchangeLimit,
-  type ExchangeRate,
   type ExchangeType,
   type ForeignCurrency,
   type ReservationInput,
 } from '../features/exchange/api'
+import { formatFeeRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { reservationTriggerText, toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
 import { formatDateTime } from '../lib/datetime'
@@ -27,6 +27,7 @@ import {
   toAmountInput,
   type Currency,
 } from '../lib/money'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const RESERVATION_PERIOD_DAYS = [1, 3, 7, 30] as const
@@ -46,8 +47,8 @@ function isForeign(value: string | null): value is ForeignCurrency {
   return value === 'JPY' || value === 'CNY'
 }
 
-function isAbort(cause: unknown): boolean {
-  return cause instanceof DOMException && cause.name === 'AbortError'
+function loadRates(signal: AbortSignal) {
+  return fetchExchangeRates(undefined, signal)
 }
 
 /** 응답을 받지 못한 예약 요청. 다시 보낼 때는 키와 본문(만료 시각 포함)을 그대로 쓴다. */
@@ -73,7 +74,8 @@ export function ExchangeReservationNewPage() {
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [walletProblem, setWalletProblem] = useState<'none' | 'inactive' | null>(null)
   const [limits, setLimits] = useState<ExchangeLimit[] | null>(null)
-  const [rates, setRates] = useState<ExchangeRate[] | null>(null)
+  // 지금 매매기준율은 5초마다 갱신한다. 안내용이라 실패하면 마지막 값을 두고, 처음부터 실패하면 표시만 뺀다.
+  const { data: rates, error: ratesError } = useAutoRefresh(loadRates)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -96,13 +98,8 @@ export function ExchangeReservationNewPage() {
           setWalletProblem('none')
         }
       })
-    // 한도·환율은 안내용이라 실패하면 표시만 뺀다(최종 판단은 예약 API).
+    // 한도는 안내용이라 실패하면 표시만 뺀다(최종 판단은 예약 API).
     fetchExchangeLimits(controller.signal).then(setLimits, () => undefined)
-    fetchExchangeRates(undefined, controller.signal).then(setRates, (cause) => {
-      if (!isAbort(cause)) {
-        setRates([])
-      }
-    })
     return () => controller.abort()
   }, [])
 
@@ -294,7 +291,8 @@ export function ExchangeReservationNewPage() {
           {amountInput && parsedAmount.ok && <span className="hint">{formatAmount(parsedAmount.minor, fromCurrency)}</span>}
           {minMinor !== null && maxMinor !== null && (
             <span className="hint">
-              1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료는 체결할 때
+              1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료(
+              {formatFeeRate(PRE_QUOTE_FEE_RATE)})는 체결할 때
               보내는 통화로 따로 빠집니다.
             </span>
           )}
@@ -320,7 +318,7 @@ export function ExchangeReservationNewPage() {
               지금 매매기준율 {formatDecimalText(rate.midRate)}원 (기준일 {rate.rateDate})
             </span>
           )}
-          {rates && !rate && <span className="hint">환율 정보를 불러오지 못했습니다.</span>}
+          {(rates || ratesError != null) && !rate && <span className="hint">환율 정보를 불러오지 못했습니다.</span>}
           {executesSoon && (
             <span className="hint">지금 환율이 이미 조건을 만족해, 다음 환율 수집 때 바로 체결될 수 있습니다.</span>
           )}
