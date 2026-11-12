@@ -80,3 +80,64 @@ describe('받은 송금 금액 표시', () => {
     expect(await screen.findByText('송금이 거절되었습니다. 잔액이 빠지지 않았습니다.')).toBeInTheDocument()
   })
 })
+
+describe('송금 실패 사유', () => {
+  const ID = 'bbbbbbbb-0000-4000-8000-000000000001'
+  const sentFailed = (failureReason: string | null) =>
+    transfer(ID, { direction: 'SENT', senderId: ME, receiverId: OTHER, status: 'FAILED', failureReason })
+
+  function renderDetail(body: unknown) {
+    mockFetch({ [`GET /api/v1/transfers/${ID}`]: () => ok(body) })
+    renderRoute('/transfers/:transferId', <TransferDetailPage />, `/transfers/${ID}`)
+  }
+
+  it.each([
+    ['INSUFFICIENT_BALANCE', '잔액이 부족해 송금이 거절되었습니다. 잔액은 빠지지 않았습니다. 충전한 뒤 다시 송금해 주세요.'],
+    ['ACCOUNT_UNAVAILABLE', /보내는 분 또는 받는 분의 계정을 쓸 수 없어 송금이 거절되었습니다\. 잔액은 빠지지 않았습니다/],
+    ['NOT_PROCESSED', '송금이 처리되지 않아 운영자가 실패로 확정했습니다. 잔액은 빠지지 않았습니다. 필요하면 다시 송금해 주세요.'],
+  ])('보낸 송금이 %s로 실패하면 사유별 안내를 보여 준다', async (reason, text) => {
+    renderDetail(sentFailed(reason))
+    expect(await screen.findByText(text)).toBeInTheDocument()
+    expect(screen.queryByText('송금이 거절되었습니다. 잔액이 빠지지 않았습니다.')).not.toBeInTheDocument()
+  })
+
+  it('사유가 null이면 기존 안내를 보여 준다', async () => {
+    renderDetail(sentFailed(null))
+    expect(await screen.findByText('송금이 거절되었습니다. 잔액이 빠지지 않았습니다.')).toBeInTheDocument()
+  })
+
+  it('받는 분에게는 보내는 분의 잔액 부족을 알리지 않는다', async () => {
+    renderDetail(transfer(ID, { status: 'FAILED', failureReason: 'INSUFFICIENT_BALANCE' }))
+    expect(await screen.findByText('보내는 분의 송금이 거절되었습니다. 받은 돈이 없습니다.')).toBeInTheDocument()
+    expect(screen.queryByText(/잔액/)).not.toBeInTheDocument()
+  })
+
+  it('받는 분에게도 계정 사용 불가는 알린다', async () => {
+    renderDetail(transfer(ID, { status: 'FAILED', failureReason: 'ACCOUNT_UNAVAILABLE' }))
+    expect(await screen.findByText(/받은 돈이 없습니다\. 내 지갑 상태를 확인해 주세요/)).toBeInTheDocument()
+  })
+
+  it('내역의 실패 항목에 짧은 사유를 붙이되 받는 분에게 잔액 부족은 숨긴다', async () => {
+    mockFetch({
+      'GET /api/v1/transfers': () =>
+        ok(
+          page([
+            transfer('bbbbbbbb-0000-4000-8000-000000000002', {
+              direction: 'SENT',
+              senderId: ME,
+              receiverId: OTHER,
+              status: 'FAILED',
+              failureReason: 'INSUFFICIENT_BALANCE',
+            }),
+            transfer('bbbbbbbb-0000-4000-8000-000000000003', { status: 'FAILED', failureReason: 'INSUFFICIENT_BALANCE' }),
+            transfer('bbbbbbbb-0000-4000-8000-000000000004', { status: 'FAILED', failureReason: 'NOT_PROCESSED' }),
+          ]),
+        ),
+    })
+    renderRoute('/transfers', <TransferListPage />, '/transfers')
+
+    expect(await screen.findByText(/실패 사유: 잔액 부족/)).toBeInTheDocument()
+    expect(screen.getAllByText(/실패 사유: 잔액 부족/)).toHaveLength(1)
+    expect(screen.getByText(/실패 사유: 처리되지 않음/)).toBeInTheDocument()
+  })
+})

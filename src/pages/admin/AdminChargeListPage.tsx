@@ -47,6 +47,8 @@ export function AdminChargeListPage() {
   const status = isStatus(statusParam) ? statusParam : undefined
   const userIdParam = searchParams.get('userId') ?? ''
   const userId = isUuid(userIdParam) ? userIdParam : undefined
+  /** 주소의 `?userId=`가 UUID가 아니면 조용히 전체 목록을 보여 주지 않고 오류로 알린다. */
+  const userIdParamInvalid = userIdParam.trim() !== '' && !userId
   const page = pageParam(searchParams.get('page'))
 
   const [userIdInput, setUserIdInput] = useState(userIdParam)
@@ -54,11 +56,15 @@ export function AdminChargeListPage() {
   const [result, setResult] = useState<PageResponse<AdminCharge> | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
+  const [copyMessage, setCopyMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    const controller = new AbortController()
     setResult(null)
     setError(null)
+    if (userIdParamInvalid) {
+      return
+    }
+    const controller = new AbortController()
     fetchAdminCharges({ status, userId, page, size: PAGE_SIZE }, controller.signal)
       .then(setResult)
       .catch((cause) => {
@@ -67,7 +73,7 @@ export function AdminChargeListPage() {
         }
       })
     return () => controller.abort()
-  }, [status, userId, page, reloadToken])
+  }, [status, userId, userIdParamInvalid, page, reloadToken])
 
   function update(next: { status?: string; userId?: string; page?: number }) {
     const params = new URLSearchParams()
@@ -93,7 +99,28 @@ export function AdminChargeListPage() {
       return
     }
     setUserIdError(null)
+    setCopyMessage(null)
     update({ userId: value })
+  }
+
+  /** 회원 UUID를 복사하고 그 회원의 충전만 보이게 거른다. 복사가 막혀도 거르기는 한다. */
+  async function copyAndFilter(memberId: string) {
+    setUserIdInput(memberId)
+    setUserIdError(null)
+    update({ userId: memberId })
+    try {
+      await navigator.clipboard.writeText(memberId)
+      setCopyMessage(`회원 ID ${memberId}를 복사했습니다. 이 회원의 충전만 보여 줍니다.`)
+    } catch {
+      setCopyMessage(`회원 ID를 복사하지 못했습니다(브라우저 권한). 이 회원(${memberId})의 충전만 보여 줍니다.`)
+    }
+  }
+
+  function clearUserFilter() {
+    setUserIdInput('')
+    setUserIdError(null)
+    setCopyMessage(null)
+    update({ userId: '' })
   }
 
   return (
@@ -137,30 +164,58 @@ export function AdminChargeListPage() {
           </div>
         </label>
         {userIdError && <p className="field-error">{userIdError}</p>}
+        {userId && (
+          <button type="button" className="link-button" onClick={clearUserFilter}>
+            회원 필터 지우기
+          </button>
+        )}
       </form>
+
+      {userIdParamInvalid && (
+        <p className="error" role="alert">
+          주소의 회원 ID({userIdParam})가 UUID 형식이 아니라 조회하지 않았습니다. 회원 ID를 다시 검색하거나{' '}
+          <button type="button" className="link-button" onClick={clearUserFilter}>
+            회원 필터 지우기
+          </button>
+          를 눌러 주세요.
+        </p>
+      )}
+      {copyMessage && (
+        <p className="hint" role="status">
+          {copyMessage}
+        </p>
+      )}
 
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      {!result && !error && <p>불러오는 중입니다…</p>}
+      {!result && !error && !userIdParamInvalid && <p>불러오는 중입니다…</p>}
       {result && result.items.length === 0 && <p className="hint">조건에 맞는 충전이 없습니다.</p>}
       {result && result.items.length > 0 && (
         <ul className="item-list">
-          {result.items.map((item) =>
-            item.status === 'MANUAL_REVIEW' ? (
-              <li key={item.chargeId}>
+          {result.items.map((item) => (
+            <li key={item.chargeId}>
+              {item.status === 'MANUAL_REVIEW' ? (
                 <Link to={`/admin/charges/${item.chargeId}/review`} className="item">
                   <ChargeItem item={item} />
                 </Link>
-              </li>
-            ) : (
-              <li key={item.chargeId} className="item">
-                <ChargeItem item={item} />
-              </li>
-            ),
-          )}
+              ) : (
+                <div className="item">
+                  <ChargeItem item={item} />
+                </div>
+              )}
+              <button
+                type="button"
+                className="link-button"
+                onClick={() => void copyAndFilter(item.userId)}
+                aria-label={`회원 ${item.userId} ID 복사 후 이 회원만 보기`}
+              >
+                회원 ID 복사·이 회원만 보기
+              </button>
+            </li>
+          ))}
         </ul>
       )}
 

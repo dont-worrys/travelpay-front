@@ -4,6 +4,8 @@ import type { Currency } from '../../lib/money'
 /** 백엔드 `docs/guide/payment-transfer.md` 기준. */
 export type TransferStatus = 'REQUESTED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'MANUAL_REVIEW'
 export type TransferDirection = 'SENT' | 'RECEIVED'
+/** 실패 사유. 송금 요청 422 오류 코드에서 `TRANSFER_`를 뺀 이름과 같다. */
+export type TransferFailureReason = 'INSUFFICIENT_BALANCE' | 'ACCOUNT_UNAVAILABLE' | 'NOT_PROCESSED'
 
 /** 송금 객체. `direction`은 요청자 기준이다. */
 export interface Transfer {
@@ -14,6 +16,11 @@ export interface Transfer {
   amount: number
   currency: Currency
   status: TransferStatus
+  /**
+   * `FAILED`일 때만 값이 있고 그 밖에는 null(백엔드 #285).
+   * 이 필드가 없는 예전 서버에서도 동작하도록 없으면 사유 없이 기본 안내를 쓴다.
+   */
+  failureReason?: TransferFailureReason | null
   memo: string | null
   createdAt: string
 }

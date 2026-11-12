@@ -33,6 +33,16 @@ export interface ExchangeRate {
   source: string
   rateDate: string
   collectedAt: string
+  /**
+   * 매매기준율 전일 대비(#272). 전일 환율이 없으면 넷 다 null.
+   * 이 필드가 없는 예전 서버에서도 동작하도록 선택 필드로 둔다.
+   */
+  previousMidRate?: string | null
+  previousRateDate?: string | null
+  /** 최신 − 전일. 내림이면 음수("-1.31"). */
+  changeAmount?: string | null
+  /** 변동률(%), 소수 둘째 자리. 내림이면 음수. */
+  changeRate?: string | null
 }
 
 /** 보내는 통화별 1회 한도와 내 지갑으로 보낼 수 있는 금액. 잔액을 못 가져오면 `balance`·`availableAmount`가 null. */

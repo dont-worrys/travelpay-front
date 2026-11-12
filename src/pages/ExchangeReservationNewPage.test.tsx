@@ -66,6 +66,11 @@ afterEach(() => {
 })
 
 describe('ExchangeReservationNewPage', () => {
+  it('한도 안내에 견적 전 고정 수수료 1%를 보여 준다', async () => {
+    setup(() => ok(reservation(), 201))
+    expect(await screen.findByText(/수수료\(1%\)는 체결할 때/)).toBeInTheDocument()
+  })
+
   it('금액·목표 환율은 문자열로, 만료 시각은 고른 기간 뒤 UTC로 보낸다', async () => {
     const user = userEvent.setup()
     const api = setup(() => ok(reservation(), 201))

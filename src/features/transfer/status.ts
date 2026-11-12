@@ -1,5 +1,5 @@
 import { isApiError, toUserMessage } from '../../api'
-import type { TransferDirection, TransferStatus } from './api'
+import type { TransferDirection, TransferFailureReason, TransferStatus } from './api'
 
 export const STATUS_LABEL: Record<TransferStatus, string> = {
   REQUESTED: '접수',
@@ -32,8 +32,54 @@ const STATUS_DESCRIPTION: Record<TransferDirection, Partial<Record<TransferStatu
   },
 }
 
-export function statusDescription(direction: TransferDirection, status: TransferStatus): string | undefined {
+/**
+ * 실패 사유별 안내. 잔액 부족은 보내는 분의 사정이라 받는 분에게는 사유 없이 기본 안내만 보여 준다.
+ * 어느 쪽 계정 문제인지는 서버도 알려 주지 않는다(`ACCOUNT_UNAVAILABLE`).
+ */
+const FAILURE_DESCRIPTION: Record<TransferDirection, Partial<Record<TransferFailureReason, string>>> = {
+  SENT: {
+    INSUFFICIENT_BALANCE: '잔액이 부족해 송금이 거절되었습니다. 잔액은 빠지지 않았습니다. 충전한 뒤 다시 송금해 주세요.',
+    ACCOUNT_UNAVAILABLE:
+      '보내는 분 또는 받는 분의 계정을 쓸 수 없어 송금이 거절되었습니다. 잔액은 빠지지 않았습니다. 내 지갑 상태를 확인하고, 문제가 없으면 받는 분에게 확인해 주세요.',
+    NOT_PROCESSED: '송금이 처리되지 않아 운영자가 실패로 확정했습니다. 잔액은 빠지지 않았습니다. 필요하면 다시 송금해 주세요.',
+  },
+  RECEIVED: {
+    ACCOUNT_UNAVAILABLE:
+      '보내는 분 또는 받는 분의 계정을 쓸 수 없어 송금이 거절되었습니다. 받은 돈이 없습니다. 내 지갑 상태를 확인해 주세요.',
+    NOT_PROCESSED: '송금이 처리되지 않아 운영자가 실패로 확정했습니다. 받은 돈이 없습니다.',
+  },
+}
+
+/** 내역에 붙이는 짧은 실패 사유. 받는 분에게 보여 주지 않는 사유는 빠져 있다. */
+const FAILURE_LABEL: Record<TransferDirection, Partial<Record<TransferFailureReason, string>>> = {
+  SENT: { INSUFFICIENT_BALANCE: '잔액 부족', ACCOUNT_UNAVAILABLE: '계정 사용 불가', NOT_PROCESSED: '처리되지 않음' },
+  RECEIVED: { ACCOUNT_UNAVAILABLE: '계정 사용 불가', NOT_PROCESSED: '처리되지 않음' },
+}
+
+export function statusDescription(
+  direction: TransferDirection,
+  status: TransferStatus,
+  failureReason?: TransferFailureReason | null,
+): string | undefined {
+  if (status === 'FAILED' && failureReason) {
+    const byReason = FAILURE_DESCRIPTION[direction][failureReason]
+    if (byReason) {
+      return byReason
+    }
+  }
   return STATUS_DESCRIPTION[direction][status]
+}
+
+/** 실패한 송금의 짧은 사유. 사유가 없거나 보여 주지 않는 사유면 null. */
+export function failureLabel(
+  direction: TransferDirection,
+  status: TransferStatus,
+  failureReason?: TransferFailureReason | null,
+): string | null {
+  if (status !== 'FAILED' || !failureReason) {
+    return null
+  }
+  return FAILURE_LABEL[direction][failureReason] ?? null
 }
 
 /**
@@ -59,6 +105,9 @@ const TRANSFER_MESSAGES: Record<string, string> = {
   TRANSFER_RECEIVER_NOT_FOUND: '받는 분을 찾을 수 없습니다. 회원 ID를 확인해 주세요.',
   TRANSFER_SENDER_WALLET_UNAVAILABLE: '송금할 수 있는 지갑이 없습니다. 지갑 상태를 확인해 주세요.',
   TRANSFER_INSUFFICIENT_BALANCE: '잔액이 부족합니다. 충전 후 다시 시도해 주세요.',
+  TRANSFER_ACCOUNT_UNAVAILABLE:
+    '보내는 분 또는 받는 분의 계정을 쓸 수 없어 송금이 거절되었습니다. 잔액은 빠지지 않았습니다. 내 지갑 상태를 확인하고, 문제가 없으면 받는 분에게 확인해 주세요.',
+  TRANSFER_NOT_PROCESSED: '처리되지 않아 실패로 확정된 송금입니다. 잔액은 빠지지 않았습니다. 다시 송금하려면 처음부터 새로 진행해 주세요.',
 }
 
 export function toTransferMessage(error: unknown, fallback: string): string {

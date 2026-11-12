@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchTransfers, type Transfer, type TransferDirection } from '../features/transfer/api'
-import { amountDisplay, toTransferMessage } from '../features/transfer/status'
+import { amountDisplay, failureLabel, toTransferMessage } from '../features/transfer/status'
 import { TransferStatusBadge } from '../features/transfer/TransferStatusBadge'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
@@ -86,6 +86,7 @@ export function TransferListPage() {
           {result.items.map((item) => {
             const sent = item.direction === 'SENT'
             const amount = amountDisplay(item.direction, item.status)
+            const reason = failureLabel(item.direction, item.status, item.failureReason)
             return (
               <li key={item.transferId}>
                 <Link to={`/transfers/${item.transferId}`} className="item">
@@ -100,6 +101,7 @@ export function TransferListPage() {
                     <span className="hint">
                       {formatDateTime(item.createdAt)}
                       {item.memo ? ` · ${item.memo}` : ''}
+                      {reason ? ` · 실패 사유: ${reason}` : ''}
                     </span>
                     <TransferStatusBadge status={item.status} />
                   </span>

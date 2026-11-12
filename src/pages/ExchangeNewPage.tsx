@@ -9,10 +9,10 @@ import {
   placeExchange,
   type ExchangeLimit,
   type ExchangeQuote,
-  type ExchangeRate,
   type ExchangeType,
   type ForeignCurrency,
 } from '../features/exchange/api'
+import { formatFeeRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
 import { newIdempotencyKey } from '../lib/idempotency'
@@ -26,6 +26,7 @@ import {
   toAmountInput,
   type Currency,
 } from '../lib/money'
+import { useAutoRefresh } from '../lib/useAutoRefresh'
 
 type Step = 'form' | 'confirm'
 
@@ -39,8 +40,8 @@ function isForeign(value: string | null): value is ForeignCurrency {
   return value === 'JPY' || value === 'CNY'
 }
 
-function isAbort(cause: unknown): boolean {
-  return cause instanceof DOMException && cause.name === 'AbortError'
+function loadRates(signal: AbortSignal) {
+  return fetchExchangeRates(undefined, signal)
 }
 
 /** 남은 시간을 "4:59"처럼 표시한다. */
@@ -63,7 +64,6 @@ export function ExchangeNewPage() {
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [walletProblem, setWalletProblem] = useState<'none' | 'inactive' | null>(null)
   const [limits, setLimits] = useState<ExchangeLimit[] | null>(null)
-  const [rates, setRates] = useState<ExchangeRate[] | null>(null)
 
   const [step, setStep] = useState<Step>('form')
   const [quote, setQuote] = useState<ExchangeQuote | null>(null)
@@ -80,6 +80,10 @@ export function ExchangeNewPage() {
   const fromCurrency: Currency = type === 'EXCHANGE' ? 'KRW' : foreign
   const toCurrency: Currency = type === 'EXCHANGE' ? foreign : 'KRW'
 
+  // 참고 환율은 견적 받기 전에만 5초마다 갱신한다. 견적 이후에는 견적 환율(5분 보장)만 보여 준다.
+  // 안내용이라 실패하면 마지막 값을 두고, 처음부터 실패하면 표시만 뺀다(최종 판단은 견적·환전 API).
+  const { data: rates, error: ratesError } = useAutoRefresh(loadRates, { enabled: step === 'form' })
+
   useEffect(() => {
     const controller = new AbortController()
     fetchMyWallet(controller.signal)
@@ -92,13 +96,8 @@ export function ExchangeNewPage() {
           setWalletProblem('none')
         }
       })
-    // 한도·환율은 안내용이라 실패하면 표시만 뺀다(최종 판단은 견적·환전 API).
+    // 한도는 안내용이라 실패하면 표시만 뺀다(최종 판단은 견적·환전 API).
     fetchExchangeLimits(controller.signal).then(setLimits, () => undefined)
-    fetchExchangeRates(undefined, controller.signal).then(setRates, (cause) => {
-      if (!isAbort(cause)) {
-        setRates([])
-      }
-    })
     return () => controller.abort()
   }, [])
 
@@ -242,7 +241,9 @@ export function ExchangeNewPage() {
           <dt>보내는 금액</dt>
           <dd>{formatMajorAmount(quote.fromAmount, quote.fromCurrency)}</dd>
           <dt>수수료</dt>
-          <dd>{formatMajorAmount(quote.feeAmount, quote.fromCurrency)}</dd>
+          <dd>
+            {formatMajorAmount(quote.feeAmount, quote.fromCurrency)} (수수료율 {formatFeeRate(quote.feeRate)})
+          </dd>
           <dt>지갑에서 빠질 금액</dt>
           <dd className="amount">{formatMajorAmount(quote.totalDebitAmount, quote.fromCurrency)}</dd>
           <dt>적용 환율</dt>
@@ -345,11 +346,13 @@ export function ExchangeNewPage() {
           {rate && (
             <span className="hint">
               {rate.unit.toLocaleString('ko-KR')}
-              {CURRENCY_INFO[foreign].unit}당 {type === 'EXCHANGE' ? '살 때' : '팔 때'}{' '}
-              {formatDecimalText(type === 'EXCHANGE' ? rate.buyRate : rate.sellRate)}원 (기준일 {rate.rateDate})
+              {CURRENCY_INFO[foreign].unit}당 매매기준율 {formatDecimalText(rate.midRate)}원 (기준일 {rate.rateDate}),
+              수수료 {formatFeeRate(PRE_QUOTE_FEE_RATE)}. 참고용이며 적용 환율은 견적에서 정해집니다.
             </span>
           )}
-          {rates && !rate && <span className="hint">환율 정보를 불러오지 못했습니다. 견적에서 확인할 수 있습니다.</span>}
+          {(rates || ratesError != null) && !rate && (
+            <span className="hint">환율 정보를 불러오지 못했습니다. 견적에서 확인할 수 있습니다.</span>
+          )}
         </label>
 
         <label>
@@ -369,8 +372,8 @@ export function ExchangeNewPage() {
           )}
           {minMinor !== null && maxMinor !== null && (
             <span className="hint">
-              1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료는 보내는
-              통화로 따로 빠집니다.
+              1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료(
+              {formatFeeRate(PRE_QUOTE_FEE_RATE)})는 보내는 통화로 따로 빠집니다.
             </span>
           )}
           {balanceMinor !== null && (

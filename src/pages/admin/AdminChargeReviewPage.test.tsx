@@ -35,7 +35,7 @@ function review(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function resolution() {
+function resolution(overrides: Record<string, unknown> = {}) {
   return {
     resolutionId: '99999999-9999-4999-8999-999999999999',
     chargeId: CHARGE_ID,
@@ -48,6 +48,7 @@ function resolution() {
     refund: NOT_FOUND,
     ledger: NOT_FOUND,
     resolvedAt: '2026-11-10T01:05:00Z',
+    ...overrides,
   }
 }
 
@@ -88,7 +89,7 @@ describe('AdminChargeReviewPage', () => {
     expect(await screen.findByText(/보정 결과를 확인하지 못했습니다/)).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '같은 내용으로 다시 보내기' }))
 
-    expect(await screen.findByText('충전 보정 완료')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: '충전 처리 재개' })).toBeInTheDocument()
     const requests = api.calls('POST', `${BASE}/resolve`)
     expect(requests).toHaveLength(3)
     const key = requests[0]?.headers['Idempotency-Key']
@@ -127,7 +128,7 @@ describe('AdminChargeReviewPage', () => {
     expect(screen.getByLabelText(/보정 사유/)).toBeEnabled()
 
     await user.click(screen.getByRole('button', { name: '보정' }))
-    await screen.findByText('충전 보정 완료')
+    await screen.findByRole('heading', { name: '충전 처리 재개' })
     const [first, second] = api.calls('POST', `${BASE}/resolve`)
     expect(first?.headers['Idempotency-Key']).not.toBe(second?.headers['Idempotency-Key'])
   })
@@ -137,5 +138,51 @@ describe('AdminChargeReviewPage', () => {
     render()
 
     expect(await screen.findByText(/수동 확인 상태의 충전이 아닙니다/)).toBeInTheDocument()
+  })
+
+  it.each([
+    ['RESUME_CREDIT', /원장 적립 단계로 재개/, 'CREDIT_PROCESSING', '처리 중'],
+    ['RESUME_REFUND', /은행 환불 단계로 재개/, 'REFUND_PROCESSING', '환불 중'],
+  ])('%s 뒤에는 완료가 아니라 처리 중이라고 안내하고, 그 상태로 거른 충전 목록으로 보낸다', async (action, radio, status, label) => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const api = mockFetch({
+      [`GET ${BASE}/review`]: () => ok(review()),
+      [`POST ${BASE}/resolve`]: () => ok(resolution({ action, resultStatus: status })),
+    })
+    render()
+
+    await user.click(await screen.findByRole('radio', { name: radio }))
+    await user.type(screen.getByLabelText(/보정 사유/), '재개')
+    await user.click(screen.getByRole('button', { name: '보정' }))
+
+    expect(await screen.findByRole('heading', { name: '충전 처리 재개' })).toBeInTheDocument()
+    expect(screen.queryByText('충전 보정 완료')).not.toBeInTheDocument()
+    expect(screen.getByText(/서버가 처리 중이며 완료 시점은 정해져 있지 않습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: `충전 목록에서 확인(${label})` })).toHaveAttribute(
+      'href',
+      `/admin/charges?status=${status}`,
+    )
+    // 재개 뒤에는 다시 조회하지 않는다(확인 API는 MANUAL_REVIEW 전용이고 완료 시점 보장이 없음).
+    expect(api.calls('GET', `${BASE}/review`)).toHaveLength(1)
+  })
+
+  it('확정 조치는 기존처럼 보정 완료로 보여 주고 전체 충전 목록으로 보낸다', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    mockFetch({
+      [`GET ${BASE}/review`]: () =>
+        ok(review({ availableActions: ['CONFIRM_FAILED'], unavailableActions: [] })),
+      [`POST ${BASE}/resolve`]: () => ok(resolution({ action: 'CONFIRM_FAILED', resultStatus: 'FAILED' })),
+    })
+    render()
+
+    await user.click(await screen.findByRole('radio', { name: /실패로 확정/ }))
+    await user.type(screen.getByLabelText(/보정 사유/), '출금 없음 확인')
+    await user.click(screen.getByRole('button', { name: '보정' }))
+
+    expect(await screen.findByRole('heading', { name: '충전 보정 완료' })).toBeInTheDocument()
+    expect(screen.getByText(/보정했습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '충전 목록' })).toHaveAttribute('href', '/admin/charges')
   })
 })
