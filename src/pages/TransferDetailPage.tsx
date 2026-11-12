@@ -92,7 +92,7 @@ export function TransferDetailPage() {
   }
 
   const sent = transfer.direction === 'SENT'
-  const description = statusDescription(transfer.direction, transfer.status)
+  const description = statusDescription(transfer.direction, transfer.status, transfer.failureReason)
   const amount = amountDisplay(transfer.direction, transfer.status)
 
   return (

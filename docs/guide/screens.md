@@ -12,7 +12,7 @@
 | `/wallet/charge` | 원화 충전(은행·계좌번호). 계좌 예금주가 회원 실명과 같아야 함 | 필요 |
 | `/wallet/charges`, `/wallet/charges/:chargeId` | 충전 내역·상세. 상세는 끝날 때까지 2초마다 최대 2분 다시 조회 | 필요 |
 | `/transfers/new` | 송금하기: 수취인 확인 → 금액·통화·메모 → 확인 → 송금 | 필요 |
-| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회, `REQUESTED`는 취소 가능. 받은 송금은 완료된 것만 `+`로 표시 | 필요 |
+| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회, `REQUESTED`는 취소 가능. 받은 송금은 완료된 것만 `+`로 표시. 실패하면 `failureReason`별 안내(상세)와 짧은 사유(내역)를 보여 주되, 받은 송금에는 보낸 분의 잔액 부족을 알리지 않음 | 필요 |
 | `/payments/new` | 결제하기: 가맹점 ID·통화·금액·결제 내용 → 확인 → 결제. `?merchantId=&currency=&amount=&paymentInfo=`로 미리 채움(가맹점 결제 링크) | 필요 |
 | `/payments`, `/payments/:paymentId` | 결제 내역·상세. 상세에서 환불 신청(승인 후 3일 안)·신청 취소 | 필요 |
 | `/merchant` | 가맹점 관리 입구: 가맹점 ID 입력(내 가맹점 목록 API가 없음), 최근 연 가맹점 | 필요 |
