@@ -167,4 +167,19 @@ describe('TransferNewPage', () => {
     const [first, second] = api.calls('POST', TRANSFER_PATH)
     expect(second?.headers['Idempotency-Key']).not.toBe(first?.headers['Idempotency-Key'])
   })
+
+  it.each([
+    ['TRANSFER_INSUFFICIENT_BALANCE', '잔액이 부족합니다. 충전 후 다시 시도해 주세요.'],
+    ['TRANSFER_ACCOUNT_UNAVAILABLE', '보내는 분 또는 받는 분의 계정을 쓸 수 없어 송금이 거절되었습니다.'],
+    ['TRANSFER_NOT_PROCESSED', '처리되지 않아 실패로 확정된 송금입니다.'],
+  ])('송금이 거절(422 %s)되면 사유별 문구를 보여 준다', async (code, message) => {
+    const user = userEvent.setup()
+    setup({ [`POST ${TRANSFER_PATH}`]: () => fail(422, code, '서버 문구') })
+
+    await fillAndConfirm(user, '3000')
+    await user.click(screen.getByRole('button', { name: '송금하기' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message)
+    expect(screen.queryByText('서버 문구')).not.toBeInTheDocument()
+  })
 })

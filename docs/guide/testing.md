@@ -2,7 +2,7 @@
 
 ## 테스트
 
-Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(28파일 145건, 2026-11-12). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
+Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(28파일 155건, 2026-11-12). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
 
 테스트 의존성(Vitest·jsdom·Testing Library)은 `devDependencies`에 있어 `npm install`로 함께 설치됩니다. 테스트 파일은 `tsconfig.app.json`에서 제외해 앱 빌드에 들어가지 않고, `tsconfig.test.json`으로 따로 타입 검사합니다.
 
@@ -26,7 +26,7 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 | 로그인·역할 | `features/auth/RequireRole.test.tsx` | 비로그인 → `/login?redirect=`, 일반회원 ↔ 관리자 경로 분리, 열린 리다이렉트 차단 |
 | 테스트 계좌 | `features/wallet/testAccounts.test.ts` | `VITE_LOCAL_TEST_ACCOUNT` 형식 해석 |
 | 금전 요청 화면 | `ChargeNewPage`·`TransferNewPage`·`PaymentNewPage`·`ExchangeNewPage`·`ExchangeReservationNewPage` | 보내는 본문(최소 단위, 사용자 ID 없음), 결과 모름이면 같은 키 재전송, 서버가 비교하는 내용을 바꾸거나 4xx 뒤에는 새 키 |
-| 일반회원 화면 | `PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
+| 일반회원 화면 | `PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시·송금 실패 사유별 안내, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
 | 관리자 화면 | `pages/admin/*.test.tsx` 10개 | MANUAL_REVIEW 처리, 송금 미리보기 → 확정, 충전 보정 키 규칙·재개 안내, 충전 목록 회원 복사·필터·잘못된 userId, 대사 합계 안내, 처리 기록, 회원 정지·세션 종료, 약관 등록, 가맹점 생성 안내, 지연 환불 대리 실행·거절·직접 환불(키·오류 코드), 가맹점 결제 조회 |
 
 테스트가 없는 화면(목록·상세 조회 위주, 가입·로그인 등)은 [Gateway 경유 E2E](../verification/gateway-e2e.md)와 [브라우저 화면 확인](../verification/browser-check.md)으로 봤습니다.
