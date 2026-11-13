@@ -55,6 +55,7 @@ const PaymentDetailPage = lazyPage(() => import('./pages/PaymentDetailPage'), 'P
 const PaymentListPage = lazyPage(() => import('./pages/PaymentListPage'), 'PaymentListPage')
 const PasswordChangePage = lazyPage(() => import('./pages/PasswordChangePage'), 'PasswordChangePage')
 const PaymentNewPage = lazyPage(() => import('./pages/PaymentNewPage'), 'PaymentNewPage')
+const SettlementDepositListPage = lazyPage(() => import('./pages/SettlementDepositListPage'), 'SettlementDepositListPage')
 const SettlementDetailPage = lazyPage(() => import('./pages/SettlementDetailPage'), 'SettlementDetailPage')
 const SettlementListPage = lazyPage(() => import('./pages/SettlementListPage'), 'SettlementListPage')
 const SignupPage = lazyPage(() => import('./pages/SignupPage'), 'SignupPage')
@@ -86,6 +87,7 @@ const userRoutes: RouteObject[] = [
   { path: 'wallet', element: <WalletPage /> },
   { path: 'wallet/charge', element: <ChargeNewPage /> },
   { path: 'wallet/charges', element: <ChargeListPage /> },
+  { path: 'wallet/settlements', element: <SettlementDepositListPage /> },
   { path: 'wallet/charges/:chargeId', element: <ChargeDetailPage /> },
 ]
 

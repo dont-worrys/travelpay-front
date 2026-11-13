@@ -11,7 +11,7 @@ import { RateTicker } from './RateTicker'
 const HISTORY_PATHS = new Set(HISTORY_TABS.map((tab) => tab.to))
 
 /**
- * 모바일 하단 탭바(일반회원). "내역"은 거래내역 도메인 탭(충전·송금·환전·결제 내역)으로 가며 결제 내역에서 시작한다.
+ * 모바일 하단 탭바(일반회원). "내역"은 거래내역 도메인 탭(충전·송금·환전·결제·정산 입금 내역)으로 가며 결제 내역에서 시작한다.
  * 내역 목록 화면에 있을 때는 "내역"만 선택 표시한다.
  */
 const USER_TABS: { to: string; label: string; icon: IconName; isActive: (path: string) => boolean }[] = [

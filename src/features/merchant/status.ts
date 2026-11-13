@@ -1,7 +1,7 @@
 import { isApiError } from '../../api'
 import type { BadgeTone } from '../../components/StatusBadge'
 import { toPaymentMessage } from '../payment/status'
-import type { SettlementStatus } from './api'
+import type { Settlement, SettlementStatus } from './api'
 
 export const SETTLEMENT_STATUS: Record<SettlementStatus, { label: string; tone: BadgeTone }> = {
   REQUESTED: { label: '처리 중', tone: 'info' },
@@ -15,6 +15,16 @@ export const SETTLEMENT_DESCRIPTION: Partial<Record<SettlementStatus, string>> =
   PAID: '주인 회원 지갑으로 입금했습니다. 포함된 결제는 더 이상 환불할 수 없습니다.',
   FAILED: '정산이 거절되었습니다. 포함됐던 결제는 다음 정산 요청 때 다시 정산됩니다.',
   MANUAL_REVIEW: '자동 처리가 멈춰 운영자가 확인하고 있습니다. 같은 결제가 두 번 정산되지 않으니 기다려 주세요.',
+}
+
+/** 정산 입금 내역의 가맹점 표시. 이름이 응답에 없으면 가맹점 ID 앞 8자리. */
+export function settlementMerchantLabel(settlement: Settlement): string {
+  return settlement.merchantName || `가맹점 ${settlement.merchantId.slice(0, 8)}`
+}
+
+/** 입금 시각. `PAID`인데 `paidAt`이 비어 있으면(필드 추가 전 서버) 마지막 변경 시각으로 대신한다. */
+export function settlementPaidTime(settlement: Settlement): string {
+  return settlement.paidAt ?? settlement.updatedAt
 }
 
 /** 가맹점 주인 화면에서 문구를 바꿀 오류. 나머지는 결제 화면 문구를 따른다. */
