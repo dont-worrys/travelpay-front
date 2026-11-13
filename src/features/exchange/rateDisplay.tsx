@@ -64,3 +64,42 @@ export function RateChange({ rate }: { rate: ExchangeRate }) {
     </span>
   )
 }
+
+/**
+ * 매매기준율 표시(docs/convention/style.md 6-7절). 라벨 칩 + 굵은 큰 숫자 + 전일 대비. 값은 문자열 그대로 쓴다.
+ * 칩·숫자는 조각나 읽히지 않도록 읽기 프로그램에는 한 문장(예: "100엔당 매매기준율 930원")으로 준다.
+ */
+export function MidRate({
+  rate,
+  unitLabel,
+  label = '매매기준율',
+  chip = true,
+  size = 'lg',
+}: {
+  rate: ExchangeRate
+  /** "100엔당"처럼 숫자 앞에 둘 단위. */
+  unitLabel?: string
+  label?: string
+  /** 카드 머리에 이미 "매매기준율"이 있으면 칩을 생략한다. */
+  chip?: boolean
+  size?: 'lg' | 'md'
+}) {
+  const value = formatDecimalText(rate.midRate)
+  return (
+    <span className={`mid-rate ${size}`}>
+      <span className="visually-hidden">
+        {unitLabel ? `${unitLabel} ` : ''}
+        {label} {value}원
+      </span>
+      <span className="mid-rate-main" aria-hidden="true">
+        {chip && <span className="mid-rate-chip">{label}</span>}
+        {unitLabel && <span className="mid-rate-per">{unitLabel}</span>}
+        <span className="mid-rate-value">
+          <strong>{value}</strong>
+          <span className="mid-rate-unit">원</span>
+        </span>
+      </span>
+      <RateChange rate={rate} />
+    </span>
+  )
+}

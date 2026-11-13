@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { homePathFor } from '../features/auth/RequireRole'
 import { useAuth } from '../features/auth/useAuth'
@@ -76,28 +76,31 @@ function MenuLinks({ items }: { items: MenuItem[] }) {
   )
 }
 
-/** 상단 바의 위치 표시(첫 경로 기준). */
-const SECTION_LABEL: [RegExp, string][] = [
-  [/^\/admin/, '관리자'],
-  [/^\/wallet/, '지갑'],
-  [/^\/transfers/, '송금'],
-  [/^\/payments/, '결제'],
-  [/^\/exchange/, '환전'],
-  [/^\/merchant/, '가맹점'],
-  [/^\/me$/, '내 정보'],
-  [/^\/account/, '계정'],
-  [/^\/login/, '로그인'],
-  [/^\/signup/, '회원가입'],
-]
-
-function sectionLabel(path: string): string | null {
-  return SECTION_LABEL.find(([pattern]) => pattern.test(path))?.[1] ?? null
+/** 계정 메뉴 항목(헤더 아바타 메뉴와 서랍 아래에 같은 항목). */
+function AccountLinks({ isUser, loggingOut, onLogout }: { isUser: boolean; loggingOut: boolean; onLogout: () => void }) {
+  return (
+    <>
+      {isUser && (
+        <NavLink to="/me">
+          <Icon name="user" />내 정보
+        </NavLink>
+      )}
+      <NavLink to="/account/password">
+        <Icon name="lock" />
+        비밀번호 변경
+      </NavLink>
+      <button type="button" onClick={onLogout} disabled={loggingOut}>
+        <Icon name="logout" />
+        로그아웃
+      </button>
+    </>
+  )
 }
 
 /**
- * 공통 레이아웃. 데스크톱(768px 이상)은 왼쪽 고정 사이드바 + 본문 위 상단 바(위치·사용자),
- * 모바일은 상단 미니 헤더(로고·사용자·메뉴 버튼) + 일반회원 하단 탭바. 메뉴 링크 텍스트·경로와
- * 일반회원·관리자·비로그인 분기는 그대로이고, 모바일에서는 메뉴 버튼으로 같은 메뉴를 펼친다.
+ * 공통 레이아웃(docs/convention/style.md 5절). 1024px 이상은 네이비 가로 헤더(로고 · 메뉴 · 환율 티커 · 계정),
+ * 그보다 좁으면 미니 헤더 + 메뉴 서랍, 768px 미만 일반회원은 하단 탭바. 메뉴 링크 텍스트·경로와
+ * 일반회원·관리자·비로그인 분기는 그대로다.
  */
 export function AppLayout() {
   const { state, logout } = useAuth()
@@ -105,24 +108,37 @@ export function AppLayout() {
   const { pathname } = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const accountRef = useRef<HTMLDivElement>(null)
 
-  // 다른 화면으로 가면 모바일 메뉴를 닫는다.
+  // 다른 화면으로 가면 서랍·계정 메뉴를 닫는다.
   useEffect(() => {
     setMenuOpen(false)
+    setAccountOpen(false)
   }, [pathname])
 
   useEffect(() => {
-    if (!menuOpen) {
+    if (!menuOpen && !accountOpen) {
       return
     }
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMenuOpen(false)
+        setAccountOpen(false)
+      }
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(event.target as Node)) {
+        setAccountOpen(false)
       }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [menuOpen])
+    document.addEventListener('mousedown', onPointerDown)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('mousedown', onPointerDown)
+    }
+  }, [menuOpen, accountOpen])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -132,6 +148,8 @@ export function AppLayout() {
       // 로그아웃 요청이 실패해도 화면은 로그아웃 상태로 둔다(세션은 만료 시간에 끝난다).
     } finally {
       setLoggingOut(false)
+      setAccountOpen(false)
+      setMenuOpen(false)
       navigate('/', { replace: true })
     }
   }
@@ -140,102 +158,108 @@ export function AppLayout() {
   const isMaster = authenticated && state.me.role === 'MASTER'
   const isUser = authenticated && !isMaster
   const homePath = authenticated ? homePathFor(state.me.role) : '/'
-  const section = sectionLabel(pathname)
-
   const realName = state.status === 'authenticated' ? state.me.realName : ''
+
+  const menu = (
+    <>
+      {isMaster && <MenuLinks items={MASTER_MENU} />}
+      {isUser && <MenuLinks items={USER_MENU} />}
+      {state.status === 'anonymous' && <MenuLinks items={ANONYMOUS_MENU} />}
+    </>
+  )
 
   return (
     <RatesProvider enabled={!isMaster && state.status !== 'loading'}>
-    <div className={isUser ? 'app with-tabbar' : 'app'}>
-      <aside className={menuOpen ? 'app-sidebar open' : 'app-sidebar'} id="app-menu">
-        <Link to={homePath} className="app-title">
-          TravelPay <span className="app-title-sub">글로벌 여행 금융</span>
-        </Link>
-        <nav className="app-nav" aria-label="전체 메뉴">
-          {isMaster && <MenuLinks items={MASTER_MENU} />}
-          {isUser && <MenuLinks items={USER_MENU} />}
-          {state.status === 'anonymous' && <MenuLinks items={ANONYMOUS_MENU} />}
-        </nav>
-        {authenticated && (
-          <nav className="app-nav app-nav-bottom" aria-label="계정 메뉴">
-            {isUser && (
-              <NavLink to="/me">
-                <Icon name="user" />
-                내 정보
-                <span className="app-nav-label">{realName}</span>
-              </NavLink>
-            )}
-            <NavLink to="/account/password">
-              <Icon name="lock" />
-              비밀번호 변경
-              {isMaster && <span className="app-nav-label">{realName}(관리자)</span>}
-            </NavLink>
-            <button type="button" className="app-logout" onClick={handleLogout} disabled={loggingOut}>
-              <Icon name="logout" />
-              로그아웃
-            </button>
-          </nav>
-        )}
-      </aside>
-      {menuOpen && <div className="app-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
-
-      <div className="app-content">
-        <header className="app-topbar">
-          <Link to={homePath} className="app-topbar-brand">
-            TravelPay
-          </Link>
-          <div className="app-topbar-left">
-            <p className="app-breadcrumb">
-              홈{section && <> / {section}</>}
-            </p>
-            {!isMaster && <RateTicker />}
-          </div>
-          <div className="app-user">
-            {authenticated && (
-              <Link to={isMaster ? '/account/password' : '/me'} className="app-profile">
-                <span className="app-avatar" aria-hidden="true">
-                  {realName.slice(0, 1)}
-                </span>
-                <span className="app-user-name">
-                  {realName}님{isMaster && <span className="app-user-role">(관리자)</span>}
-                </span>
-              </Link>
-            )}
-            <button
-              type="button"
-              className="app-menu-button"
-              aria-expanded={menuOpen}
-              aria-controls="app-menu"
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              메뉴
-            </button>
+      <div className={isUser ? 'app with-tabbar' : 'app'}>
+        <header className="app-header">
+          <div className="app-header-inner">
+            <Link to={homePath} className="app-logo">
+              <span className="app-logo-mark" aria-hidden="true">
+                <Icon name="arrowUp" />
+              </span>
+              TravelPay
+            </Link>
+            <nav className="app-nav" aria-label="전체 메뉴">
+              {menu}
+            </nav>
+            <div className="app-header-right">
+              {!isMaster && <RateTicker />}
+              {authenticated && (
+                <div className="app-account" ref={accountRef}>
+                  <button
+                    type="button"
+                    className="app-profile"
+                    aria-expanded={accountOpen}
+                    aria-controls="app-account-menu"
+                    onClick={() => setAccountOpen((open) => !open)}
+                  >
+                    <span className="app-avatar" aria-hidden="true">
+                      {realName.slice(0, 1)}
+                    </span>
+                    <span className="app-user-name">
+                      {realName} 님{isMaster && <span className="app-user-role">(관리자)</span>}
+                    </span>
+                  </button>
+                  {accountOpen && (
+                    <nav className="app-account-menu" id="app-account-menu" aria-label="계정 메뉴">
+                      <AccountLinks isUser={isUser} loggingOut={loggingOut} onLogout={handleLogout} />
+                    </nav>
+                  )}
+                </div>
+              )}
+              <button
+                type="button"
+                className="app-menu-button"
+                aria-expanded={menuOpen}
+                aria-controls="app-drawer"
+                onClick={() => setMenuOpen((open) => !open)}
+              >
+                <Icon name="menu" />
+                메뉴
+              </button>
+            </div>
           </div>
         </header>
+
+        {menuOpen && (
+          <>
+            <div className="app-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+            <div className="app-drawer" id="app-drawer">
+              <nav className="app-drawer-nav" aria-label="전체 메뉴">
+                {menu}
+              </nav>
+              {authenticated && (
+                <nav className="app-drawer-nav app-drawer-account" aria-label="계정 메뉴">
+                  <AccountLinks isUser={isUser} loggingOut={loggingOut} onLogout={handleLogout} />
+                </nav>
+              )}
+            </div>
+          </>
+        )}
+
         <main className="app-main">
           <Outlet />
         </main>
-      </div>
 
-      {isUser && (
-        <nav className="app-tabbar" aria-label="주요 메뉴">
-          {USER_TABS.map((tab) => {
-            const active = tab.isActive(pathname)
-            return (
-              <Link
-                key={tab.label}
-                to={tab.to}
-                className={active ? 'active' : undefined}
-                aria-current={active ? 'page' : undefined}
-              >
-                <Icon name={tab.icon} />
-                {tab.label}
-              </Link>
-            )
-          })}
-        </nav>
-      )}
-    </div>
+        {isUser && (
+          <nav className="app-tabbar" aria-label="주요 메뉴">
+            {USER_TABS.map((tab) => {
+              const active = tab.isActive(pathname)
+              return (
+                <Link
+                  key={tab.label}
+                  to={tab.to}
+                  className={active ? 'active' : undefined}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <Icon name={tab.icon} />
+                  {tab.label}
+                </Link>
+              )
+            })}
+          </nav>
+        )}
+      </div>
     </RatesProvider>
   )
 }

@@ -133,14 +133,19 @@ export function WalletPage() {
   }
 
   return (
-    <section>
-      <div className="title-row">
-        <h1>내 지갑</h1>
+    <section className="page-wide">
+      <div className="page-head">
+        <div>
+          <h1>내 지갑</h1>
+          <p className="page-eyebrow">통화별 잔액과 최근 충전을 확인하세요.</p>
+        </div>
         <div className="actions inline">
-          <Link to="/wallet/charge" className="button-link">
+          <Link to="/wallet/charge" className="button-link secondary">
             충전하기
           </Link>
-          <Link to="/transfers/new">송금하기</Link>
+          <Link to="/transfers/new" className="button-link">
+            송금하기
+          </Link>
         </div>
       </div>
 
@@ -153,17 +158,20 @@ export function WalletPage() {
         </p>
       )}
       {balances && (
-        <section className="page-section" aria-labelledby="wallet-currencies">
-          <div className="section-head">
+        <section className="card page-section" aria-labelledby="wallet-currencies">
+          <div className="card-head">
             <h2 id="wallet-currencies">보유 통화</h2>
           </div>
-          <ul className="panel row-list">
+          <ul className="row-list">
             {balances.map((item) => (
               <li key={item.currency} className="currency-row">
                 <CurrencyMark currency={item.currency} />
                 <span className="currency-name">
-                  <strong>{CURRENCY_TEXT[item.currency]?.name ?? CURRENCY_INFO[item.currency]?.label}</strong>
-                  <span>{CURRENCY_TEXT[item.currency]?.use}</span>
+                  <strong>{item.currency}</strong>
+                  <span>
+                    {CURRENCY_TEXT[item.currency]?.name ?? CURRENCY_INFO[item.currency]?.label} ·{' '}
+                    {CURRENCY_TEXT[item.currency]?.use}
+                  </span>
                 </span>
                 <span className="currency-amount">
                   <strong>{formatAmount(item.balance, item.currency)}</strong>
@@ -180,14 +188,16 @@ export function WalletPage() {
         </section>
       )}
 
-      <section className="page-section" aria-labelledby="wallet-charges">
-        <div className="section-head">
+      <section className="card page-section" aria-labelledby="wallet-charges">
+        <div className="card-head">
           <h2 id="wallet-charges">최근 충전</h2>
-          <Link to="/wallet/charges">전체 보기</Link>
+          <Link to="/wallet/charges" className="link-more">
+            전체 보기
+          </Link>
         </div>
         {charges.length === 0 && <p className="hint empty">충전 내역이 없습니다.</p>}
         {charges.length > 0 && (
-          <ul className="panel item-list">
+          <ul className="item-list wallet-charges">
             {charges.map((charge) => (
               <li key={charge.chargeId}>
                 <Link to={`/wallet/charges/${charge.chargeId}`} className="item">

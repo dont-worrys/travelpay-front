@@ -163,7 +163,10 @@ export function TransferNewPage() {
   if (step === 'confirm' && recipient && parsedAmount.ok) {
     return (
       <section>
-        <h1>송금 확인</h1>
+        <div className="title-row">
+          <h1>송금 확인</h1>
+          <TransferSteps current={1} />
+        </div>
         <dl className="info">
           <dt>받는 분</dt>
           <dd>
@@ -205,14 +208,18 @@ export function TransferNewPage() {
   }
 
   return (
-    <section>
-      <h1>송금하기</h1>
+    <section className="page-wide">
+      <div className="title-row">
+        <h1>송금하기</h1>
+        <TransferSteps current={0} />
+      </div>
       {noWallet && (
         <p className="error">
           송금하려면 지갑이 필요합니다. <Link to="/wallet">지갑 만들기</Link>
         </p>
       )}
-      <form className="form" onSubmit={handleReview} noValidate>
+      <div className="transfer-grid">
+      <form className="form card" onSubmit={handleReview} noValidate>
         <label>
           받는 분 회원 ID
           <div className="input-row">
@@ -257,7 +264,7 @@ export function TransferNewPage() {
 
         <label>
           금액
-          <div className="input-row">
+          <div className="amount-input">
             <input
               inputMode={CURRENCY_INFO[currency].decimals > 0 ? 'decimal' : 'numeric'}
               value={amountInput}
@@ -265,7 +272,7 @@ export function TransferNewPage() {
               placeholder="0"
               autoComplete="off"
             />
-            <span>{CURRENCY_INFO[currency].unit}</span>
+            <span className="amount-input-code">{currency}</span>
           </div>
           {amountInput && parsedAmount.ok && (
             <span className="hint">{formatAmount(parsedAmount.minor, currency)}</span>
@@ -302,7 +309,42 @@ export function TransferNewPage() {
           다음
         </button>
       </form>
+
+      <aside className="card" aria-labelledby="transfer-summary">
+        <div className="card-head">
+          <h2 id="transfer-summary">송금 요약</h2>
+        </div>
+        <dl className="summary-list">
+          <dt>보내는 금액</dt>
+          <dd>{parsedAmount.ok ? formatAmount(parsedAmount.minor, currency) : '-'}</dd>
+          <dt>수수료</dt>
+          <dd>{formatAmount(0, currency)}</dd>
+          <dt className="summary-total">총 출금 금액</dt>
+          <dd className="summary-total">{parsedAmount.ok ? formatAmount(parsedAmount.minor, currency) : '-'}</dd>
+        </dl>
+        <p className="rate-meta">송금 수수료는 없어요. 보내는 금액만 지갑에서 빠집니다.</p>
+      </aside>
+      </div>
     </section>
   )
 }
 
+
+const TRANSFER_STEPS = ['정보 입력', '내용 확인', '완료']
+
+/** 송금 단계 표시. 완료는 상세 화면 이동으로 대신하므로 이 화면에서는 앞의 두 단계만 현재가 된다. */
+function TransferSteps({ current }: { current: number }) {
+  return (
+    <ol className="steps" aria-label="송금 단계">
+      {TRANSFER_STEPS.map((label, index) => (
+        <li
+          key={label}
+          className={index < current ? 'done' : undefined}
+          aria-current={index === current ? 'step' : undefined}
+        >
+          {label}
+        </li>
+      ))}
+    </ol>
+  )
+}
