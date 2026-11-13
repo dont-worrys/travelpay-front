@@ -9,6 +9,7 @@ export const HISTORY_TABS: { to: string; label: string }[] = [
   { to: '/transfers', label: '송금' },
   { to: '/exchanges', label: '환전' },
   { to: '/payments', label: '결제' },
+  { to: '/wallet/settlements', label: '정산 입금' },
 ]
 
 export function HistoryTabs() {
