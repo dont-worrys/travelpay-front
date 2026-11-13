@@ -2,13 +2,13 @@
 export type BadgeTone = 'success' | 'info' | 'warn' | 'danger' | 'neutral' | 'review'
 
 /**
- * 계열 → 표준 배지 클래스(docs/convention/style.md 2-2): 완료 emerald, 처리 중·대기 amber, 실패 rose,
- * 확인 중(MANUAL_REVIEW) indigo, 그 밖 회색.
+ * 계열 → 표준 배지 클래스(docs/convention/style.md 2-2): 완료 초록, 처리 중·대기 파랑, 사용자 확인 대기·확인 중
+ * 주황, 실패 빨강, 그 밖 회색.
  */
 const TONE_CLASS: Record<BadgeTone, string> = {
   success: 'badge-completed',
   info: 'badge-processing',
-  warn: 'badge-processing',
+  warn: 'badge-processing warn',
   danger: 'badge-failed',
   review: 'badge-manual',
   neutral: 'badge-neutral',

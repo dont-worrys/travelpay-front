@@ -94,7 +94,8 @@ describe('ExchangeNewPage', () => {
   it('견적 전에는 살 때 환율이 아니라 매매기준율과 고정 수수료 1%를 참고로 보여 준다', async () => {
     setup(() => ok({}))
 
-    expect(await screen.findByText(/100엔당 매매기준율 930원 \(기준일 2026-11-09\), 수수료 1%/)).toBeInTheDocument()
+    expect(await screen.findByText('100엔당 매매기준율 930원')).toBeInTheDocument()
+    expect(screen.getByText(/수수료 1% · 기준일 2026-11-09/)).toBeInTheDocument()
     expect(screen.queryByText(/살 때/)).not.toBeInTheDocument()
     expect(await screen.findByText(/수수료\(1%\)는 보내는 통화로/)).toBeInTheDocument()
   })

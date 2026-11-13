@@ -13,7 +13,7 @@ import {
   type ExchangeType,
   type ForeignCurrency,
 } from '../features/exchange/api'
-import { formatFeeRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
+import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
 import { newIdempotencyKey } from '../lib/idempotency'
@@ -350,17 +350,19 @@ export function ExchangeNewPage() {
               </option>
             ))}
           </select>
-          {rate && (
-            <span className="hint">
-              {rate.unit.toLocaleString('ko-KR')}
-              {CURRENCY_INFO[foreign].unit}당 매매기준율 {formatDecimalText(rate.midRate)}원 (기준일 {rate.rateDate}),
-              수수료 {formatFeeRate(PRE_QUOTE_FEE_RATE)}. 참고용이며 적용 환율은 견적에서 정해집니다.
-            </span>
-          )}
           {(rates || ratesError != null) && !rate && (
             <span className="hint">환율 정보를 불러오지 못했습니다. 견적에서 확인할 수 있습니다.</span>
           )}
         </label>
+        {rate && (
+          <div className="mid-rate-box">
+            <MidRate rate={rate} unitLabel={`${rate.unit.toLocaleString('ko-KR')}${CURRENCY_INFO[foreign].unit}당`} />
+            <p className="rate-meta">
+              수수료 {formatFeeRate(PRE_QUOTE_FEE_RATE)} · 기준일 {rate.rateDate} · 참고용이며 적용 환율은 견적에서
+              정해집니다
+            </p>
+          </div>
+        )}
 
         <label>
           보내는 금액 ({CURRENCY_INFO[fromCurrency].label})
