@@ -13,7 +13,7 @@
 | `/wallet/charges`, `/wallet/charges/:chargeId` | 충전 내역·상세. 상세는 끝날 때까지 2초마다 최대 2분 다시 조회 | 필요 |
 | `/wallet/settlements` | 정산 입금 내역: 내 모든 가맹점의 `PAID` 정산(`/payments/settlements/me`). 가맹점 이름(없으면 ID 앞 8자리)·입금 시각(`paidAt`)·금액, 순서는 서버 정렬(정산 요청 시각 최신순) 그대로. 행은 가맹점 정산 상세로 연결 | 필요 |
 | `/transfers/new` | 송금하기: 수취인 확인(마스킹 이름 + "송금 가능" 배지) → 금액·통화·메모(원화면 금액 칩) → 확인(수수료 0원) → 송금. 완료하면 상세로 이동(모달 없음) | 필요 |
-| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회, `REQUESTED`는 취소 가능. 받은 송금은 완료된 것만 `+`로 표시. 실패하면 `failureReason`별 안내(상세)와 짧은 사유(내역)를 보여 주되, 받은 송금에는 보낸 분의 잔액 부족을 알리지 않음 | 필요 |
+| `/transfers`, `/transfers/:transferId` | 송금 내역(전체·보낸·받은)·상세. `PROCESSING`이면 다시 조회. 송금 취소 API가 없어(백엔드 2026-11-13 제거) 취소 버튼 없음. 받은 내역은 서버가 `COMPLETED`만 돌려주며, 받은 송금은 완료된 것만 `+`로 표시. 실패하면 `failureReason`별 안내(상세)와 짧은 사유(내역)를 보여 주되, 받은 송금에는 보낸 분의 잔액 부족을 알리지 않음 | 필요 |
 | `/payments/new` | 결제하기: 가맹점 ID·통화·금액·결제 내용 → 확인 → 결제. `?merchantId=&currency=&amount=&paymentInfo=`로 미리 채움(가맹점 결제 링크) | 필요 |
 | `/payments`, `/payments/:paymentId` | 결제 내역·상세. 상세에서 환불 신청(승인 후 3일 안)·신청 취소 | 필요 |
 | `/merchant` | 가맹점 관리 입구: 가맹점 ID 입력(내 가맹점 목록 API가 없음), 최근 연 가맹점 | 필요 |

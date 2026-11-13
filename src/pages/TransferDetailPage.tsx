@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
-import { isApiError, toUserMessage } from '../api'
-import { cancelTransfer, fetchTransfer, type Transfer } from '../features/transfer/api'
+import { fetchTransfer, type Transfer } from '../features/transfer/api'
 import { amountDisplay, statusDescription, toTransferMessage } from '../features/transfer/status'
 import { TransferStatusBadge } from '../features/transfer/TransferStatusBadge'
 import { formatDateTime } from '../lib/datetime'
@@ -19,8 +18,6 @@ export function TransferDetailPage() {
   const [transfer, setTransfer] = useState<Transfer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pollStopped, setPollStopped] = useState(false)
-  const [cancelling, setCancelling] = useState(false)
-  const [cancelError, setCancelError] = useState<string | null>(null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -55,26 +52,6 @@ export function TransferDetailPage() {
       window.clearTimeout(timer)
     }
   }, [transferId])
-
-  async function handleCancel() {
-    if (!transfer || !window.confirm('이 송금을 취소할까요?')) {
-      return
-    }
-    setCancelling(true)
-    setCancelError(null)
-    try {
-      setTransfer(await cancelTransfer(transfer.transferId))
-    } catch (cause) {
-      if (isApiError(cause) && cause.code === 'COMMON_CONFLICT') {
-        setCancelError('이미 처리 중이거나 끝난 송금이라 취소할 수 없습니다.')
-        fetchTransfer(transfer.transferId).then(setTransfer, () => undefined)
-      } else {
-        setCancelError(toUserMessage(cause, '취소하지 못했습니다.'))
-      }
-    } finally {
-      setCancelling(false)
-    }
-  }
 
   if (error) {
     return (
@@ -129,18 +106,8 @@ export function TransferDetailPage() {
         </dd>
       </dl>
 
-      {cancelError && (
-        <p className="error" role="alert">
-          {cancelError}
-        </p>
-      )}
       <div className="actions">
         <Link to="/transfers">송금 내역</Link>
-        {sent && transfer.status === 'REQUESTED' && (
-          <button type="button" className="secondary" onClick={handleCancel} disabled={cancelling}>
-            {cancelling ? '취소 중…' : '송금 취소'}
-          </button>
-        )}
         {sent && transfer.status === 'COMPLETED' && (
           <Link to={`/transfers/new?receiverId=${transfer.receiverId}`}>같은 분에게 또 보내기</Link>
         )}

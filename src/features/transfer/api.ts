@@ -72,7 +72,3 @@ export function fetchTransfers(query: TransferListQuery, signal?: AbortSignal): 
   })
 }
 
-/** `REQUESTED` 송금만 송금인이 취소할 수 있다. 그 밖의 상태는 409 `COMMON_CONFLICT`. */
-export function cancelTransfer(transferId: string): Promise<Transfer> {
-  return apiRequest<Transfer>(`/api/v1/transfers/${encodeURIComponent(transferId)}/cancel`, { method: 'POST' })
-}
