@@ -13,6 +13,8 @@ import {
 import { CURRENCY_TEXT, CurrencyMark } from '../components/CurrencyMark'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
 import { toWalletMessage } from '../features/wallet/status'
+import { fetchMySettlements, type Settlement } from '../features/merchant/api'
+import { settlementMerchantLabel, settlementPaidTime } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { CURRENCY_INFO, formatAmount } from '../lib/money'
 
@@ -20,9 +22,17 @@ type Loaded =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
   | { kind: 'none' }
-  | { kind: 'wallet'; wallet: Wallet; balances: Balance[] | null; balanceError: string | null; charges: Charge[] }
+  | {
+      kind: 'wallet'
+      wallet: Wallet
+      balances: Balance[] | null
+      balanceError: string | null
+      charges: Charge[]
+      settlements: Settlement[]
+    }
 
 const RECENT_CHARGES = 5
+const RECENT_SETTLEMENTS = 5
 
 export function WalletPage() {
   const [loaded, setLoaded] = useState<Loaded>({ kind: 'loading' })
@@ -45,13 +55,14 @@ export function WalletPage() {
       return
     }
     if (wallet.status !== 'ACTIVE') {
-      setLoaded({ kind: 'wallet', wallet, balances: null, balanceError: null, charges: [] })
+      setLoaded({ kind: 'wallet', wallet, balances: null, balanceError: null, charges: [], settlements: [] })
       return
     }
-    // 잔액(원장)이 실패해도 충전 내역은 보여 준다.
-    const [balances, charges] = await Promise.allSettled([
+    // 잔액(원장)이 실패해도 충전 내역은 보여 준다. 정산 입금은 가맹점 주인만 있어 실패하면 카드를 숨긴다.
+    const [balances, charges, settlements] = await Promise.allSettled([
       fetchMyBalances(signal),
       fetchCharges({ size: RECENT_CHARGES }, signal),
+      fetchMySettlements({ status: 'PAID', size: RECENT_SETTLEMENTS }, signal),
     ])
     if (signal?.aborted) {
       return
@@ -63,6 +74,7 @@ export function WalletPage() {
       balanceError:
         balances.status === 'rejected' ? toWalletMessage(balances.reason, '잔액을 불러오지 못했습니다.') : null,
       charges: charges.status === 'fulfilled' ? charges.value.items : [],
+      settlements: settlements.status === 'fulfilled' ? settlements.value.items : [],
     })
   }, [])
 
@@ -122,7 +134,7 @@ export function WalletPage() {
     )
   }
 
-  const { wallet, balances, balanceError, charges } = loaded
+  const { wallet, balances, balanceError, charges, settlements } = loaded
   if (wallet.status !== 'ACTIVE') {
     return (
       <section>
@@ -133,14 +145,19 @@ export function WalletPage() {
   }
 
   return (
-    <section>
-      <div className="title-row">
-        <h1>내 지갑</h1>
+    <section className="page-wide">
+      <div className="page-head">
+        <div>
+          <h1>내 지갑</h1>
+          <p className="page-eyebrow">통화별 잔액과 최근 충전을 확인하세요.</p>
+        </div>
         <div className="actions inline">
-          <Link to="/wallet/charge" className="button-link">
+          <Link to="/wallet/charge" className="button-link secondary">
             충전하기
           </Link>
-          <Link to="/transfers/new">송금하기</Link>
+          <Link to="/transfers/new" className="button-link">
+            송금하기
+          </Link>
         </div>
       </div>
 
@@ -153,17 +170,20 @@ export function WalletPage() {
         </p>
       )}
       {balances && (
-        <section className="page-section" aria-labelledby="wallet-currencies">
-          <div className="section-head">
+        <section className="card page-section" aria-labelledby="wallet-currencies">
+          <div className="card-head">
             <h2 id="wallet-currencies">보유 통화</h2>
           </div>
-          <ul className="panel row-list">
+          <ul className="row-list">
             {balances.map((item) => (
               <li key={item.currency} className="currency-row">
                 <CurrencyMark currency={item.currency} />
                 <span className="currency-name">
-                  <strong>{CURRENCY_TEXT[item.currency]?.name ?? CURRENCY_INFO[item.currency]?.label}</strong>
-                  <span>{CURRENCY_TEXT[item.currency]?.use}</span>
+                  <strong>{item.currency}</strong>
+                  <span>
+                    {CURRENCY_TEXT[item.currency]?.name ?? CURRENCY_INFO[item.currency]?.label} ·{' '}
+                    {CURRENCY_TEXT[item.currency]?.use}
+                  </span>
                 </span>
                 <span className="currency-amount">
                   <strong>{formatAmount(item.balance, item.currency)}</strong>
@@ -180,14 +200,16 @@ export function WalletPage() {
         </section>
       )}
 
-      <section className="page-section" aria-labelledby="wallet-charges">
-        <div className="section-head">
+      <section className="card page-section" aria-labelledby="wallet-charges">
+        <div className="card-head">
           <h2 id="wallet-charges">최근 충전</h2>
-          <Link to="/wallet/charges">전체 보기</Link>
+          <Link to="/wallet/charges" className="link-more">
+            전체 보기
+          </Link>
         </div>
         {charges.length === 0 && <p className="hint empty">충전 내역이 없습니다.</p>}
         {charges.length > 0 && (
-          <ul className="panel item-list">
+          <ul className="item-list wallet-charges">
             {charges.map((charge) => (
               <li key={charge.chargeId}>
                 <Link to={`/wallet/charges/${charge.chargeId}`} className="item">
@@ -205,6 +227,32 @@ export function WalletPage() {
           </ul>
         )}
       </section>
+
+      {settlements.length > 0 && (
+        <section className="card page-section" aria-labelledby="wallet-settlements">
+          <div className="card-head">
+            <h2 id="wallet-settlements">최근 정산 입금</h2>
+            <Link to="/wallet/settlements" className="link-more">
+              전체 보기
+            </Link>
+          </div>
+          <ul className="item-list">
+            {settlements.map((item) => (
+              <li key={item.settlementId}>
+                <Link to={`/merchant/${item.merchantId}/settlements/${item.settlementId}`} className="item">
+                  <span className="item-main">
+                    <span>{settlementMerchantLabel(item)}</span>
+                    <span className="amount received">+{formatAmount(item.amount, item.currency)}</span>
+                  </span>
+                  <span className="item-sub">
+                    <span className="hint">{formatDateTime(settlementPaidTime(item))} 입금</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </section>
   )
 }

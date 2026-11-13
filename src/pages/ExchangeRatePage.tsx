@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { CurrencyMark } from '../components/CurrencyMark'
 import { useAuth } from '../features/auth/useAuth'
 import { fetchExchangeRates } from '../features/exchange/api'
-import { formatFeeRate, PRE_QUOTE_FEE_RATE, RateChange } from '../features/exchange/rateDisplay'
+import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { toExchangeMessage } from '../features/exchange/status'
 import { formatDateTime } from '../lib/datetime'
 import { CURRENCY_INFO, formatDecimalText } from '../lib/money'
@@ -18,7 +18,7 @@ export function ExchangeRatePage() {
   const { data: rates, error, reload } = useAutoRefresh(loadRates)
 
   return (
-    <section>
+    <section className="page-wide">
       <div className="title-row">
         <h1>환율</h1>
         <div className="actions inline">
@@ -49,33 +49,27 @@ export function ExchangeRatePage() {
       {rates && rates.length === 0 && <p className="hint empty">제공 중인 환율이 없습니다.</p>}
 
       {rates && rates.length > 0 && (
-        <ul className="item-list">
+        <ul className="rate-cards">
           {rates.map((rate) => {
             const unitLabel = `${rate.unit.toLocaleString('ko-KR')}${CURRENCY_INFO[rate.currency].unit}`
             return (
-              <li key={rate.currency}>
-                <div className="item">
-                  <span className="item-main">
-                    <strong className="rate-title">
-                      <CurrencyMark currency={rate.currency} small />
-                      {CURRENCY_INFO[rate.currency].label} · {unitLabel}당
-                    </strong>
-                    <span className="amount">
-                      {formatDecimalText(rate.midRate)}원
-                      <RateChange rate={rate} />
-                    </span>
+              <li key={rate.currency} className="card rate-card">
+                <span className="rate-title">
+                  <CurrencyMark currency={rate.currency} />
+                  <span className="currency-name">
+                    <strong>{CURRENCY_INFO[rate.currency].label}</strong>
+                    <span>{unitLabel}당</span>
                   </span>
-                  <span className="item-sub">
-                    <span className="hint">
-                      살 때 {formatDecimalText(rate.buyRate)}원 · 팔 때 {formatDecimalText(rate.sellRate)}원
-                    </span>
+                </span>
+                <MidRate rate={rate} unitLabel={`${unitLabel}당`} />
+                <span className="rate-card-foot">
+                  <span className="rate-meta">
+                    살 때 {formatDecimalText(rate.buyRate)}원 · 팔 때 {formatDecimalText(rate.sellRate)}원
                   </span>
-                  <span className="item-sub">
-                    <span className="hint">
-                      기준일 {rate.rateDate} · 수집 {formatDateTime(rate.collectedAt)}
-                    </span>
+                  <span className="rate-meta">
+                    기준일 {rate.rateDate} · 수집 {formatDateTime(rate.collectedAt)}
                   </span>
-                </div>
+                </span>
               </li>
             )
           })}

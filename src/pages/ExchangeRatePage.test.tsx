@@ -90,7 +90,7 @@ describe('ExchangeRatePage', () => {
     renderRoute('/exchange-rates', <ExchangeRatePage />, '/exchange-rates')
 
     expect(await screen.findByText('▲2.1 (+0.25%)')).toBeInTheDocument()
-    expect(screen.getByText(/190.12원/)).toBeInTheDocument()
+    expect(screen.getByText('1위안당 매매기준율 190.12원')).toBeInTheDocument()
     expect(document.querySelectorAll('.rate-change')).toHaveLength(1)
     expect(screen.getByText(/매매기준율에 수수료 1%가 붙습니다/)).toBeInTheDocument()
     expect(screen.getByText(/은행 고시 참고값/)).toBeInTheDocument()

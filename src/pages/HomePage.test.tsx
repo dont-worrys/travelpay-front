@@ -48,17 +48,17 @@ describe('HomePage', () => {
     expect(container.querySelector('.home-hero-amount')).toHaveTextContent('1,850,000원')
 
     const actions = screen.getByRole('navigation', { name: '자주 쓰는 기능' })
-    expect(within(actions).getByRole('link', { name: '충전' })).toHaveAttribute('href', '/wallet/charge')
-    expect(within(actions).getByRole('link', { name: '송금' })).toHaveAttribute('href', '/transfers/new')
+    expect(within(actions).getByRole('link', { name: '송금하기' })).toHaveAttribute('href', '/transfers/new')
+    expect(within(actions).getByRole('link', { name: '충전하기' })).toHaveAttribute('href', '/wallet/charge')
+    expect(within(actions).getByRole('link', { name: '환전하기' })).toHaveAttribute('href', '/exchange')
     expect(within(actions).getByRole('link', { name: '결제' })).toHaveAttribute('href', '/payments/new')
-    expect(within(actions).getByRole('link', { name: '환전' })).toHaveAttribute('href', '/exchange')
 
     expect(screen.getByText('142,500엔')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '원화로 환전' })).toHaveAttribute(
       'href',
       '/exchange?type=RE_EXCHANGE&currency=JPY',
     )
-    expect(await screen.findByText('900.2원')).toBeInTheDocument()
+    expect(await screen.findByText('100엔당 매매기준율 900.2원')).toBeInTheDocument()
   })
 
   it('지갑이 없으면 지갑 만들기로 안내한다', async () => {

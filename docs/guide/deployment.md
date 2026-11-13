@@ -36,6 +36,25 @@
 - 실제 파일(`/assets/*.js`, `favicon` 등)은 rewrite보다 먼저 응답됩니다.
 - `/api/*`는 rewrite에서 빼서, 잘못된 API 기준 주소로 요청해도 HTML이 아닌 404가 납니다.
 - 없는 `/assets/*` 파일은 `index.html` 대신 404가 납니다(배포 직후 이전 번들 요청 구분용).
+- 화면 코드는 라우트별 청크로 나뉘어 처음 여는 화면에서 내려받습니다(#55). 배포 직후 이전 버전 탭에서 아직 열지 않은 화면으로 가면 이전 청크가 404가 됩니다. 이때 `lib/chunkReload`가 한 번만 자동 새로고침합니다(`sessionStorage` `travelpay.chunkReloadAt`, 청크를 정상으로 받으면 지움). 새로고침 뒤에도 못 받으면 본문에 "화면을 불러오지 못했습니다" 안내와 새로고침 버튼(`RouteError`)을 보입니다. 동적 import 실패 문구로만 판단하므로 화면 코드의 일반 오류는 새로고침하지 않고 기존처럼 라우터 기본 오류 화면으로 갑니다.
+
+## 응답 헤더 (`vercel.json`)
+
+| 경로 | 헤더 | 이유 |
+|---|---|---|
+| `/assets/*` | `Cache-Control: public, max-age=31536000, immutable` | 파일 이름에 내용 해시가 붙어 배포마다 이름이 바뀌므로 오래 캐시해도 됩니다. `index.html`은 Vercel 기본값(매번 재검증)이라 새 배포가 바로 반영됩니다. |
+| 전체 | `X-Content-Type-Options: nosniff` | 응답 형식 추측 금지 |
+| 전체 | `X-Frame-Options: DENY` | 다른 사이트의 iframe에 넣지 못하게 함(클릭재킹 방지) |
+| 전체 | `Referrer-Policy: strict-origin-when-cross-origin` | 다른 출처(API 포함)로는 경로 없이 출처만 보냄 |
+
+CSP는 Google Fonts·API 주소 허용 목록을 운영에서 확인한 뒤 따로 정합니다(지금은 넣지 않음).
+
+## 배포 전 확인 (프런트)
+
+- `npm test`·`npm run build` 통과, 빌드에 500kB 청크 경고 없음.
+- 운영 빌드에는 `.env.local` 값이 들어가지 않습니다(Vercel은 저장소 기준으로 빌드). 로컬에서 `npm run build`하면 `.env.local`을 읽으므로, 로컬 `dist`를 직접 올리지 않습니다.
+- 충전 테스트 계좌 버튼은 개발 서버에서만 보입니다(`VITE_SHOW_TEST_ACCOUNTS` 미설정 시).
+- 운영 반영은 `dev` → `main` PR로 합니다(Production Branch `main`).
 
 ## Preview 환경 제한
 
@@ -69,6 +88,7 @@ Preview에서는 화면 모양·라우팅만 확인합니다. 로그인이 필�
 |---|---|---|
 | 접속·HTTPS | 브라우저 `https://travelpay.store` | 화면 표시, 인증서 유효 |
 | www 리다이렉트 | `curl -sI https://www.travelpay.store/wallet` | 308, `Location: https://travelpay.store/wallet` |
+| 응답 헤더 | `curl -sI https://travelpay.store/` 와 `curl -sI https://travelpay.store/assets/<파일>.js` | 보안 헤더 3개, assets에 `immutable` |
 | 새로고침·직접 접근 | `/wallet`, `/admin/reviews` 주소 직접 입력·새로고침 | 404 없이 화면(로그인 전이면 로그인 화면) |
 | CSRF·SESSION | 개발자 도구 Network: `GET /api/v1/auth/csrf` → `Set-Cookie: SESSION`(HttpOnly, `api.travelpay.store`) | 200, 이후 요청에 쿠키 전달 |
 | 로그인·세션 유지 | 로그인 → 새로고침 → `GET /api/v1/users/me` | 200, 로그인 유지 |

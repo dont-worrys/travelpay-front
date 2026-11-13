@@ -2,7 +2,7 @@
 
 ## 테스트
 
-Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(31파일 164건, 2026-11-12). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
+Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(50파일 254건, 2026-11-13). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
 
 테스트 의존성(Vitest·jsdom·Testing Library)은 `devDependencies`에 있어 `npm install`로 함께 설치됩니다. 테스트 파일은 `tsconfig.app.json`에서 제외해 앱 빌드에 들어가지 않고, `tsconfig.test.json`으로 따로 타입 검사합니다.
 
@@ -24,19 +24,24 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 | 금액 | `lib/money.test.ts` | 입력 → 최소 단위 정수, 환전 주 단위 문자열 변환 |
 | 공통 화면 부품 | `components/AmountPresets.test.tsx`·`RateTicker.test.tsx` | 금액 칩 더하기(빈 입력은 0부터), 거래내역 탭 링크·현재 화면 표시, 환율 티커 통화 선택(다시 조회 안 함)·실패 시 숨김(레이아웃 밖에서는 직접 조회) |
 | 주기 조회 | `lib/useAutoRefresh.test.ts` | 5초 주기, 앞 조회 중 새 조회 안 함, 실패 시 마지막 값 유지, 탭 숨김 중단·재개, `enabled` 전환, 화면을 떠나면 요청 취소 |
+| 라우팅·코드 스플리팅 | `router.test.tsx`·`lib/chunkReload.test.ts`·`components/RouteError.test.tsx` | 실제 라우트 표(`routes`)로 화면 청크를 받는 동안 공통 로딩(`PageLoading`) 표시 후 화면, 비로그인 직접 접근 → 로그인, 없는 주소, 메뉴 이동. 청크 로딩 실패 시 1회만 새로고침·재실패 시 `ChunkLoadError`·성공 시 표시 지움·일반 오류와 저장소 불가 시 새로고침 안 함, 브라우저별 실패 문구 판별, 재실패 안내(헤더 유지)·일반 오류는 기본 오류 화면 |
 | 로그인·역할 | `features/auth/RequireRole.test.tsx` | 비로그인 → `/login?redirect=`, 일반회원 ↔ 관리자 경로 분리, 열린 리다이렉트 차단 |
 | 테스트 계좌 | `features/wallet/testAccounts.test.ts` | `VITE_LOCAL_TEST_ACCOUNT` 형식 해석 |
 | 금전 요청 화면 | `ChargeNewPage`·`TransferNewPage`·`PaymentNewPage`·`ExchangeNewPage`·`ExchangeReservationNewPage` | 보내는 본문(최소 단위, 사용자 ID 없음), 결과 모름이면 같은 키 재전송, 서버가 비교하는 내용을 바꾸거나 4xx 뒤에는 새 키 |
+| 가입·로그인·내 정보 | `SignupPage`·`LoginPage`·`MyPage` | 필수 약관 동의 전 가입 막음·동의한 약관만 전송·약관 조회 실패, 로그인 뒤 CSRF 재발급·redirect(외부 주소 무시)·오류 문구, 회원 ID 복사(권한 없으면 그대로) |
+| 상세 화면 | `ChargeDetailPage`·`TransferDetailPage`·`ExchangeDetailPage`·`PaymentDetailPage`·`SettlementDetailPage` | 상태별 배지·안내, 처리 중 충전 재조회·`MANUAL_REVIEW`는 재조회 안 함, 송금 취소 버튼 없음(API 제거), 예약 체결 주문 표시, 환불 신청(키 없음)·신청 취소(DELETE)·환불 중 409 재조회, 정산 `paidAt`·거절 사유, 없는 ID 404 |
+| 지갑·가맹점·정산 | `WalletPage`·`MerchantEntryPage`·`SettlementListPage`·`SettlementDepositListPage` | 통화별 잔액·최근 충전·최근 정산 입금(없으면 숨김, 잔액 실패해도 나머지 표시), 가맹점 주인 확인·최근 5개 기억, 정산 요청 키 규칙(결과 모름 같은 키·4xx 뒤 새 키), 정산 입금 `PAID`만 |
 | 일반회원 화면 | `HomePage`·`PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 홈 원화 잔액 영역·자주 쓰는 기능 링크·보유 통화·오늘의 환율, 지갑 없음, 환율 실패 시 구역 숨김, 비로그인은 요청 없음, 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시·송금 실패 사유별 안내, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
-| 관리자 화면 | `pages/admin/*.test.tsx` 10개 | MANUAL_REVIEW 처리, 송금 미리보기 → 확정, 충전 보정 키 규칙·재개 안내, 충전 목록 회원 복사·필터·잘못된 userId, 대사 합계 안내, 처리 기록, 회원 정지·세션 종료, 약관 등록, 가맹점 생성 안내, 지연 환불 대리 실행·거절·직접 환불(키·오류 코드), 가맹점 결제 조회 |
+| 관리자 화면 | `pages/admin/*.test.tsx` 14개 | 처리 대기·송금·처리 기록·지연 환불 목록(탭·필터·주소 반영·잘못된 UUID·페이지 이동·403), MANUAL_REVIEW 처리, 송금 미리보기 → 확정, 충전 보정 키 규칙·재개 안내, 충전 목록 회원 복사·필터·잘못된 userId, 대사 합계 안내, 처리 기록, 회원 정지·세션 종료, 약관 등록, 가맹점 생성 안내, 지연 환불 대리 실행·거절·직접 환불(키·오류 코드), 가맹점 결제 조회 |
 
-테스트가 없는 화면(목록·상세 조회 위주, 가입·로그인 등)은 [Gateway 경유 E2E](../verification/gateway-e2e.md)와 [브라우저 화면 확인](../verification/browser-check.md)으로 봤습니다.
+테스트가 없는 화면(충전·결제·환전 예약 목록, 가맹점 홈, 관리자 홈·대사·약관 목록 등 조회 위주)은 [Gateway 경유 E2E](../verification/gateway-e2e.md)와 [브라우저 화면 확인](../verification/browser-check.md)으로 봤습니다.
 
 ### 테스트 작성 방법
 
 - 요청 가로채기: `mockFetch({ 'METHOD /path': handler })`. 경로표에 없는 요청은 실패하므로 화면이 부르는 API를 모두 적습니다. CSRF 발급(`GET /api/v1/auth/csrf`)은 기본으로 `Csrf-Token: test-csrf`를 줍니다.
 - 응답: `ok(data, status)`, `fail(status, code, message, details)`, 연결 실패는 `networkError()`. 핸들러 두 번째 인자(호출 순번)로 "첫 요청은 실패, 다음은 성공"을 만듭니다.
 - 확인: `api.calls('POST', path)`로 보낸 본문·헤더를 봅니다. 재시도는 `Idempotency-Key`가 같은지·다른지를 함께 확인합니다.
+- 페이지 테스트는 페이지 컴포넌트를 직접 그려 lazy 로딩을 거치지 않습니다. 라우트 표 자체를 시험할 때는 `createMemoryRouter(routes, …)`로 그리고 `findBy*`로 청크 로딩 뒤 화면을 기다립니다(`router.test.tsx`).
 - 화면 그리기: `renderRoute(path, element, initialEntry)`. 다른 경로로 이동하면 `data-testid="navigated"`가 보입니다. `useAuth`를 쓰는 화면은 `AuthProvider`로 감싸고 `GET /api/v1/users/me`를 경로표에 넣습니다.
 - 테스트 사이 정리(`fetch` 원복, DOM 정리)는 `src/test/setup.ts`가 합니다. CSRF 토큰은 모듈 상태라 공통 요청 함수를 직접 시험할 때는 `beforeEach`에서 `clearCsrfToken()`을 부릅니다.
 
@@ -44,7 +49,7 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 
 PR 전에 아래 순서로 확인하고, PR 본문 "검증"에는 실제로 한 것과 못 한 것을 나눠 적습니다.
 
-1. **정적 확인** — `npm run typecheck` → `npm test` → `npm run build`. 빌드의 500kB 청크 경고는 현재 알려진 경고로 동작에 영향이 없습니다.
+1. **정적 확인** — `npm run typecheck` → `npm test` → `npm run build`. 화면은 라우트별 청크(`router.tsx`의 `lazyPage`)와 라이브러리 `vendor` 청크로 나뉘며, 500kB 청크 경고가 다시 나오면 새 라이브러리나 정적 import가 시작 청크에 들어갔는지 확인합니다.
 2. **백엔드 연결** — [처음 실행하기](../getting-started.md#3-백엔드-실행) 표대로 필요한 서비스만 띄우고 `npm run dev`. Gateway에 `GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173`이 있어야 합니다. 로그인 화면에서 가입·로그인이 되면 연결은 정상입니다.
 3. **화면 확인** — 바꾼 기능의 화면을 브라우저로 직접 조작합니다. 금전 요청은 성공 뒤 잔액·내역이 맞는지, 오류 응답이면 문구가 맞는지 봅니다. 충전은 회원 실명과 같은 예금주의 Mock Bank 시드 계좌([목록](../getting-started.md#충전-테스트-계좌))를 씁니다.
 4. **관리자 화면** — 로컬 DB에서 역할을 `MASTER`로 바꾼 계정으로 로그인합니다(관리자 가입 화면은 없음). `MANUAL_REVIEW`·대사 불일치 데이터를 만드는 방법은 [충전 보정 테스트 데이터](../verification/test-data.md#충전-보정-테스트-데이터-2026-11-11)·[관리자 브라우저 검증 데이터](../verification/test-data.md#관리자-브라우저-검증-데이터-2026-11-11) 절을 봅니다.

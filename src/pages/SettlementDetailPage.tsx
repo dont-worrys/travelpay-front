@@ -90,6 +90,12 @@ export function SettlementDetailPage() {
         <dd>{settlement.paymentCount}건</dd>
         <dt>요청 시각</dt>
         <dd>{formatDateTime(settlement.createdAt)}</dd>
+        {settlement.paidAt && (
+          <>
+            <dt>입금 시각</dt>
+            <dd>{formatDateTime(settlement.paidAt)}</dd>
+          </>
+        )}
         <dt>정산 ID</dt>
         <dd>
           <code>{settlement.settlementId}</code>

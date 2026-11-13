@@ -44,6 +44,7 @@ describe('HistoryTabs', () => {
     expect(screen.getByRole('link', { name: '충전' })).toHaveAttribute('href', '/wallet/charges')
     expect(screen.getByRole('link', { name: '환전' })).toHaveAttribute('href', '/exchanges')
     expect(screen.getByRole('link', { name: '결제' })).toHaveAttribute('href', '/payments')
+    expect(screen.getByRole('link', { name: '정산 입금' })).toHaveAttribute('href', '/wallet/settlements')
     expect(screen.getByRole('link', { name: '송금' })).toHaveAttribute('aria-current', 'page')
   })
 })

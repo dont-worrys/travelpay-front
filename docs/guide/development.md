@@ -5,10 +5,12 @@
 ```text
 src/
   main.tsx              진입점 (AuthProvider + RouterProvider)
-  router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다
+  router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다.
+                        화면은 lazyPage(React.lazy)로 라우트별 청크가 되고, 로딩 표시는 AppLayout의 Suspense(PageLoading)가 맡는다.
+                        청크를 못 받으면 lib/chunkReload가 1회 새로고침, 그래도 실패하면 RouteError(경로 없는 묶음의 errorElement)가 안내한다
   index.css             전역 스타일(공통 클래스 + 화면별 구역, 색·글씨 크기·배율은 :root 변수, 규칙은 docs/convention/style.md)
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
-  components/           공통 레이아웃(AppLayout: 사이드바·상단 바·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
+  components/           공통 레이아웃(AppLayout: 네이비 헤더·계정 메뉴·서랍·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
                         통화 배지(CurrencyMark), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
                         환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분)
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
@@ -19,12 +21,16 @@ src/
                         환불 실행·거절 공통 UI(RefundActions, 가맹점·관리자 화면 공용), 결제 상세 조회 훅(useMerchantPayment)
   features/exchange/    환율·한도·견적·환전·예약 환전 API·상태, 전일 대비·수수료율 표시(rateDisplay)
   features/admin/       관리자 API(가맹점·MANUAL_REVIEW·송금·충전·대사·처리 기록·회원·약관), 처리 대기·처리 기록 화면용 변환
-  lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime), 주기 조회 훅(useAutoRefresh)
+  lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime), 주기 조회 훅(useAutoRefresh),
+                        청크 로딩 실패 시 1회 새로고침(chunkReload)
   pages/                화면 단위 컴포넌트
   test/                 테스트 도우미(fetch 모의, 메모리 라우터)
 docs/
-  guide/api-common.md   공통 API 규칙(응답 형식, 오류 코드, 세션·CSRF, 멱등성, CORS)
-  convention/           브랜치·커밋·이슈·PR 규칙
+  getting-started.md    처음 실행하기(설치, 환경 변수, 백엔드 띄우는 순서)
+  guide/                공통 API 규칙, 화면 목록, 개발·테스트·배포 가이드
+  convention/           브랜치·커밋·이슈·PR 규칙, 스타일 가이드
+  verification/         Gateway E2E·브라우저 확인 기록, 로컬 검증 데이터
+vercel.json             Vercel 빌드·SPA rewrite·응답 헤더
 ```
 
 기능별 API 명세와 오류 코드는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다. 환전·예약 환전은 `exchange-service.md`와 맞춰 두었습니다. 관리자 충전 보정·대사처럼 가이드에 절이 없는 API는 해당 서비스의 컨트롤러·DTO 코드를 기준으로 했습니다.

@@ -108,7 +108,7 @@
 
 프런트 코드는 위 수취인 표시만 고쳤습니다. 확인하지 못한 것:
 
-- `REQUESTED` 송금 취소 성공: 원장 연동 뒤 새 송금은 `PROCESSING`으로 시작해 지금은 `REQUESTED`를 만들 수 없습니다.
+- `REQUESTED` 송금 취소 성공: 원장 연동 뒤 새 송금은 `PROCESSING`으로 시작해 지금은 `REQUESTED`를 만들 수 없습니다. 이후 백엔드가 취소 API를 없애고 받은 내역을 `COMPLETED`만 돌려주도록 바꿔(2026-11-13) 프런트도 취소 버튼을 뺐습니다. 위 "취소"·"발견한 것" 첫 줄은 당시 기록입니다.
 - `PROCESSING`이 이어지는 경우와 `MANUAL_REVIEW`: 아래 [관리자 MANUAL_REVIEW 처리](#관리자-manual_review-처리) 절에서 확인했습니다(원장 중지 중 202 `PROCESSING` → 약 8분 뒤 `MANUAL_REVIEW` → 운영자 확정 → `COMPLETED`).
 - 화면 대조: 요청은 스크립트로 보냈고, 송금 화면은 [브라우저 화면 확인](browser-check.md) 절에서 따로 확인했습니다.
 

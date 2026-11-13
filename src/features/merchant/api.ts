@@ -55,6 +55,10 @@ export interface Settlement {
   cutoffAt: string
   ledgerTransactionId: string | null
   failureReason: string | null
+  /** `PAID`를 확정한 시각(입금 시각). `PAID`가 아니면 null. */
+  paidAt: string | null
+  /** 가맹점 현재 이름(백엔드 #320). 그 전 서버 응답에는 없다. */
+  merchantName?: string
   createdAt: string
   updatedAt: string
 }
@@ -141,6 +145,20 @@ export function fetchSettlements(
 
 export function fetchSettlement(merchantId: string, settlementId: string, signal?: AbortSignal): Promise<SettlementDetail> {
   return apiRequest<SettlementDetail>(`${merchantPath(merchantId)}/settlements/${encodeURIComponent(settlementId)}`, {
+    signal,
+  })
+}
+
+/**
+ * 내 정산 목록. 내가 주인인 모든 가맹점의 정산을 합친 페이지로, 서버 정렬은 요청 시각(`createdAt`) 최신순이다.
+ * 가맹점이 없으면 빈 페이지.
+ */
+export function fetchMySettlements(
+  query: { status?: SettlementStatus; page?: number; size?: number },
+  signal?: AbortSignal,
+): Promise<PageResponse<Settlement>> {
+  return apiRequest<PageResponse<Settlement>>('/api/v1/payments/settlements/me', {
+    query: { status: query.status, page: query.page, size: query.size },
     signal,
   })
 }

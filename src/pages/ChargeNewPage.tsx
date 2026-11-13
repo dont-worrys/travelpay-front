@@ -142,7 +142,10 @@ export function ChargeNewPage() {
         <h2>원화(KRW) 지갑 충전</h2>
         <label>
           금액
-          <div className="input-row">
+          <div className="amount-input">
+            <span className="amount-input-symbol" aria-hidden="true">
+              ₩
+            </span>
             <input
               inputMode="numeric"
               value={amountInput}
@@ -150,7 +153,7 @@ export function ChargeNewPage() {
               placeholder="0"
               autoComplete="off"
             />
-            <span>원</span>
+            <span className="amount-input-code">KRW</span>
           </div>
           {amountInput && parsedAmount.ok && <span className="hint">{formatAmount(parsedAmount.minor, 'KRW')}</span>}
           {fieldErrors.amount && <span className="field-error">{fieldErrors.amount}</span>}

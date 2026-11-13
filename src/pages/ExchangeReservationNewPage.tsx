@@ -11,7 +11,8 @@ import {
   type ForeignCurrency,
   type ReservationInput,
 } from '../features/exchange/api'
-import { formatFeeRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
+import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
+import { Icon } from '../components/Icon'
 import { reservationTriggerText, toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
 import { formatDateTime } from '../lib/datetime'
@@ -20,7 +21,6 @@ import {
   compareDecimalText,
   CURRENCY_INFO,
   formatAmount,
-  formatDecimalText,
   majorToMinor,
   parseAmount,
   parseRate,
@@ -300,6 +300,18 @@ export function ExchangeReservationNewPage() {
           {amountError && <span className="field-error">{amountError}</span>}
         </label>
 
+        {rate && (
+          <div className="mid-rate-box">
+            <MidRate rate={rate} unitLabel={`${unitLabel}당`} label="지금 매매기준율" />
+            <p className="rate-meta">기준일 {rate.rateDate} · 목표 환율과 비교해 보세요</p>
+          </div>
+        )}
+        {executesSoon && (
+          <p className="notice-warn">
+            <Icon name="alert" />
+            지금 환율이 이미 조건을 만족해, 다음 환율 수집 때 바로 체결될 수 있습니다.
+          </p>
+        )}
         <label>
           목표 환율 ({unitLabel}당 원)
           <div className="input-row">
@@ -313,15 +325,7 @@ export function ExchangeReservationNewPage() {
             />
             <span>원</span>
           </div>
-          {rate && (
-            <span className="hint">
-              지금 매매기준율 {formatDecimalText(rate.midRate)}원 (기준일 {rate.rateDate})
-            </span>
-          )}
           {(rates || ratesError != null) && !rate && <span className="hint">환율 정보를 불러오지 못했습니다.</span>}
-          {executesSoon && (
-            <span className="hint">지금 환율이 이미 조건을 만족해, 다음 환율 수집 때 바로 체결될 수 있습니다.</span>
-          )}
           {rateError && <span className="field-error">{rateError}</span>}
         </label>
 
