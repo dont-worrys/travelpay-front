@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { homePathFor } from '../features/auth/RequireRole'
 import { useAuth } from '../features/auth/useAuth'
 import { HISTORY_TABS } from './HistoryTabs'
 import { Icon, type IconName } from './Icon'
+import { PageLoading } from './PageLoading'
 import { RatesProvider } from './RatesProvider'
 import { RateTicker } from './RateTicker'
 
@@ -238,7 +239,10 @@ export function AppLayout() {
         )}
 
         <main className="app-main">
-          <Outlet />
+          {/* 화면 코드는 라우트별 청크라(router.tsx) 처음 열 때 내려받는 동안 본문 자리에만 로딩을 보인다. */}
+          <Suspense fallback={<PageLoading />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         {isUser && (

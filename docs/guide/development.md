@@ -5,7 +5,9 @@
 ```text
 src/
   main.tsx              진입점 (AuthProvider + RouterProvider)
-  router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다
+  router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다.
+                        화면은 lazyPage(React.lazy)로 라우트별 청크가 되고, 로딩 표시는 AppLayout의 Suspense(PageLoading)가 맡는다.
+                        청크를 못 받으면 lib/chunkReload가 1회 새로고침, 그래도 실패하면 RouteError(경로 없는 묶음의 errorElement)가 안내한다
   index.css             전역 스타일(공통 클래스 + 화면별 구역, 색·글씨 크기·배율은 :root 변수, 규칙은 docs/convention/style.md)
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
   components/           공통 레이아웃(AppLayout: 네이비 헤더·계정 메뉴·서랍·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),

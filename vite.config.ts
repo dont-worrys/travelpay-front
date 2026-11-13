@@ -15,6 +15,19 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      rollupOptions: {
+        output: {
+          // 모든 화면이 쓰는 라이브러리(react·react-dom·react-router, 시작 청크의 약 90%)는 배포마다 바뀌지 않으므로
+          // 따로 묶어 브라우저 캐시를 재사용한다. 화면 코드는 router.tsx의 lazy로 라우트별 청크가 된다(#55).
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              return 'vendor'
+            }
+          },
+        },
+      },
+    },
     define: {
       'import.meta.env.VITE_API_DISABLED': JSON.stringify(apiDisabled ? 'true' : 'false'),
     },
