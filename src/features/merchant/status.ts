@@ -17,7 +17,7 @@ export const SETTLEMENT_DESCRIPTION: Partial<Record<SettlementStatus, string>> =
   MANUAL_REVIEW: '자동 처리가 멈춰 운영자가 확인하고 있습니다. 같은 결제가 두 번 정산되지 않으니 기다려 주세요.',
 }
 
-/** 정산 입금 내역의 가맹점 표시. 이름이 응답에 없으면 가맹점 ID 앞 8자리. */
+/** 정산 입금 내역의 가맹점 표시. 이름이 없는 응답(백엔드 #320 배포 전)은 가맹점 ID 앞 8자리. */
 export function settlementMerchantLabel(settlement: Settlement): string {
   return settlement.merchantName || `가맹점 ${settlement.merchantId.slice(0, 8)}`
 }

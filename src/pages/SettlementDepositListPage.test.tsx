@@ -13,6 +13,7 @@ function settlement(id: string, overrides: Record<string, unknown>) {
   return {
     settlementId: id,
     merchantId: MERCHANT_A,
+    merchantName: '제주 기념품샵',
     status: 'PAID',
     amount: 50000,
     currency: 'KRW',
@@ -43,6 +44,7 @@ describe('정산 입금 내역', () => {
             settlement('cccccccc-0000-4000-8000-000000000001', { merchantName: '도쿄 라멘', amount: 50000 }),
             settlement('cccccccc-0000-4000-8000-000000000002', {
               merchantId: MERCHANT_B,
+              merchantName: undefined,
               amount: 12000,
               paidAt: '2026-11-13T05:00:00Z',
             }),
@@ -57,7 +59,7 @@ describe('정산 입금 내역', () => {
     expect(first).toHaveTextContent(`+${formatAmount(50000, 'KRW')}`)
     expect(first).toHaveTextContent(`${formatDateTime('2026-11-12T03:00:01Z')} 입금 · 결제 3건`)
 
-    // 이름이 없는 서버 응답은 가맹점 ID 앞 8자리로 보여 준다.
+    // merchantName이 없는 응답(백엔드 #320 배포 전)은 가맹점 ID 앞 8자리로 보여 준다.
     const second = screen.getByRole('link', { name: /가맹점 bbbbbbbb/ })
     expect(second).toHaveTextContent(formatDateTime('2026-11-13T05:00:00Z'))
 

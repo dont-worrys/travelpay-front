@@ -57,8 +57,8 @@ export interface Settlement {
   failureReason: string | null
   /** `PAID`를 확정한 시각(입금 시각). `PAID`가 아니면 null. */
   paidAt: string | null
-  /** 결제 담당이 추가하기로 한 필드(2026-11-13). 오기 전 서버에는 없다. */
-  merchantName?: string | null
+  /** 가맹점 현재 이름(백엔드 #320). 그 전 서버 응답에는 없다. */
+  merchantName?: string
   createdAt: string
   updatedAt: string
 }
