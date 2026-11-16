@@ -11,6 +11,7 @@ import {
   type ReservationInput,
 } from '../features/exchange/api'
 import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
+import { AmountInput } from '../components/AmountInput'
 import { Icon } from '../components/Icon'
 import { reservationTriggerText, toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
@@ -273,17 +274,9 @@ export function ExchangeReservationNewPage() {
         <label>
           보내는 금액 ({CURRENCY_INFO[fromCurrency].label})
           <div className="input-row">
-            <input
-              inputMode={CURRENCY_INFO[fromCurrency].decimals > 0 ? 'decimal' : 'numeric'}
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              placeholder="0"
-              autoComplete="off"
-              disabled={locked}
-            />
+            <AmountInput currency={fromCurrency} value={amountInput} onChange={setAmountInput} disabled={locked} />
             <span>{CURRENCY_INFO[fromCurrency].unit}</span>
           </div>
-          {amountInput && parsedAmount.ok && <span className="hint">{formatAmount(parsedAmount.minor, fromCurrency)}</span>}
           {minMinor !== null && maxMinor !== null && (
             <span className="hint">
               1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료(

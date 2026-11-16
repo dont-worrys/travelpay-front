@@ -148,3 +148,31 @@ export function formatAmount(minor: number, currency: string): string {
   const whole = BigInt(wholeDigits).toLocaleString('ko-KR')
   return `${negative ? '-' : ''}${whole}${fraction}${info.unit}`
 }
+
+/** 금액 칸에 둘 수 있는 정수 자릿수. 이보다 긴 값은 어떤 통화로도 처리할 수 없는 크기라 입력 단계에서 자른다. */
+const AMOUNT_INPUT_MAX_WHOLE_DIGITS = 15
+
+/**
+ * 금액 칸에 들어온 글자를 숫자 금액 문자열로 거른다(쉼표 없는 "1000000", "12.5").
+ * 숫자와 소수점 하나만 남기고(마이너스·문자·쉼표 제거), 소수점은 소수가 있는 통화(CNY)에서만 자릿수까지 둔다.
+ * 소수가 없는 통화에 "12.50"을 붙여 넣으면 소수점 앞만 남긴다(1250이 되지 않게). 앞쪽 0은 하나만 둔다.
+ */
+export function sanitizeAmountInput(input: string, currency: Currency): string {
+  const { decimals } = CURRENCY_INFO[currency]
+  const cleaned = input.replace(/[^\d.]/g, '')
+  const dot = cleaned.indexOf('.')
+  const wholeRaw = dot === -1 ? cleaned : cleaned.slice(0, dot)
+  const whole = wholeRaw.replace(/^0+(?=\d)/, '').slice(0, AMOUNT_INPUT_MAX_WHOLE_DIGITS)
+  if (dot === -1 || decimals === 0) {
+    return whole
+  }
+  const fraction = cleaned.slice(dot + 1).replace(/\./g, '').slice(0, decimals)
+  return `${whole || '0'}.${fraction}`
+}
+
+/** 금액 칸에 보일 모양: 정수 부분에 세 자리마다 쉼표("1,000,000", "1,234.5"). 입력 중인 끝 소수점도 남긴다. */
+export function groupAmountInput(value: string): string {
+  const dot = value.indexOf('.')
+  const whole = dot === -1 ? value : value.slice(0, dot)
+  return whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (dot === -1 ? '' : value.slice(dot))
+}

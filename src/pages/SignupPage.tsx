@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { isApiError, toUserMessage } from '../api'
 import { fetchTerms, signup, type TermItem } from '../features/auth/api'
 import { safeRedirectPath } from '../features/auth/redirect'
+import { isSignupEmail } from '../lib/email'
+import { formatPhoneInput } from '../lib/phone'
 
 const termKey = (term: TermItem) => `${term.termsCode}:${term.termsVersion}`
 
@@ -18,6 +20,7 @@ export function SignupPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [emailTouched, setEmailTouched] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -30,6 +33,9 @@ export function SignupPage() {
   }, [])
 
   const requiredAgreed = (terms ?? []).filter((t) => t.isRequired).every((t) => agreed[termKey(t)])
+  // 흔한 이메일 형식이 아니면 가입 버튼을 끈다. 안내는 칸을 벗어난 뒤에 보인다(서버 필드 오류가 있으면 그쪽을 보인다).
+  const emailValid = isSignupEmail(form.loginEmail)
+  const showEmailError = emailTouched && form.loginEmail.trim() !== '' && !emailValid && !fieldErrors.loginEmail
 
   function update(field: keyof typeof form, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -46,6 +52,7 @@ export function SignupPage() {
     try {
       await signup({
         ...form,
+        loginEmail: form.loginEmail.trim(),
         consents: terms
           .filter((t) => agreed[termKey(t)])
           .map((t) => ({ termsCode: t.termsCode, termsVersion: t.termsVersion })),
@@ -63,7 +70,7 @@ export function SignupPage() {
   }
 
   return (
-    <section>
+    <section className="auth-page">
       <h1>회원가입</h1>
       <form className="form" onSubmit={handleSubmit} noValidate>
         <label>
@@ -73,7 +80,10 @@ export function SignupPage() {
             autoComplete="username"
             value={form.loginEmail}
             onChange={(e) => update('loginEmail', e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            aria-invalid={showEmailError || Boolean(fieldErrors.loginEmail)}
           />
+          {showEmailError && <span className="field-error">이메일 형식을 확인해 주세요. (예: name@example.com)</span>}
           {fieldErrors.loginEmail && <span className="field-error">{fieldErrors.loginEmail}</span>}
         </label>
         <label>
@@ -103,7 +113,7 @@ export function SignupPage() {
             autoComplete="tel"
             placeholder="010-1234-5678"
             value={form.phone}
-            onChange={(e) => update('phone', e.target.value)}
+            onChange={(e) => update('phone', formatPhoneInput(e.target.value))}
           />
           {fieldErrors.phone && <span className="field-error">{fieldErrors.phone}</span>}
         </label>
@@ -111,7 +121,7 @@ export function SignupPage() {
         <fieldset className="terms">
           <legend>약관 동의</legend>
           {termsError && <p className="error">{termsError}</p>}
-          {!terms && !termsError && <p>약관을 불러오는 중입니다…</p>}
+          {!terms && !termsError && <p className="loading-delay">약관을 불러오는 중입니다…</p>}
           {terms?.map((term) => (
             <div key={termKey(term)} className="term">
               <label className="inline">
@@ -136,7 +146,7 @@ export function SignupPage() {
             {error}
           </p>
         )}
-        <button type="submit" disabled={submitting || !terms || !requiredAgreed}>
+        <button type="submit" disabled={submitting || !terms || !requiredAgreed || !emailValid}>
           {submitting ? '가입 중…' : '가입하기'}
         </button>
       </form>

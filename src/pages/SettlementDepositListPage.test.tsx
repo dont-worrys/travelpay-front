@@ -74,7 +74,7 @@ describe('정산 입금 내역', () => {
 
     const query = new URLSearchParams(requests[0]?.search)
     expect(query.get('status')).toBe('PAID')
-    expect(screen.getByRole('link', { name: '정산 입금' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('정산이 없으면 빈 목록 문구를 보여 준다', async () => {

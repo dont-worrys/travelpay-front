@@ -1,57 +1,72 @@
 /*
  * 전역 스타일 한 파일. 화면은 아래 공통 클래스를 조합해 쓰고, 특정 화면에서만 쓰는 스타일은 맨 아래 "화면별"에 둔다.
- * 색·모서리·글씨·간격은 :root 변수로만 지정한다. 값의 기준은 docs/convention/style.md(#54 시안)다.
+ * 색·모서리·글씨·간격은 :root 변수로만 지정한다. 값은 xe.com을 브라우저 개발자 도구로 실측한 것이며(2026-11-16),
+ * 기준과 출처는 docs/convention/style.md 다. 클래스 이름은 테스트·화면 코드가 쓰므로 바꾸지 않는다.
  * 반응형 기준: 768px(모바일 / 태블릿), 1024px(태블릿 / 데스크톱: 가로 헤더 메뉴).
  */
 
 /* 1. 디자인 토큰 */
 :root {
-  /* 네이비(헤더·히어로) */
+  /* 네이비 그라디언트(헤더·히어로·서랍·푸터). xe: blue-850 → blue-700, 푸터 blue-900 → blue-700 */
   --navy: #0b1b3f;
-  --navy-soft: rgba(255, 255, 255, 0.12);
+  --navy-deep: #07122f;
+  --navy-light: #172c5f;
+  --gradient-hero: linear-gradient(to left, #0b1b3f 0%, #172c5f 100%);
+  --gradient-footer: linear-gradient(to left bottom, #07122f 0%, #172c5f 100%);
+  --navy-soft: rgba(255, 255, 255, 0.1);
   --on-navy: #ffffff;
-  --on-navy-muted: #c9d3ea;
-  --on-navy-subtle: #a9b6d3;
+  --on-navy-muted: #d3dcf0;
+  --on-navy-subtle: #aebbd8;
   --on-navy-border: rgba(255, 255, 255, 0.2);
-  --on-navy-border-strong: rgba(255, 255, 255, 0.35);
+  --on-navy-border-strong: rgba(255, 255, 255, 0.4);
 
-  /* 파랑(주 버튼·선택·링크) */
+  /* 슬레이트(선택된 탭·칩·라벨 칩). xe greyblue */
+  --slate: #1c2c52;
+  --slate-hover: #5a6478;
+  --slate-text: #5a6478;
+
+  /* 파랑(주 버튼·선택·링크). xe xe-primary-500 / 450 / 600 */
   --primary: #1f4bff;
   --primary-hover: #1b3fd6;
+  --primary-pressed: #1434b0;
   --link: #1b3fd6;
   --link-hover: #0b1b3f;
   --primary-subtle: #e8eeff;
   --primary-border: #1f4bff;
 
   /* 바탕·표면·테두리 */
+  --bg-page: #ffffff;
   --bg-app: #f4f6fa;
   --surface: #ffffff;
   --surface-subtle: #f8f9fc;
+  --surface-muted: #edf0f6;
+  --surface-muted-hover: #e1e6f0;
   --border-color: #e3e7ef;
-  --border-subtle: #eef0f3;
-  --input-border: #c9d3ea;
+  --border-subtle: #eef0f5;
+  --input-border: #ccd4e6;
 
   /* 글자 */
   --text-main: #0b1b3f;
+  --text-strong: #07122f;
   --text-body: #3a4458;
   --text-muted: #5a6478;
   --text-placeholder: #8a93a6;
-  --disabled: #dde2ec;
-  --disabled-text: #4a5263;
+  --disabled: #e3e7ef;
+  --disabled-text: #5a6478;
 
-  /* 상태(배지·알림) */
-  --status-completed-bg: #e6f4ec;
-  --status-completed-text: #0e6b43;
+  /* 상태(배지·알림). xe success / info / warning / danger muted 계열 */
+  --status-completed-bg: #e1ffeb;
+  --status-completed-text: #005c34;
   --status-processing-bg: #e8eeff;
   --status-processing-text: #1b3fd6;
-  --status-warn-bg: #fff4e0;
-  --status-warn-text: #8a4b00;
-  --status-warn-strong: #6b3a00;
-  --status-failed-bg: #fdecec;
-  --status-failed-text: #b42318;
-  --status-failed-strong: #b42318;
-  --status-neutral-bg: #eef0f3;
-  --status-neutral-text: #4a5263;
+  --status-warn-bg: #fff6da;
+  --status-warn-text: #5d4a00;
+  --status-warn-strong: #352900;
+  --status-failed-bg: #ffeae6;
+  --status-failed-text: #910a09;
+  --status-failed-strong: #d60009;
+  --status-neutral-bg: #edeff3;
+  --status-neutral-text: #4b4c4f;
 
   /* 환율 전일 대비(팀 지정) */
   --rate-up: #c8312f;
@@ -59,28 +74,33 @@
   --rate-up-on-navy: #ff8a84;
   --rate-down-on-navy: #8fa6ff;
 
-  /* 모양 */
+  /* 모양. xe: 버튼·탭 알약, 입력 8px, 카드 20px, 히어로 카드 24px */
   --radius-sm: 6px;
   --radius-md: 8px;
-  --radius-control: 10px;
+  --radius-control: 8px;
   --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-pill: 9999px;
   --card-border: 1px solid var(--border-color);
-  --shadow-raised: 0 12px 32px rgba(11, 27, 63, 0.25);
-  --control-height: 44px;
-  --control-height-lg: 52px;
+  --shadow-raised: 0 18px 36px -18px rgba(0, 0, 0, 0.1), 0 30px 45px -30px rgba(50, 50, 93, 0.1);
+  --shadow-menu: 0 12px 32px rgba(11, 27, 63, 0.2);
+  --control-height: 48px;
+  --control-height-lg: 48px;
+  --input-height: 50px;
   --focus-ring: 0 0 0 2px var(--primary);
 
   /* 간격·폭 */
+  --header-height: 72px;
   --space-page-x: 16px;
-  --space-page-top: 36px;
+  --space-page-top: 32px;
   --space-page-bottom: 64px;
   --gap-section: 24px;
   --pad-card: 20px;
   --gap-card: 16px;
   --width-form: 760px;
   --width-list: 960px;
-  --width-wide: 1280px;
+  --width-wide: 1200px;
   --tabbar-height: 56px;
 
   /* 글씨 크기(모바일 기본, 768px 이상에서 일부 키움) */
@@ -88,42 +108,47 @@
   --fs-balance: 28px;
   --fs-amount-lg: 28px;
   --fs-rate-lg: 26px;
-  --fs-h1: 24px;
-  --fs-amount-card: 22px;
-  --fs-h2: 17px;
+  --fs-h1: 28px;
+  --fs-amount-card: 24px;
+  --fs-h2: 18px;
   --fs-h3: 16px;
-  --fs-body: 15px;
+  --fs-body: 16px;
   --fs-control: 16px;
-  --fs-button: 15px;
+  --fs-button: 16px;
   --fs-nav: 15px;
   --fs-sm: 14px;
   --fs-xs: 13px;
   --fs-2xs: 12px;
 
-  font-family: Inter, 'Noto Sans KR', Pretendard, system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
-  line-height: 1.6;
+  /* 홈 히어로 아래 흰 곡선이 보이는 높이 */
+  --curve-visible: 96px;
+
+  font-family: 'Zalando Sans', 'Noto Sans KR', system-ui, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
   color: var(--text-body);
-  background-color: var(--bg-app);
+  background-color: var(--bg-page);
 }
 
 @media (min-width: 768px) {
   :root {
-    --space-page-x: 24px;
-    --pad-card: 24px;
-    --fs-hero: 48px;
+    --space-page-x: 40px;
+    --space-page-top: 40px;
+    --pad-card: 28px;
+    --curve-visible: 200px;
+    --fs-hero: 44px;
     --fs-balance: 40px;
     --fs-amount-lg: 32px;
     --fs-rate-lg: 32px;
-    --fs-h1: 28px;
-    --fs-amount-card: 24px;
-    --fs-h2: 18px;
-    --fs-control: 15px;
+    --fs-h1: 36px;
+    --fs-amount-card: 26px;
+    --fs-h2: 20px;
   }
 }
 
 @media (min-width: 1024px) {
   :root {
-    --space-page-x: 32px;
+    --header-height: 88px;
     --gap-section: 28px;
   }
 }
@@ -135,8 +160,15 @@
 
 body {
   margin: 0;
-  background-color: var(--bg-app);
+  background-color: var(--bg-page);
   font-size: var(--fs-body);
+}
+
+button,
+input,
+select,
+textarea {
+  letter-spacing: inherit;
 }
 
 h1,
@@ -144,63 +176,79 @@ h2,
 h3,
 h4 {
   color: var(--text-main);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
 }
 
 h1 {
-  margin: 0 0 20px;
+  margin: 0 0 24px;
   font-size: var(--fs-h1);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.3;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
 }
 
 h2 {
   margin: 32px 0 12px;
   font-size: var(--fs-h2);
-  font-weight: 700;
+  font-weight: 650;
+  line-height: 1.3;
 }
 
 h3 {
   margin: 0 0 12px;
   font-size: var(--fs-h3);
-  font-weight: 700;
+  font-weight: 650;
 }
 
 a {
   color: var(--link);
 }
 
-a:hover {
-  color: var(--link-hover);
+/* hover 효과는 마우스처럼 올려 둘 수 있는 기기에서만 쓴다. 터치 기기는 탭한 뒤에도 :hover가 남아
+ * 누른 버튼·탭이 선택된 것처럼 보이므로, 모든 :hover 규칙을 제자리에서 이 조건으로 감싼다. */
+@media (hover: hover) {
+  a:hover {
+    color: var(--link-hover);
+  }
 }
 
 code {
   font-size: var(--fs-xs);
-  font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
+/* xe: 키보드 포커스는 파랑 2px 윤곽선(+2px 띄움). 어두운 바탕 위에서는 흰색 */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-  border-radius: 4px;
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.app-header :focus-visible,
+.app-drawer :focus-visible,
+.app-footer :focus-visible,
+.home-hero :focus-visible {
+  outline-color: var(--on-navy);
 }
 
 /*
  * 3. 레이아웃(AppLayout)
- * 1024px 이상: 네이비 가로 헤더(로고 · 메뉴 · 환율 티커 · 계정).
- * 1024px 미만: 네이비 미니 헤더(로고 · 계정 · 메뉴 버튼) + 서랍. 768px 미만 일반회원은 하단 탭바.
+ * 1024px 이상: 그라디언트 가로 헤더(로고 · 메뉴 · 환율 티커 · 로그인/계정), 높이 88px.
+ * 1024px 미만: 헤더 72px(로고 · 로그인/계정 · 메뉴 아이콘) + 서랍. 768px 미만 일반회원은 하단 탭바.
+ * 맨 아래는 그라디언트 푸터.
  */
 .app {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--navy);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--gradient-hero);
   color: var(--on-navy);
 }
 
@@ -209,9 +257,9 @@ code {
   align-items: center;
   gap: 16px;
   max-width: calc(var(--width-wide) + 2 * var(--space-page-x));
-  min-height: 56px;
+  min-height: var(--header-height);
   margin: 0 auto;
-  padding: 8px var(--space-page-x);
+  padding: 0 24px;
 }
 
 .app-logo {
@@ -220,59 +268,61 @@ code {
   align-items: center;
   gap: 10px;
   color: var(--on-navy);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
   text-decoration: none;
 }
 
-.app-logo:hover {
-  color: var(--on-navy);
+@media (hover: hover) {
+  .app-logo:hover {
+    color: var(--on-navy);
+  }
 }
 
+/* 로고 마크 "TP$": 초승달 링 안에 TP, 열린 오른쪽에 $ (BrandMark.tsx). 현재 글자색(흰색)을 따른다 */
 .app-logo-mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--primary);
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
   color: var(--on-navy);
 }
 
-.app-logo-mark .icon {
-  width: 18px;
-  height: 18px;
+.app-logo-name {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
 }
 
-/* 가로 메뉴(1024px 이상만) */
+/* 가로 메뉴(1024px 이상만). 흰 글씨 알약, 마우스를 올리면 흰색 10% 바탕 */
 .app-nav {
   display: none;
   flex: 1;
   flex-wrap: wrap;
   gap: 4px;
   min-width: 0;
+  margin-left: 16px;
 }
 
 .app-nav a {
-  padding: 10px 14px;
-  border-radius: var(--radius-md);
-  color: var(--on-navy-muted);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  color: var(--on-navy);
   font-size: var(--fs-nav);
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.5;
   text-decoration: none;
   white-space: nowrap;
+  transition: background-color 0.15s;
 }
 
-.app-nav a:hover {
-  color: var(--on-navy);
+@media (hover: hover) {
+  .app-nav a:hover {
+    background: var(--navy-soft);
+    color: var(--on-navy);
+  }
 }
 
 .app-nav a.active {
   background: var(--navy-soft);
-  color: var(--on-navy);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .app-nav .icon {
@@ -287,6 +337,44 @@ code {
   margin-left: auto;
 }
 
+/* 로그인 전 헤더의 로그인 알약(xe의 Login). 회원가입은 로그인 화면에서 이어진다 */
+.app-auth {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-auth a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 20px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-navy);
+  font-size: var(--fs-nav);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.app-auth a.active {
+  background: var(--primary-hover);
+  color: var(--on-navy);
+}
+
+@media (hover: hover) {
+  .app-auth a:hover {
+    background: var(--primary-hover);
+    color: var(--on-navy);
+  }
+}
+
+.app-auth a:active {
+  transform: scale(0.97);
+}
+
 /* 환율 티커(네이비 위, 768px 이상) */
 .rate-ticker {
   display: none;
@@ -296,12 +384,12 @@ code {
 }
 
 .rate-ticker-chip {
-  padding: 2px 8px;
-  border-radius: var(--radius-sm);
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
   background: var(--navy-soft);
   color: var(--on-navy);
   font-size: var(--fs-2xs);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .rate-ticker-value {
@@ -312,14 +400,15 @@ code {
   text-decoration: none;
 }
 
-.rate-ticker-value:hover {
-  color: var(--on-navy);
+@media (hover: hover) {
+  .rate-ticker-value:hover {
+    color: var(--on-navy);
+  }
 }
 
 .rate-ticker-value strong {
   font-size: var(--fs-body);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
 }
 
 .rate-ticker-value .rate-ticker-unit {
@@ -345,9 +434,9 @@ code {
 }
 
 .rate-ticker select {
-  padding: 2px 4px;
+  padding: 4px 8px;
   border: 1px solid var(--on-navy-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: transparent;
   color: var(--on-navy-muted);
   font: inherit;
@@ -359,7 +448,7 @@ code {
   color: var(--text-main);
 }
 
-/* 계정(아바타 + 이름, 누르면 계정 메뉴) */
+/* 계정(이름 + 작은 화살표, 누르면 계정 메뉴) */
 .app-account {
   position: relative;
   min-width: 0;
@@ -368,32 +457,42 @@ code {
 .app-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   min-width: 0;
-  min-height: var(--control-height);
-  padding: 2px;
+  min-height: 40px;
+  padding: 4px 8px 4px 14px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: none;
   color: var(--on-navy);
   font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  font-size: var(--fs-nav);
+  font-weight: 550;
   cursor: pointer;
+  transition: background-color 0.15s;
 }
 
-.app-avatar {
-  display: inline-flex;
+.app-profile[aria-expanded='true'] {
+  background: var(--navy-soft);
+}
+
+@media (hover: hover) {
+  .app-profile:hover {
+    background: var(--navy-soft);
+  }
+}
+
+/* 이름 옆 작은 화살표(계정 메뉴가 열린다는 표시). 열리면 위를 향한다 */
+.app-profile-caret {
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--primary-subtle);
-  color: var(--link);
-  font-size: var(--fs-sm);
-  font-weight: 700;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.app-profile[aria-expanded='true'] .app-profile-caret {
+  transform: rotate(-90deg);
 }
 
 .app-user-name {
@@ -409,12 +508,12 @@ code {
   z-index: 60;
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  padding: 6px;
+  min-width: 208px;
+  padding: 8px;
   border: var(--card-border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   background: var(--surface);
-  box-shadow: var(--shadow-raised);
+  box-shadow: var(--shadow-menu);
 }
 
 .app-account-menu a,
@@ -422,10 +521,10 @@ code {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: var(--control-height);
+  min-height: 44px;
   padding: 0 12px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: none;
   color: var(--text-main);
   font: inherit;
@@ -436,9 +535,11 @@ code {
   cursor: pointer;
 }
 
-.app-account-menu a:hover,
-.app-account-menu button:hover:not(:disabled) {
-  background: var(--surface-subtle);
+@media (hover: hover) {
+  .app-account-menu a:hover,
+  .app-account-menu button:hover:not(:disabled) {
+    background: var(--bg-app);
+  }
 }
 
 .app-account-menu .icon {
@@ -452,26 +553,32 @@ code {
   cursor: not-allowed;
 }
 
+/* 메뉴 버튼: 1024px 미만에서 햄버거 아이콘만(글자는 화면 읽기 프로그램용) */
 .app-menu-button {
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--on-navy-border-strong);
-  border-radius: var(--radius-md);
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
   background: transparent;
   color: var(--on-navy);
-  font: inherit;
-  font-size: var(--fs-sm);
-  font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+@media (hover: hover) {
+  .app-menu-button:hover {
+    background: var(--navy-soft);
+  }
 }
 
 .app-menu-button .icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
 }
 
 /* 서랍 메뉴(1024px 미만) */
@@ -479,7 +586,7 @@ code {
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: rgba(11, 27, 63, 0.45);
+  background: rgba(7, 18, 47, 0.5);
 }
 
 .app-drawer {
@@ -494,7 +601,7 @@ code {
   width: min(320px, 85vw);
   padding: 20px 16px;
   overflow-y: auto;
-  background: var(--navy);
+  background: var(--gradient-hero);
   color: var(--on-navy);
 }
 
@@ -509,12 +616,12 @@ code {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: var(--control-height);
-  padding: 0 12px;
+  min-height: 48px;
+  padding: 0 16px;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: none;
-  color: var(--on-navy-muted);
+  color: var(--on-navy);
   font: inherit;
   font-size: var(--fs-nav);
   font-weight: 500;
@@ -523,15 +630,17 @@ code {
   cursor: pointer;
 }
 
-.app-drawer-nav a:hover,
-.app-drawer-nav button:hover:not(:disabled) {
-  color: var(--on-navy);
+@media (hover: hover) {
+  .app-drawer-nav a:hover,
+  .app-drawer-nav button:hover:not(:disabled) {
+    background: var(--navy-soft);
+    color: var(--on-navy);
+  }
 }
 
 .app-drawer-nav a.active {
   background: var(--navy-soft);
-  color: var(--on-navy);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .app-drawer-nav button:disabled {
@@ -552,6 +661,7 @@ code {
 
 /* 본문: 헤더와 같은 가운데 컨테이너. 화면 루트 섹션이 폭을 정한다. */
 .app-main {
+  flex: 1;
   padding: var(--space-page-top) 0 var(--space-page-bottom);
 }
 
@@ -571,6 +681,54 @@ code {
 
 .app-main > section.page-wide {
   max-width: calc(var(--width-wide) + 2 * var(--space-page-x));
+}
+
+/* 로그인·가입처럼 가운데 좁은 카드로 쓰는 화면 */
+.app-main > section.auth-page {
+  max-width: calc(520px + 2 * var(--space-page-x));
+}
+
+.auth-page > h1 {
+  text-align: center;
+}
+
+.auth-page > p:not([class]) {
+  margin: 20px 0 0;
+  text-align: center;
+}
+
+/* 푸터(xe: 아래쪽 그라디언트 띠) */
+.app-footer {
+  display: none;
+  padding: 48px 0;
+  background: var(--gradient-footer);
+  color: var(--on-navy-muted);
+}
+
+.app-footer-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: calc(var(--width-wide) + 2 * var(--space-page-x));
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.app-footer p {
+  margin: 0;
+  font-size: var(--fs-xs);
+}
+
+.app-footer-tagline {
+  color: var(--on-navy);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+/* 저작권 줄은 서비스 소개와 헤더 아래 선과 같은 색의 선으로 나눈다 */
+.app-footer-copyright {
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* 하단 탭바(768px 미만 일반회원) */
@@ -603,7 +761,7 @@ code {
 
 .app-tabbar a.active {
   color: var(--primary);
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .app-tabbar .icon {
@@ -627,7 +785,11 @@ code {
 
 @media (max-width: 479px) {
   .app-logo {
-    font-size: 18px;
+    gap: 8px;
+  }
+
+  .app-logo-name {
+    font-size: 17px;
   }
 
   .app-user-name {
@@ -640,6 +802,11 @@ code {
     display: flex;
   }
 
+  .app-header-inner,
+  .app-footer-inner {
+    padding: 0 var(--space-page-x);
+  }
+
   .app-tabbar {
     display: none;
   }
@@ -647,13 +814,15 @@ code {
   .app.with-tabbar .app-main {
     padding-bottom: var(--space-page-bottom);
   }
+
+  .app-footer {
+    display: block;
+  }
 }
 
 @media (min-width: 1024px) {
   .app-header-inner {
     gap: 24px;
-    padding-top: 14px;
-    padding-bottom: 14px;
   }
 
   .app-nav {
@@ -677,7 +846,7 @@ code {
   align-items: center;
   justify-content: space-between;
   gap: 12px 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .title-row h1,
@@ -689,6 +858,24 @@ code {
   margin: 4px 0 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
+}
+
+/* 제목 줄 오른쪽 링크 묶음: xe 표 안 링크처럼 14px/500, 마우스를 올릴 때만 밑줄 */
+.title-row > a:not(.button-link),
+.title-row .actions a:not(.button-link),
+.page-head .actions a:not(.button-link) {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .title-row > a:not(.button-link):hover,
+  .title-row .actions a:not(.button-link):hover,
+  .page-head .actions a:not(.button-link):hover {
+    text-decoration: underline;
+  }
 }
 
 .actions {
@@ -703,7 +890,7 @@ code {
   margin-top: 0;
 }
 
-/* 폼 */
+/* 폼. 입력은 xe처럼 옅은 테두리, 마우스를 올리거나 포커스하면 파랑 2px */
 .form {
   display: flex;
   flex-direction: column;
@@ -713,9 +900,9 @@ code {
 .form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
+  gap: 8px;
+  color: var(--text-body);
+  font-size: var(--fs-sm);
   font-weight: 500;
 }
 
@@ -734,8 +921,8 @@ code {
 .form textarea,
 .input-row > input {
   width: 100%;
-  min-height: var(--control-height);
-  padding: 8px 14px;
+  min-height: var(--input-height);
+  padding: 10px 16px;
   border: 1px solid var(--input-border);
   border-radius: var(--radius-control);
   background: var(--surface);
@@ -743,6 +930,9 @@ code {
   font: inherit;
   font-size: var(--fs-control);
   font-weight: 400;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .form input::placeholder,
@@ -755,8 +945,24 @@ code {
 .form textarea:focus,
 .input-row > input:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+@media (hover: hover) {
+  .form input:not([type='checkbox']):not([type='radio']):hover:not(:disabled),
+  .form select:hover:not(:disabled),
+  .form textarea:hover:not(:disabled),
+  .input-row > input:hover:not(:disabled) {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
+}
+
+.form input:not([type='checkbox']):not([type='radio']):focus,
+.form select:focus,
+.form textarea:focus,
+.input-row > input:focus {
   outline: none;
-  box-shadow: 0 0 0 0.5px var(--primary);
 }
 
 .form input:disabled,
@@ -773,23 +979,30 @@ code {
   border-color: var(--status-failed-strong);
 }
 
+/* 큰 알약 버튼(xe: 높이 48, 알약, 주 버튼 --primary) */
 .form button[type='submit'] {
   width: 100%;
   min-height: var(--control-height-lg);
-  padding: 10px 18px;
+  padding: 10px 32px;
   border: none;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-pill);
   background: var(--primary);
   color: #ffffff;
   font: inherit;
   font-size: var(--fs-button);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.15s;
 }
 
-.form button[type='submit']:hover:not(:disabled) {
-  background: var(--primary-hover);
+@media (hover: hover) {
+  .form button[type='submit']:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+}
+
+.form button[type='submit']:active:not(:disabled) {
+  background: var(--primary-pressed);
 }
 
 .form button[type='submit']:disabled {
@@ -817,38 +1030,54 @@ code {
   min-width: 0;
 }
 
-/* 큰 금액 입력: 왼쪽 통화 기호, 오른쪽 통화 코드 */
+/* 큰 금액 입력: 왼쪽 통화 기호, 오른쪽 통화 코드. xe 환전 입력처럼 옅은 테두리 + 큰 숫자(24px/550) */
 .amount-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 60px;
-  padding: 0 16px;
-  border: 1.5px solid var(--primary);
-  border-radius: var(--radius-lg);
+  min-height: 64px;
+  padding: 0 20px;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-control);
   background: var(--surface);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
 
 .amount-input:focus-within {
-  box-shadow: var(--focus-ring);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+@media (hover: hover) {
+  .amount-input:hover {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
 }
 
 .form .amount-input input:not([type='checkbox']):not([type='radio']) {
   flex: 1;
   min-width: 0;
-  min-height: 56px;
+  min-height: 60px;
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--text-main);
+  color: var(--slate);
   font-size: var(--fs-amount-card);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
+  font-weight: 550;
+  letter-spacing: -0.04em;
 }
 
 .form .amount-input input:not([type='checkbox']):not([type='radio']):focus {
   box-shadow: none;
+}
+
+@media (hover: hover) {
+  .form .amount-input input:not([type='checkbox']):not([type='radio']):hover {
+    box-shadow: none;
+  }
 }
 
 .amount-input-symbol,
@@ -856,10 +1085,11 @@ code {
   flex-shrink: 0;
   color: var(--text-muted);
   font-size: var(--fs-body);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .amount-input-symbol {
+  color: var(--slate);
   font-size: var(--fs-amount-card);
 }
 
@@ -876,11 +1106,11 @@ button.secondary,
   justify-content: center;
   gap: 8px;
   min-height: var(--control-height);
-  padding: 8px 18px;
-  border-radius: var(--radius-control);
+  padding: 8px 24px;
+  border-radius: var(--radius-pill);
   font: inherit;
   font-size: var(--fs-button);
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.3;
   cursor: pointer;
   text-decoration: none;
@@ -897,23 +1127,33 @@ button.primary,
   color: #ffffff;
 }
 
-button.primary:hover:not(:disabled),
-.button-link:hover {
-  background: var(--primary-hover);
-  color: #ffffff;
+@media (hover: hover) {
+  button.primary:hover:not(:disabled),
+  .button-link:hover {
+    background: var(--primary-hover);
+    color: #ffffff;
+  }
 }
 
+button.primary:active:not(:disabled),
+.button-link:active {
+  background: var(--primary-pressed);
+}
+
+/* 보조 버튼: xe "Track exchange rates" (연한 회색 알약, 글자 #18191a) */
 button.secondary,
 .button-link.secondary {
-  border: 1px solid var(--input-border);
-  background: var(--surface);
-  color: var(--text-main);
+  border: 1px solid transparent;
+  background: var(--surface-muted);
+  color: #18191a;
 }
 
-button.secondary:hover:not(:disabled),
-.button-link.secondary:hover {
-  background: var(--surface-subtle);
-  color: var(--text-main);
+@media (hover: hover) {
+  button.secondary:hover:not(:disabled),
+  .button-link.secondary:hover {
+    background: var(--surface-muted-hover);
+    color: #18191a;
+  }
 }
 
 button.primary:disabled,
@@ -931,10 +1171,12 @@ button.on-navy,
   color: var(--on-navy);
 }
 
-button.on-navy:hover:not(:disabled),
-.button-link.on-navy:hover {
-  background: var(--navy-soft);
-  color: var(--on-navy);
+@media (hover: hover) {
+  button.on-navy:hover:not(:disabled),
+  .button-link.on-navy:hover {
+    background: var(--navy-soft);
+    color: var(--on-navy);
+  }
 }
 
 .button-link.block {
@@ -951,8 +1193,10 @@ button.on-navy:hover:not(:disabled),
   cursor: pointer;
 }
 
-.link-button:hover:not(:disabled) {
-  color: var(--link-hover);
+@media (hover: hover) {
+  .link-button:hover:not(:disabled) {
+    color: var(--link-hover);
+  }
 }
 
 .link-button:disabled {
@@ -960,13 +1204,19 @@ button.on-navy:hover:not(:disabled),
   cursor: not-allowed;
 }
 
-/* 카드 머리 등의 "더 보기" 글자 링크 */
+/* 카드 머리 등의 "더 보기" 글자 링크(xe 표 안 링크: 14px/500, 파랑, 마우스를 올리면 밑줄) */
 .link-more {
   color: var(--link);
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .link-more:hover {
+    text-decoration: underline;
+  }
 }
 
 .link-more::after {
@@ -993,8 +1243,8 @@ p.error,
 .notice,
 .notice-warn {
   margin: 0;
-  padding: 12px 14px;
-  border-radius: var(--radius-control);
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
   font-size: var(--fs-sm);
 }
 
@@ -1044,7 +1294,7 @@ section > .notice-warn {
 .info dd {
   margin: 0;
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 550;
   overflow-wrap: anywhere;
 }
 
@@ -1067,8 +1317,7 @@ section > .notice-warn {
 .amount {
   color: var(--text-main);
   font-size: var(--fs-body);
-  font-variant-numeric: tabular-nums;
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .amount.received {
@@ -1083,8 +1332,7 @@ section > .notice-warn {
   margin: 8px 0;
   color: var(--text-main);
   font-size: var(--fs-amount-lg);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.25;
 }
@@ -1093,8 +1341,7 @@ section > .notice-warn {
 .rate-change {
   margin-left: 6px;
   font-size: var(--fs-sm);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-weight: 550;
   white-space: nowrap;
 }
 
@@ -1131,7 +1378,7 @@ section > .notice-warn {
   background: var(--navy);
   color: var(--on-navy);
   font-size: var(--fs-2xs);
-  font-weight: 600;
+  font-weight: 550;
   white-space: nowrap;
 }
 
@@ -1151,15 +1398,14 @@ section > .notice-warn {
 
 .mid-rate-value strong {
   font-size: var(--fs-rate-lg);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .mid-rate-unit {
   font-size: var(--fs-body);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .mid-rate .rate-change {
@@ -1191,16 +1437,16 @@ section > .notice-warn {
   background: var(--bg-app);
 }
 
-/* 상태 배지(components/StatusBadge). 항상 글자 라벨과 함께 쓴다. */
+/* 상태 배지(components/StatusBadge). 항상 글자 라벨과 함께 쓴다. xe의 알약 배지 */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
   background: var(--status-neutral-bg);
   color: var(--status-neutral-text);
   font-size: var(--fs-2xs);
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0;
   line-height: 1.4;
   white-space: nowrap;
@@ -1227,75 +1473,82 @@ section > .notice-warn {
   color: var(--status-failed-text);
 }
 
-/* 화면 안 필터 탭 */
-.tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  overflow-x: auto;
-  border-bottom: 1px solid var(--border-color);
-  scrollbar-width: none;
-}
-
-.tab {
-  flex-shrink: 0;
-  min-height: var(--control-height);
-  padding: 8px 14px;
-  border: none;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: var(--fs-button);
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.tab:hover {
-  color: var(--text-main);
-}
-
-.tab.active {
-  border-bottom-color: var(--primary);
-  color: var(--primary);
-  font-weight: 600;
-}
-
-/* 거래내역 도메인 탭(components/HistoryTabs) */
+/* 화면 안 필터 탭. xe 탭: 옅은 테두리의 알약 트랙 안에 알약 버튼, 선택은 슬레이트 바탕 + 흰 글씨 */
+.tabs,
 .history-tabs {
   display: flex;
   gap: 4px;
   margin-bottom: var(--gap-section);
-  padding: 4px;
+  padding: 8px;
   overflow-x: auto;
-  border: var(--card-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
   background: var(--surface);
+  scrollbar-width: none;
 }
 
+.tab,
 .history-tabs a {
-  flex: 1;
-  min-height: 40px;
-  padding: 8px 12px;
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: var(--fs-button);
-  font-weight: 500;
-  line-height: 1.6;
+  display: inline-flex;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--slate-text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 550;
+  line-height: 1.4;
   text-align: center;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
-.history-tabs a:hover {
-  color: var(--text-main);
+@media (hover: hover) {
+  .tab:hover,
+  .history-tabs a:hover {
+    background: var(--bg-app);
+    color: var(--slate);
+  }
 }
 
+.tab.active,
 .history-tabs a.active {
-  background: var(--navy);
+  background: var(--slate);
   color: var(--on-navy);
-  font-weight: 600;
+}
+
+@media (hover: hover) {
+  .tab.active:hover,
+  .history-tabs a.active:hover {
+    background: var(--slate-hover);
+    color: var(--on-navy);
+  }
+}
+
+/* 거래내역 탭 이름 뒤 "내역"은 넓은 화면에서만(HistoryTabs.tsx). 칸 앞 공백은 사라지므로 여백으로 띄운다 */
+.history-tabs-suffix {
+  display: none;
+  margin-left: 0.3em;
+}
+
+@media (min-width: 768px) {
+  .tab,
+  .history-tabs a {
+    padding: 0 20px;
+  }
+
+  .history-tabs-suffix {
+    display: inline;
+  }
 }
 
 /* 내역 목록 */
@@ -1318,9 +1571,11 @@ section > .notice-warn {
   text-decoration: none;
 }
 
-a.item:hover {
-  background: var(--surface-subtle);
-  color: inherit;
+@media (hover: hover) {
+  a.item:hover {
+    background: var(--surface-subtle);
+    color: inherit;
+  }
 }
 
 .item-main,
@@ -1335,7 +1590,7 @@ a.item:hover {
 .item-main {
   color: var(--text-main);
   font-size: var(--fs-body);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .item-main > :first-child {
@@ -1374,7 +1629,7 @@ a.item:hover {
   font-size: var(--fs-sm);
 }
 
-/* 카드: 흰 바탕 + 1px 테두리(그림자 없음). 섹션 직계 폼·목록·정보 목록도 카드로 띄운다(카드 안 카드 없음). */
+/* 카드: 흰 바탕 + 1px 테두리(xe 표 래퍼: #e2e4e7, 20px). 섹션 직계 폼·목록·정보 목록도 카드로 띄운다(카드 안 카드 없음). */
 .card,
 .panel,
 .app-main > section > .form,
@@ -1394,8 +1649,10 @@ a.item:hover {
   overflow: hidden;
 }
 
+/* 강조 카드: xe 히어로 카드(테두리 없이 큰 그림자, 모서리 24px) */
 .card.raised {
   border-color: transparent;
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-raised);
 }
 
@@ -1480,7 +1737,7 @@ a.item:hover {
 
 .section-head a {
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 550;
   text-decoration: none;
 }
 
@@ -1513,24 +1770,27 @@ a.item:hover {
 
 .chip {
   min-height: 40px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--input-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--text-main);
   font: inherit;
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 550;
   cursor: pointer;
+  transition: background-color 0.15s;
 }
 
-.chip:hover {
-  background: var(--surface-subtle);
+@media (hover: hover) {
+  .chip:hover {
+    background: var(--bg-app);
+  }
 }
 
 .chip.selected {
-  border-color: var(--navy);
-  background: var(--navy);
+  border-color: var(--slate);
+  background: var(--slate);
   color: var(--on-navy);
 }
 
@@ -1564,7 +1824,7 @@ a.item:hover {
   background: var(--border-subtle);
   color: var(--text-muted);
   font-size: var(--fs-2xs);
-  font-weight: 700;
+  font-weight: 650;
   content: counter(steps);
 }
 
@@ -1576,7 +1836,7 @@ a.item:hover {
 
 .steps li[aria-current='step'] {
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 650;
 }
 
 /* 통화 배지(components/CurrencyMark) */
@@ -1588,7 +1848,7 @@ a.item:hover {
   height: 40px;
   border-radius: 50%;
   font-size: var(--fs-2xs);
-  font-weight: 700;
+  font-weight: 650;
   letter-spacing: 0.02em;
 }
 
@@ -1603,12 +1863,12 @@ a.item:hover {
 }
 
 .currency-mark.jpy {
-  background: #8fa6ff;
+  background: #a1bfff;
   color: var(--navy);
 }
 
 .currency-mark.cny {
-  background: #dce4ff;
+  background: #d7e4ff;
   color: var(--navy);
 }
 
@@ -1627,6 +1887,29 @@ a.item:hover {
   border: var(--card-border);
   border-radius: var(--radius-xl);
   background: var(--surface);
+}
+
+/*
+ * "불러오는 중" 문구는 0.4초 뒤에 서서히 나타난다. 화면 전환·조회가 금방 끝나면 문구가 번쩍였다 사라지지 않는다.
+ * 느릴 때만 보이고, 자리는 처음부터 잡혀 있어 나타날 때 화면이 밀리지 않는다.
+ */
+.loading,
+.loading-delay {
+  opacity: 0;
+  animation: loading-reveal 0.25s ease-out 0.4s forwards;
+}
+
+@keyframes loading-reveal {
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading,
+  .loading-delay {
+    animation-duration: 0.01s;
+  }
 }
 
 /* 빈 목록: 카드 안 가운데 회색 문구 */
@@ -1784,7 +2067,7 @@ button.secondary.selected {
   background: var(--primary-subtle);
   color: var(--link);
   font-size: var(--fs-2xs);
-  font-weight: 700;
+  font-weight: 650;
   content: counter(step);
 }
 
@@ -1800,7 +2083,10 @@ button.secondary.selected {
   gap: 6px;
 }
 
-/* 홈: 네이비 히어로(헤더와 이어짐) + 히어로 위에 겹쳐 올라오는 본문 카드 */
+/*
+ * 홈: 그라디언트 히어로(헤더와 이어짐) + 아래쪽 흰 타원 곡선(xe 히어로) + 곡선 위로 겹쳐 올라오는 본문 카드.
+ * 곡선: 히어로 바닥에 높이 300px 흰 타원(좌우 -200px)을 깔고 위 200px만 보이게 한다.
+ */
 .app-main > section.home {
   max-width: none;
   margin-top: calc(-1 * var(--space-page-top));
@@ -1808,12 +2094,28 @@ button.secondary.selected {
 }
 
 .home-hero {
-  padding: 40px var(--space-page-x) 120px;
-  background: var(--navy);
+  position: relative;
+  overflow: hidden;
+  padding: 40px var(--space-page-x) 136px;
+  background: var(--gradient-hero);
   color: var(--on-navy);
 }
 
+.home-hero::after {
+  position: absolute;
+  right: -200px;
+  bottom: -100px;
+  left: -200px;
+  height: calc(var(--curve-visible) + 100px);
+  border-radius: 100%;
+  background: var(--bg-page);
+  content: '';
+  pointer-events: none;
+}
+
 .home-hero-inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--gap-section);
@@ -1839,9 +2141,8 @@ button.secondary.selected {
   margin: 0;
   color: var(--on-navy);
   font-size: var(--fs-hero);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  font-weight: 550;
+  letter-spacing: -0.04em;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
@@ -1850,36 +2151,53 @@ button.secondary.selected {
   margin: 0;
   color: var(--on-navy);
   font-size: var(--fs-balance);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+}
+
+.home-hero-sub,
+.home-hero-title,
+.app-footer p,
+.rate-meta {
+  word-break: keep-all;
 }
 
 .home-hero-sub {
   margin: 12px 0 0;
   color: var(--on-navy-muted);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-body);
+  line-height: 1.7;
 }
 
 .home-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: 28px;
 }
 
+/* 로그인 후 주요 기능 버튼은 모두 같은 크기(칸 폭 가득, 높이 48px) */
 .home-actions .button-link {
   min-height: 48px;
-  padding: 0 18px;
+  padding: 0 12px;
 }
 
-.home-actions .button-link:not(.on-navy):hover {
-  color: #ffffff;
+@media (hover: hover) {
+  .home-actions .button-link:not(.on-navy):hover {
+    color: #ffffff;
+  }
 }
 
 .home-actions .icon {
   width: 18px;
   height: 18px;
+}
+
+@media (min-width: 560px) {
+  .home-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .home-side {
@@ -1889,12 +2207,161 @@ button.secondary.selected {
 }
 
 .home-body {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--gap-section);
   max-width: calc(var(--width-wide) + 2 * var(--space-page-x));
   margin: -72px auto 0;
   padding: 0 var(--space-page-x);
+}
+
+/* 로그인 전 홈: 한 줄로 쌓는 본문(환율표 → 송금 배너), 폭은 960px로 모아 히어로 글과 왼쪽 선이 맞는다 */
+.home-hero-inner.narrow {
+  max-width: 960px;
+}
+
+/* 소개만 있는 히어로(로그인 전): 글이 곡선 위에 오도록 곡선을 낮추고 아래 여백을 곡선 높이에 맞춘다 */
+.home-hero.intro {
+  --curve-visible: 72px;
+  padding-bottom: calc(var(--curve-visible) + 40px);
+}
+
+@media (min-width: 768px) {
+  .home-hero.intro {
+    --curve-visible: 120px;
+  }
+}
+
+.home-body.stacked {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  max-width: calc(960px + 2 * var(--space-page-x));
+}
+
+/* 환율을 못 받았을 땐 곡선 위로 올리지 않는다(네이비 배너가 네이비 히어로와 붙어 보이지 않게) */
+.home-body.stacked.plain {
+  margin-top: 8px;
+}
+
+/* 송금 배너: 네이비 그라디언트 둥근 카드 + 오른쪽 로고 장식 */
+.send-banner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+  overflow: hidden;
+  padding: 32px 24px;
+  border-radius: var(--radius-2xl);
+  background: var(--gradient-hero);
+  color: var(--on-navy);
+}
+
+.send-banner-eyebrow {
+  margin: 0 0 8px;
+  color: var(--on-navy-muted);
+  font-size: var(--fs-sm);
+  font-weight: 550;
+}
+
+/* 제목은 항상 한 줄: 글자 크기를 글 칸 폭에 맞춰 줄이고(컨테이너 단위 cqw), 최대 36px */
+.send-banner-text {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.send-banner h2 {
+  margin: 0;
+  color: var(--on-navy);
+  font-size: min(36px, 10cqw);
+  font-weight: 550;
+  letter-spacing: -0.04em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.send-banner-desc {
+  margin: 12px 0 0;
+  color: var(--on-navy-muted);
+  font-size: var(--fs-body);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+.send-banner-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  margin-top: 24px;
+}
+
+/* 두 버튼은 같은 크기(좁으면 한 줄씩 가득, 넓으면 나란히 200px) */
+.send-banner-actions .button-link {
+  min-height: 48px;
+  padding: 0 20px;
+}
+
+@media (min-width: 480px) {
+  .send-banner-actions {
+    grid-template-columns: repeat(2, minmax(0, 200px));
+  }
+}
+
+.send-banner-actions .button-link .icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .send-banner-actions .button-link:hover .icon {
+    transform: translateX(3px);
+  }
+}
+
+.send-banner-art {
+  position: relative;
+  height: 380px;
+  margin: 8px calc(-1 * 24px) calc(-1 * 32px);
+}
+
+/* 폰 뒤로 은은한 푸른 빛(배너 바탕과 어울리게). 그림 위치를 따라가도록 칸 중앙에 둔다 */
+.send-banner-art::before {
+  content: '';
+  position: absolute;
+  inset: 8% -10% 0;
+  background: radial-gradient(closest-side at 55% 42%, rgba(91, 123, 255, 0.3), rgba(91, 123, 255, 0) 100%);
+  pointer-events: none;
+}
+
+/* 손+폰 이미지는 칸 안에 비율대로 들어가고, 바닥(팔)이 배너 아래 가장자리에 붙어 잘린다 */
+.send-banner-phone {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 18px 28px rgba(2, 10, 34, 0.45));
+  user-select: none;
+}
+
+@media (min-width: 768px) {
+  .send-banner {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 32px;
+    min-height: 500px;
+    padding: 48px;
+  }
+
+  /* 칸 높이를 배너 전체로 늘려(위·오른쪽·아래 여백 상쇄) 그림 바닥이 배너 아래 가장자리에 닿게 한다 */
+  .send-banner-art {
+    align-self: stretch;
+    height: auto;
+    margin: -48px -48px -48px 0;
+  }
 }
 
 @media (max-width: 1023px) {
@@ -1914,59 +2381,195 @@ button.secondary.selected {
     grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     align-items: start;
   }
+
 }
 
-/* 오늘의 환율 카드 */
-.home-rates {
+/*
+ * 환율표(features/exchange/RateTable). 기본은 두 줄 행(좁은 화면·히어로 옆 카드), 표 폭이 560px 이상이면 한 줄 행.
+ * 기준은 화면 폭이 아니라 표 자신의 폭(컨테이너 쿼리)이라 어디에 놓아도 같은 규칙으로 접힌다.
+ */
+.rate-table {
   display: flex;
   flex-direction: column;
-  gap: var(--gap-card);
+  gap: 4px;
+  container-type: inline-size;
   color: var(--text-body);
 }
 
-.home-rates .card-head {
-  margin-bottom: 0;
-}
-
-.rate-row {
+.rate-table-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px 12px;
-  padding: 14px 0;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.rate-row-name {
+.rate-table-head h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+}
+
+/* 머리 줄: 네이비 바탕에 흰 글씨(xe 표의 진한 머리 줄). 좁을 땐 통화·환율만 */
+.rate-table-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--navy);
+  color: var(--on-navy);
+  font-size: var(--fs-xs);
+  font-weight: 550;
+}
+
+.rate-table-columns span:nth-child(2) {
+  text-align: right;
+}
+
+.rate-table-columns span:nth-child(3) {
+  display: none;
+}
+
+.rate-table-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rate-table-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'name rate'
+    'change cta';
+  align-items: center;
+  gap: 8px 12px;
+  padding: 16px;
+  transition: background-color 0.2s ease;
+}
+
+.rate-table-row + .rate-table-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+@media (hover: hover) {
+  .rate-table-row:hover {
+    background: var(--surface-subtle);
+  }
+}
+
+.rate-table-name {
+  grid-area: name;
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   color: var(--text-main);
-  font-size: var(--fs-sm);
-  font-weight: 600;
+  font-size: var(--fs-body);
 }
 
-.rate-row-name > span:not(.currency-mark) {
+.rate-table-name > span:not(.currency-mark) {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   line-height: 1.35;
 }
 
-.rate-row-name > span:not(.currency-mark) > span {
+.rate-table-name strong {
+  font-weight: 650;
+}
+
+.rate-table-name > span:not(.currency-mark) > span {
   color: var(--text-muted);
   font-size: var(--fs-2xs);
   font-weight: 400;
+  /* 좁은 화면에서 "1위안당"의 "당"만 다음 줄로 떨어지지 않게 띄어쓰기에서만 줄을 바꾼다 */
+  word-break: keep-all;
 }
 
-/* 통화마다 값 길이가 달라도 같은 배치: 환율 아래에 전일 대비, 둘 다 오른쪽 정렬 */
-.rate-row .mid-rate {
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+.rate-table-rate {
+  grid-area: rate;
+  color: var(--text-main);
+  text-align: right;
+  white-space: nowrap;
 }
 
-/* 단위는 행 왼쪽에 이미 있다 */
-.rate-row .mid-rate-per {
-  display: none;
+.rate-table-rate strong {
+  font-size: var(--fs-amount-card);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.rate-table-rate [aria-hidden='true'] > span {
+  margin-left: 2px;
+  font-size: var(--fs-sm);
+  font-weight: 550;
+}
+
+.rate-table-change {
+  grid-area: change;
+  min-width: 0;
+}
+
+.rate-table-change .rate-change {
+  margin-left: 0;
+  font-size: var(--fs-xs);
+}
+
+.rate-table-cta {
+  grid-area: cta;
+  justify-self: end;
+  padding: 0 20px;
+}
+
+.rate-table-cta .icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+@media (hover: hover) {
+  .rate-table-cta:hover .icon {
+    transform: translateX(3px);
+  }
+}
+
+.rate-table .rate-meta {
+  padding: 8px 16px 0;
+}
+
+@container (min-width: 560px) {
+  .rate-table-columns,
+  .rate-table-row {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+    column-gap: 16px;
+  }
+
+  .rate-table-columns::after {
+    content: '';
+    width: 136px;
+  }
+
+  .rate-table-columns span:nth-child(2) {
+    text-align: right;
+  }
+
+  .rate-table-columns span:nth-child(3) {
+    display: block;
+    text-align: right;
+  }
+
+  .rate-table-row {
+    grid-template-areas: 'name rate change cta';
+  }
+
+  .rate-table-change {
+    text-align: right;
+  }
+
+  .rate-table-cta {
+    min-width: 136px;
+  }
 }
 
 /* 내 지갑 통화 카드 그리드 */
@@ -1998,8 +2601,7 @@ button.secondary.selected {
   margin: 0;
   color: var(--text-main);
   font-size: var(--fs-amount-card);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
   letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
@@ -2015,7 +2617,7 @@ button.secondary.selected {
 
 .wallet-card-foot a {
   font-size: var(--fs-xs);
-  font-weight: 600;
+  font-weight: 550;
   text-decoration: none;
 }
 
@@ -2031,7 +2633,7 @@ button.secondary.selected {
 .currency-name strong {
   color: var(--text-main);
   font-size: var(--fs-body);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 .currency-name span {
@@ -2057,14 +2659,13 @@ button.secondary.selected {
 .currency-amount strong {
   color: var(--text-main);
   font-size: var(--fs-h3);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-weight: 650;
   white-space: nowrap;
 }
 
 .currency-amount a {
   font-size: var(--fs-xs);
-  font-weight: 600;
+  font-weight: 550;
   text-decoration: none;
 }
 
@@ -2087,44 +2688,16 @@ button.secondary.selected {
   text-decoration: none;
 }
 
-.link-list a:hover {
-  background: var(--surface-subtle);
+@media (hover: hover) {
+  .link-list a:hover {
+    background: var(--surface-subtle);
+  }
 }
 
 .link-list .icon {
   width: 16px;
   height: 16px;
   color: var(--text-placeholder);
-}
-
-/* 비로그인 기능 소개 */
-.feature-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.feature-list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-main);
-  font-size: var(--fs-body);
-  font-weight: 600;
-}
-
-.feature-icon {
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-lg);
-  background: var(--primary-subtle);
-  color: var(--link);
 }
 
 /* 환율 화면: 통화마다 카드(데스크톱 2열) */
@@ -2192,8 +2765,7 @@ button.secondary.selected {
 .summary-list dd {
   margin: 0;
   color: var(--text-main);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-weight: 550;
   text-align: right;
 }
 
@@ -2204,12 +2776,12 @@ button.secondary.selected {
 
 .summary-list dd.summary-total {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 650;
 }
 
 .summary-list dt.summary-total {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 550;
 }
 
 /* 송금 수취인 확인 결과 */
@@ -2237,7 +2809,7 @@ button.secondary.selected {
   margin: 0 0 4px;
   color: var(--text-muted);
   font-size: var(--fs-sm);
-  font-weight: 600;
+  font-weight: 550;
   letter-spacing: 0;
 }
 
@@ -2261,4 +2833,270 @@ button.secondary.selected {
   .receipt > .info dd {
     text-align: right;
   }
+}
+
+/*
+ * 9. 모션
+ * 원칙: 새로 뜨는 것은 짧게(0.2~0.5초) 올라오며 나타나고, 눌리는 것은 살짝 눌린다. 레이아웃을 밀지 않는 opacity·transform만 쓴다.
+ * 홈은 헤더와 이어진 네이비 히어로가 깜빡이지 않게 구역 전체가 아니라 안쪽 내용만 움직인다.
+ * "움직임 줄이기"를 켠 사람은 등장 모션을 끄고 전환을 거의 즉시로 한다.
+ */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 화면이 바뀌면 본문이 살짝 올라오며 나타난다(불러오는 중 문구와 홈 제외) */
+.app-main > *:not(.loading):not(.home) {
+  animation: rise-in 0.34s var(--ease-out) both;
+}
+
+/* 거래내역 탭(송금·충전·결제·환전)은 탭마다 다른 화면이라 통째로 움직이면 탭 줄이 매번 흔들린다.
+ * 탭 줄은 그 자리에 두고 아래 내용만 올라오게 한다(위 규칙보다 구체적이어야 덮어쓴다). */
+.app-main > section:not(.loading):has(> .history-tabs) {
+  animation: none;
+}
+
+.app-main > section:not(.loading):has(> .history-tabs) > :not(.history-tabs) {
+  animation: rise-in 0.34s var(--ease-out) both;
+}
+
+/* 조회가 끝나 늦게 붙는 목록 행·빈 목록 안내는 툭 나타나지 않고 그 자리에서 부드럽게.
+ * 행은 앞쪽 몇 개만 차례로 띄우고 나머지는 함께 띄워, 긴 목록에서도 기다림이 늘지 않는다.
+ * 주기 조회로 다시 그려도 key가 같은 행은 다시 붙지 않으므로 반복되지 않는다. */
+@keyframes content-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.item-list > li,
+.hint.empty {
+  animation: content-in 0.3s var(--ease-out) both;
+}
+
+.item-list > li:nth-child(2) {
+  animation-delay: 0.03s;
+}
+
+.item-list > li:nth-child(3) {
+  animation-delay: 0.06s;
+}
+
+.item-list > li:nth-child(4) {
+  animation-delay: 0.09s;
+}
+
+.item-list > li:nth-child(5) {
+  animation-delay: 0.12s;
+}
+
+.item-list > li:nth-child(n + 6) {
+  animation-delay: 0.15s;
+}
+
+/* 홈: 히어로 안 글·카드와 아래 카드가 차례로 */
+.home-hero-inner > *,
+.home-body > * {
+  animation: rise-in 0.5s var(--ease-out) both;
+}
+
+.home-hero-inner > :nth-child(2),
+.home-body > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.home-body > :nth-child(3) {
+  animation-delay: 0.16s;
+}
+
+.rate-table-row {
+  animation: rise-in 0.45s var(--ease-out) both;
+}
+
+.rate-table-row:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.rate-table-row:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.rate-table-row:nth-child(n + 3) {
+  animation-delay: 0.22s;
+}
+
+/* 화면 전환: 지원 브라우저(View Transitions)에서는 이전 화면이 사라지며 새 화면과 겹쳐 바뀐다(lib/viewTransition).
+ * 기본 0.25초 교차 페이드를 조금 짧게 해 이동이 굼뜨지 않게 하고, 새 화면 본문은 위 rise-in으로 함께 올라온다.
+ * 전환은 묶음(group)까지 모든 애니메이션이 끝나야 끝나므로 group도 같은 시간으로 맞춘다. */
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+}
+
+/* 서랍·계정 메뉴 */
+.app-backdrop {
+  animation: fade-in 0.2s ease-out both;
+}
+
+.app-drawer {
+  animation: drawer-in 0.28s var(--ease-out) both;
+}
+
+.app-account-menu {
+  transform-origin: top right;
+  animation: menu-in 0.18s var(--ease-out) both;
+}
+
+/* 버튼은 눌릴 때 살짝 작아진다 */
+button.primary,
+button.secondary,
+.button-link {
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    color 0.15s,
+    transform 0.12s ease;
+}
+
+button.primary:active:not(:disabled),
+button.secondary:active:not(:disabled),
+.button-link:active {
+  transform: scale(0.98);
+}
+
+/* 알림·오류 상자는 뜰 때 부드럽게 */
+.error,
+.notice,
+.field-error {
+  animation: fade-in 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* 켤 때의 선택자와 우선순위가 같아야 끌 수 있다 */
+  .app-main > *:not(.loading):not(.home),
+  .app-main > section:not(.loading):has(> .history-tabs) > :not(.history-tabs),
+  .item-list > li,
+  .hint.empty,
+  .home-hero-inner > *,
+  .home-body > *,
+  .rate-table-row,
+  .app-backdrop,
+  .app-drawer,
+  .app-account-menu,
+  .error,
+  .notice,
+  .field-error {
+    animation: none;
+  }
+
+  button.primary:active:not(:disabled),
+  button.secondary:active:not(:disabled),
+  .button-link:active,
+  .app-auth a:active {
+    transform: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/*
+ * 터치 대상 44px(style.md 9절 접근성)
+ * 겉모양(크기·간격)은 그대로 두고 누르는 영역만 넓힌다. 넓힌 만큼은 주변 간격(탭 묶음 안쪽 여백 8px,
+ * 칩 사이 8px) 안에 들어가 이웃과 겹치거나 스크롤을 만들지 않는다.
+ */
+.app-menu-button,
+.app-auth a,
+.tab,
+.history-tabs a,
+.chip {
+  position: relative;
+}
+
+.app-menu-button::after,
+.app-auth a::after,
+.tab::after,
+.history-tabs a::after,
+.chip::after {
+  content: '';
+  position: absolute;
+}
+
+/* 40×40 → 44×44 */
+.app-menu-button::after {
+  inset: -2px;
+}
+
+/* 높이 40 → 44 */
+.app-auth a::after,
+.chip::after {
+  inset: -2px 0;
+}
+
+/* 높이 36 → 44 */
+.tab::after,
+.history-tabs a::after {
+  inset: -4px 0;
 }

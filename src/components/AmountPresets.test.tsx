@@ -41,10 +41,11 @@ describe('HistoryTabs', () => {
     const router = createMemoryRouter([{ path: '*', element: <HistoryTabs /> }], { initialEntries: ['/transfers'] })
     render(<RouterProvider router={router} />)
 
-    expect(screen.getByRole('link', { name: '충전' })).toHaveAttribute('href', '/wallet/charges')
-    expect(screen.getByRole('link', { name: '환전' })).toHaveAttribute('href', '/exchanges')
-    expect(screen.getByRole('link', { name: '결제' })).toHaveAttribute('href', '/payments')
-    expect(screen.getByRole('link', { name: '정산 입금' })).toHaveAttribute('href', '/wallet/settlements')
-    expect(screen.getByRole('link', { name: '송금' })).toHaveAttribute('aria-current', 'page')
+    // 테스트 환경은 CSS를 적용하지 않아 넓은 화면처럼 " 내역"까지 이름에 들어간다.
+    expect(screen.getByRole('link', { name: '충전 내역' })).toHaveAttribute('href', '/wallet/charges')
+    expect(screen.getByRole('link', { name: '환전 내역' })).toHaveAttribute('href', '/exchanges')
+    expect(screen.getByRole('link', { name: '결제 내역' })).toHaveAttribute('href', '/payments')
+    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('href', '/wallet/settlements')
+    expect(screen.getByRole('link', { name: '송금 내역' })).toHaveAttribute('aria-current', 'page')
   })
 })
