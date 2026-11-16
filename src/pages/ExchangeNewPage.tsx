@@ -268,15 +268,15 @@ export function ExchangeNewPage() {
         )}
         {uncertain && (
           <p className="hint">
-            환전이 이미 처리되었을 수 있습니다. <strong>다시 시도</strong>는 같은 요청으로 보내므로 두 번 환전되지
-            않습니다(견적 시간이 지나도 됩니다). 새 견적으로 바꾸기 전에 <Link to="/exchanges">환전 내역</Link>을 먼저
-            확인해 주세요.
+            환전이 이미 처리되었을 수 있어 결과를 확인할 때까지 금액을 수정하거나 새 견적을 받을 수 없습니다.{' '}
+            <strong>다시 시도</strong>는 같은 요청으로 보내므로 두 번 환전되지 않습니다(견적 시간이 지나도 됩니다).
+            처리 여부는 <Link to="/exchanges">환전 내역</Link>에서도 확인할 수 있습니다.
           </p>
         )}
         {expired && !uncertain && <p className="hint">이 견적으로는 환전할 수 없습니다. 같은 금액으로 견적을 다시 받아 주세요.</p>}
 
         <div className="actions">
-          <button type="button" className="secondary" onClick={backToForm} disabled={submitting || quoting}>
+          <button type="button" className="secondary" onClick={backToForm} disabled={submitting || quoting || uncertain}>
             수정
           </button>
           {uncertain ? (

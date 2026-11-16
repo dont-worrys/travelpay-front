@@ -119,6 +119,36 @@ describe('ExchangeNewPage', () => {
     expect(second?.headers['Idempotency-Key']).toBe(first?.headers['Idempotency-Key'])
   })
 
+  it('결과를 모르는 동안에는 수정·새 견적을 막고 같은 요청 재시도와 환전 내역 확인만 남긴다', async () => {
+    const user = userEvent.setup()
+    const api = setup(() => fail(503, 'EXCHANGE_LEDGER_UNAVAILABLE', '지금은 환전할 수 없습니다.'))
+
+    await requestQuote(user, '10000')
+    await user.click(screen.getByRole('button', { name: '환전하기' }))
+
+    expect(await screen.findByRole('button', { name: '다시 시도' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '수정' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: '견적 다시 받기' })).not.toBeInTheDocument()
+    expect(screen.getByText(/결과를 확인할 때까지 금액을 수정하거나 새 견적을 받을 수 없습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '환전 내역' })).toHaveAttribute('href', '/exchanges')
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    expect(screen.getByRole('heading', { name: '환전 확인' })).toBeInTheDocument()
+    expect(api.calls('POST', '/api/v1/exchange-quotes')).toHaveLength(1)
+  })
+
+  it('결과를 알 때(정상 견적)는 수정으로 입력 화면에 돌아가 다시 견적을 받을 수 있다', async () => {
+    const user = userEvent.setup()
+    const api = setup(() => ok({}))
+
+    await requestQuote(user, '10000')
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(await screen.findByRole('button', { name: '견적 받기' }))
+
+    expect(await screen.findByRole('heading', { name: '환전 확인' })).toBeInTheDocument()
+    expect(api.calls('POST', '/api/v1/exchange-quotes')).toHaveLength(2)
+  })
+
   it('서버가 견적 만료로 거절하면 견적을 다시 받게 한다', async () => {
     const user = userEvent.setup()
     setup(() => fail(409, 'EXCHANGE_QUOTE_EXPIRED', '견적이 만료되었습니다. 견적을 다시 받아 주세요.'))
