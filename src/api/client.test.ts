@@ -194,3 +194,54 @@ describe('apiRequest', () => {
     await expect(apiRequest('/api/v1/items')).rejects.toMatchObject({ name: 'AbortError' })
   })
 })
+
+describe('apiRequest timeoutMs', () => {
+  /** 응답하지 않다가 signal이 끊기면 AbortError로 끝나는 fetch. */
+  function stubHangingFetch() {
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('대기 한도를 넘기면 요청을 끊고 결과 모름(연결 오류)으로 실패한다', async () => {
+    stubHangingFetch()
+    const pending = catchError(apiRequest('/api/v1/items', { timeoutMs: 5000 }))
+
+    await vi.advanceTimersByTimeAsync(5000)
+    const error = await pending
+
+    expect(error.status).toBe(0)
+    expect(error.code).toBe(CLIENT_ERROR_CODES.NETWORK)
+    expect(isOutcomeUnknown(error)).toBe(true)
+  })
+
+  it('호출한 쪽이 취소하면 대기 한도 오류가 아니라 AbortError를 그대로 던진다', async () => {
+    stubHangingFetch()
+    const controller = new AbortController()
+    const pending = apiRequest('/api/v1/items', { timeoutMs: 5000, signal: controller.signal }).catch((e: unknown) => e)
+
+    controller.abort()
+    const error = await pending
+
+    expect(error).toBeInstanceOf(DOMException)
+    expect((error as DOMException).name).toBe('AbortError')
+  })
+
+  it('한도 안에 응답하면 그대로 돌려준다', async () => {
+    mockFetch({ 'GET /api/v1/items': () => ok({ value: 1 }) })
+    await expect(apiRequest('/api/v1/items', { timeoutMs: 5000 })).resolves.toEqual({ value: 1 })
+  })
+})

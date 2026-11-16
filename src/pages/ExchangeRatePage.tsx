@@ -1,21 +1,16 @@
 import { Link } from 'react-router'
 import { CurrencyMark } from '../components/CurrencyMark'
+import { useLiveRates } from '../components/RatesProvider'
 import { useAuth } from '../features/auth/useAuth'
-import { fetchExchangeRates } from '../features/exchange/api'
 import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { toExchangeMessage } from '../features/exchange/status'
 import { formatDateTime } from '../lib/datetime'
 import { CURRENCY_INFO, formatDecimalText } from '../lib/money'
-import { useAutoRefresh } from '../lib/useAutoRefresh'
 
-function loadRates(signal: AbortSignal) {
-  return fetchExchangeRates(undefined, signal)
-}
-
-/** 공개 환율 조회. 로그인하지 않아도 볼 수 있다. 5초마다 다시 조회한다. */
+/** 공개 환율 조회. 로그인하지 않아도 볼 수 있다. 5초마다 다시 조회한다(상단 티커와 같은 조회를 함께 쓴다). */
 export function ExchangeRatePage() {
   const { state } = useAuth()
-  const { data: rates, error, reload } = useAutoRefresh(loadRates)
+  const { data: rates, error, reload } = useLiveRates()
 
   return (
     <section className="page-wide">

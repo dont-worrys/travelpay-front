@@ -149,4 +149,49 @@ describe('useAutoRefresh', () => {
     await advance(30_000)
     expect(load).toHaveBeenCalledTimes(1)
   })
+
+  it('간격이 바뀌면 바로 조회하지 않고 마지막 조회 기준으로 다음 조회만 다시 잡는다', async () => {
+    const load = vi.fn(async () => 'rate')
+    const { rerender } = renderHook(({ intervalMs }) => useAutoRefresh(load, { intervalMs }), {
+      initialProps: { intervalMs: 300_000 },
+    })
+    await advance(0)
+    expect(load).toHaveBeenCalledTimes(1)
+
+    await advance(2000)
+    rerender({ intervalMs: 5000 })
+    await advance(0)
+    expect(load).toHaveBeenCalledTimes(1)
+    await advance(3000)
+    expect(load).toHaveBeenCalledTimes(2)
+    await advance(5000)
+    expect(load).toHaveBeenCalledTimes(3)
+
+    rerender({ intervalMs: 300_000 })
+    await advance(10_000)
+    expect(load).toHaveBeenCalledTimes(3)
+  })
+
+  it('조회가 대기 한도로 실패해도 마지막 값을 유지하고 다음 주기에 다시 조회한다', async () => {
+    const timeout = new Error('timeout')
+    const load = vi
+      .fn<() => Promise<string>>()
+      .mockResolvedValueOnce('ok-1')
+      .mockImplementationOnce(
+        () => new Promise<string>((_resolve, reject) => window.setTimeout(() => reject(timeout), 5000)),
+      )
+      .mockResolvedValueOnce('ok-2')
+    const { result } = renderHook(() => useAutoRefresh(load))
+    await advance(0)
+
+    await advance(5000)
+    expect(load).toHaveBeenCalledTimes(2)
+    await advance(5000)
+    expect(result.current.data).toBe('ok-1')
+    expect(result.current.error).toBe(timeout)
+
+    await advance(5000)
+    expect(load).toHaveBeenCalledTimes(3)
+    expect(result.current.data).toBe('ok-2')
+  })
 })
