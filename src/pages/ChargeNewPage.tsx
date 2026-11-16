@@ -210,9 +210,7 @@ export function ChargeNewPage() {
         <ol className="step-guide">
           {CHARGE_STEPS.map((step) => (
             <li key={step.status}>
-              <strong>
-                {step.label} <span className="hint">({step.status})</span>
-              </strong>
+              <strong>{step.label}</strong>
               {step.description}
             </li>
           ))}

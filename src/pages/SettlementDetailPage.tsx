@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { fetchSettlement, type SettlementDetail } from '../features/merchant/api'
 import { SettlementStatusBadge } from '../features/merchant/SettlementStatusBadge'
-import { SETTLEMENT_DESCRIPTION, toMerchantMessage } from '../features/merchant/status'
+import { SETTLEMENT_DESCRIPTION, SETTLEMENT_FROM_DEPOSITS, toMerchantMessage } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 
@@ -12,7 +12,10 @@ const POLL_LIMIT_MS = 2 * 60 * 1000
 export function SettlementDetailPage() {
   const { merchantId = '', settlementId = '' } = useParams()
   const location = useLocation()
-  const justRequested = (location.state as { justRequested?: boolean } | null)?.justRequested === true
+  const state = location.state as { justRequested?: boolean; from?: string } | null
+  const justRequested = state?.justRequested === true
+  // 지갑의 정산 입금 내역에서 들어왔으면 돌아갈 곳도 입금 내역이다(가맹점 정산 화면 아님).
+  const fromDeposits = state?.from === SETTLEMENT_FROM_DEPOSITS
 
   const [detail, setDetail] = useState<SettlementDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -22,21 +25,33 @@ export function SettlementDetailPage() {
     const controller = new AbortController()
     const startedAt = Date.now()
     let timer: number | undefined
+    /** 한 번이라도 받아 화면에 보여 준 값이 있는지. */
+    let loaded = false
+
+    function scheduleNext() {
+      if (Date.now() - startedAt < POLL_LIMIT_MS) {
+        timer = window.setTimeout(load, POLL_INTERVAL_MS)
+      } else {
+        setPollStopped(true)
+      }
+    }
 
     async function load() {
       try {
         const data = await fetchSettlement(merchantId, settlementId, controller.signal)
         setDetail(data)
+        loaded = true
         setError(null)
         if (data.settlement.status === 'REQUESTED') {
-          if (Date.now() - startedAt < POLL_LIMIT_MS) {
-            timer = window.setTimeout(load, POLL_INTERVAL_MS)
-          } else {
-            setPollStopped(true)
-          }
+          scheduleNext()
         }
       } catch (cause) {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
+          return
+        }
+        // 처리 중 다시 조회하다 실패한 것은 일시 오류로 보고 마지막 값을 둔 채 이어서 확인한다.
+        if (loaded) {
+          scheduleNext()
           return
         }
         setError(toMerchantMessage(cause, '정산을 불러오지 못했습니다.'))
@@ -52,7 +67,8 @@ export function SettlementDetailPage() {
     }
   }, [merchantId, settlementId])
 
-  const listLink = `/merchant/${merchantId}/settlements`
+  const listLink = fromDeposits ? '/wallet/settlements' : `/merchant/${merchantId}/settlements`
+  const listLabel = fromDeposits ? '정산 입금 내역' : '정산 내역'
 
   if (error) {
     return (
@@ -61,7 +77,7 @@ export function SettlementDetailPage() {
         <p className="error" role="alert">
           {error}
         </p>
-        <Link to={listLink}>정산으로</Link>
+        <Link to={listLink}>{fromDeposits ? '정산 입금 내역으로' : '정산으로'}</Link>
       </section>
     )
   }
@@ -121,7 +137,7 @@ export function SettlementDetailPage() {
       )}
 
       <div className="actions">
-        <Link to={listLink}>정산 내역</Link>
+        <Link to={listLink}>{listLabel}</Link>
         {settlement.status === 'PAID' && <Link to="/wallet">내 지갑</Link>}
       </div>
     </section>

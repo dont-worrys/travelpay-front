@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, networkError, ok } from '../test/fetchMock'
 import { CLIENT_ERROR_CODES, isOutcomeUnknown, type ApiError } from './ApiError'
-import { apiRequest, apiRequestWithStatus, setUnauthorizedListener } from './client'
+import { apiRequest, apiRequestWithStatus, DEFAULT_GET_TIMEOUT_MS, setUnauthorizedListener } from './client'
 import { clearCsrfToken } from './csrf'
 
 const CSRF_PATH = '/api/v1/auth/csrf'
@@ -238,6 +238,39 @@ describe('apiRequest timeoutMs', () => {
 
     expect(error).toBeInstanceOf(DOMException)
     expect((error as DOMException).name).toBe('AbortError')
+  })
+
+  it('GET은 대기 한도를 주지 않아도 기본 한도에서 끊는다', async () => {
+    stubHangingFetch()
+    const pending = catchError(apiRequest('/api/v1/items'))
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_GET_TIMEOUT_MS - 1)
+    let settled = false
+    void pending.then(() => (settled = true))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(settled).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect((await pending).code).toBe(CLIENT_ERROR_CODES.NETWORK)
+  })
+
+  it('POST는 기본 대기 한도가 없다(금전 요청을 끊어 결과 모름으로 만들지 않는다)', async () => {
+    // CSRF 토큰은 바로 주고 POST만 응답하지 않게 한다.
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      String(input).includes(CSRF_PATH)
+        ? Promise.resolve(ok({ headerName: 'Csrf-Token', token: 't' }))
+        : new Promise<Response>(() => undefined),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    let settled = false
+    void apiRequest('/api/v1/items', { method: 'POST', body: {} }).then(
+      () => (settled = true),
+      () => (settled = true),
+    )
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_GET_TIMEOUT_MS * 4)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(settled).toBe(false)
   })
 
   it('한도 안에 응답하면 그대로 돌려준다', async () => {
