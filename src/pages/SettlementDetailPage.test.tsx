@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
-import { SETTLEMENT_DESCRIPTION } from '../features/merchant/status'
+import { act, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { SETTLEMENT_DESCRIPTION, SETTLEMENT_FROM_DEPOSITS } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 import { fail, mockFetch, ok, type RouteHandler } from '../test/fetchMock'
@@ -34,15 +34,18 @@ function detail(overrides: Record<string, unknown> = {}, items = [{ paymentId: P
   }
 }
 
-function setup(handler: RouteHandler) {
+function setup(handler: RouteHandler, state?: unknown) {
   const api = mockFetch({ [`GET ${PATH}`]: handler })
-  renderRoute(
-    '/merchant/:merchantId/settlements/:settlementId',
-    <SettlementDetailPage />,
-    `/merchant/${MERCHANT_ID}/settlements/${SETTLEMENT_ID}`,
-  )
+  renderRoute('/merchant/:merchantId/settlements/:settlementId', <SettlementDetailPage />, {
+    pathname: `/merchant/${MERCHANT_ID}/settlements/${SETTLEMENT_ID}`,
+    state,
+  })
   return api
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('SettlementDetailPage', () => {
   it('입금 완료 정산은 paidAt을 입금 시각으로 보여 주고 포함된 결제·지갑 링크를 둔다', async () => {
@@ -96,5 +99,40 @@ describe('SettlementDetailPage', () => {
       'href',
       `/merchant/${MERCHANT_ID}/settlements`,
     )
+  })
+
+  it('정산 입금 내역에서 들어오면 돌아가기 링크가 정산 입금 내역으로 간다', async () => {
+    setup(() => ok(detail()), { from: SETTLEMENT_FROM_DEPOSITS })
+
+    expect(await screen.findByText('입금 완료')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('href', '/wallet/settlements')
+    expect(screen.queryByRole('link', { name: '정산 내역' })).not.toBeInTheDocument()
+  })
+
+  it('정산 입금 내역에서 들어와 조회에 실패해도 정산 입금 내역으로 돌아간다', async () => {
+    setup(() => fail(404, 'PAYMENT_SETTLEMENT_NOT_FOUND'), { from: SETTLEMENT_FROM_DEPOSITS })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('정산을 찾을 수 없습니다.')
+    expect(screen.getByRole('link', { name: '정산 입금 내역으로' })).toHaveAttribute('href', '/wallet/settlements')
+  })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET ${PATH}`]: (_request, index) =>
+        index === 0 ? ok(detail({ status: 'REQUESTED', paidAt: null })) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(detail()),
+    })
+    renderRoute('/merchant/:merchantId/settlements/:settlementId', <SettlementDetailPage />, `/merchant/${MERCHANT_ID}/settlements/${SETTLEMENT_ID}`)
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(api.calls('GET', PATH)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(await screen.findByText('입금 완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', PATH)).toHaveLength(3)
   })
 })

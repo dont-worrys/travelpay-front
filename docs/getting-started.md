@@ -122,6 +122,7 @@ where id = (select user_id from user_service.user_credentials where login_email 
 | 증상 | 확인할 것 |
 |---|---|
 | 화면에 "서버에 연결하지 못했습니다", 개발 서버 터미널에 `ECONNREFUSED` | Gateway가 꺼졌거나 `API_PROXY_TARGET` 주소가 다름 |
+| "서버 응답이 늦어 요청을 멈췄습니다" | 조회가 15초(환율은 5초) 안에 끝나지 않음. 해당 서비스가 멈췄거나 Eureka에 죽은 인스턴스가 남아 있음(재기동 직후) |
 | `403 COMMON_FORBIDDEN`(로그인 전부터) | Gateway에 `GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173`이 전달되지 않음(데몬 실행 여부 확인) |
 | `503 COMMON_SERVICE_UNAVAILABLE` | 해당 서비스가 꺼져 있거나 Eureka에 아직 등록 전(기동 후 1분 안팎). 환율·환전이면 exchange |
 | 환전 견적이 503 `EXCHANGE_QUOTE_STORE_UNAVAILABLE` | `redis-cache` 컨테이너가 꺼짐 |

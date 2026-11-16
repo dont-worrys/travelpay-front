@@ -91,4 +91,24 @@ describe('ChargeDetailPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('충전 내역을 찾을 수 없습니다.')
     expect(screen.getByRole('link', { name: '충전 내역으로' })).toHaveAttribute('href', '/wallet/charges')
   })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET ${PATH}`]: (_request, index) =>
+        index === 0 ? ok(charge({ status: 'BANK_PROCESSING' })) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(charge()),
+    })
+    renderDetail()
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(2000))
+    expect(api.calls('GET', PATH)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(2000))
+    expect(await screen.findByText('완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', PATH)).toHaveLength(3)
+  })
 })

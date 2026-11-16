@@ -41,6 +41,7 @@ vercel.json             Vercel 빌드·SPA rewrite·응답 헤더
 
 - API는 `src/api`의 `apiRequest`/`apiRequestWithStatus`로만 호출합니다. 실패는 `ApiError(status, code, message, details)`로 던지고, 분기는 `error.code`로 합니다. 화면 문구는 `toUserMessage(error)`와 기능별 `to…Message`를 씁니다.
 - 세션 쿠키(`credentials: 'include'`)와 CSRF 토큰은 공통 요청 함수가 처리합니다. 로그인·로그아웃·비밀번호 변경 뒤에는 토큰을 버리고 다시 받습니다(`AuthContext`).
+- 조회(GET)는 15초 대기 한도가 기본이고, 상태 변경 요청은 한도가 없습니다([응답 대기 한도](api-common.md#응답-대기-한도)). 처리 중 상세의 자동 재조회는 한 번 실패해도 마지막 값을 두고 다음 주기에 이어 갑니다.
 - 401을 받으면 로그인 상태를 지우고 보호된 화면은 `/login?redirect=원래경로`로 보냅니다. `redirect`는 앱 내부 경로만 허용합니다.
 - 금액은 통화별 최소 단위 정수로 다룹니다(`lib/money.ts`). 환전 API만 주 단위 소수 문자열을 주고받으므로 `majorToMinor`·`formatMajorAmount`로 문자열 변환만 하고 소수 연산을 하지 않습니다.
 

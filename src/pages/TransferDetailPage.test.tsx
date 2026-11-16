@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { act, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, ok } from '../test/fetchMock'
 import { renderRoute } from '../test/renderRoute'
 import { TransferDetailPage } from './TransferDetailPage'
@@ -28,6 +28,10 @@ function transfer(overrides: Record<string, unknown> = {}) {
 function renderDetail() {
   renderRoute('/transfers/:transferId', <TransferDetailPage />, `/transfers/${ID}`)
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('TransferDetailPage', () => {
   it('완료된 보낸 송금은 금액·상태·받는 분을 보여 주고 같은 분에게 또 보내기를 연결한다', async () => {
@@ -85,5 +89,25 @@ describe('TransferDetailPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('송금을 찾을 수 없습니다.')
     expect(screen.getByRole('link', { name: '송금 내역으로' })).toHaveAttribute('href', '/transfers')
+  })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET ${PATH}`]: (_request, index) =>
+        index === 0 ? ok(transfer({ status: 'PROCESSING' })) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(transfer({ status: 'COMPLETED' })),
+    })
+    renderDetail()
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(api.calls('GET', PATH)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(await screen.findByText('완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', PATH)).toHaveLength(3)
   })
 })

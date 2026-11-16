@@ -1,5 +1,7 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { SETTLEMENT_FROM_DEPOSITS } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 import { fail, mockFetch, networkError, ok, type RouteHandler } from '../test/fetchMock'
@@ -57,8 +59,8 @@ function setup(routes: Record<string, RouteHandler> = {}) {
     [`GET ${SETTLEMENTS_PATH}`]: () => ok(page([SETTLEMENT])),
     ...routes,
   })
-  renderRoute('/wallet', <WalletPage />, '/wallet')
-  return api
+  const { router } = renderRoute('/wallet', <WalletPage />, '/wallet')
+  return { ...api, router }
 }
 
 describe('WalletPage', () => {
@@ -81,6 +83,17 @@ describe('WalletPage', () => {
     const query = new URLSearchParams(api.calls('GET', SETTLEMENTS_PATH)[0]?.search)
     expect(query.get('status')).toBe('PAID')
     expect(query.get('size')).toBe('5')
+    expect(screen.getByText('통화별 잔액과 최근 충전·정산 입금을 확인하세요.')).toBeInTheDocument()
+  })
+
+  it('정산 입금을 누르면 입금 내역에서 왔다는 표시를 넘겨 상세의 돌아가기가 입금 내역으로 간다', async () => {
+    const user = userEvent.setup()
+    const { router } = setup()
+
+    await user.click(await screen.findByRole('link', { name: /제주 기념품샵/ }))
+
+    expect(router.state.location.pathname).toBe(`/merchant/${MERCHANT_ID}/settlements/${SETTLEMENT_ID}`)
+    expect(router.state.location.state).toEqual({ from: SETTLEMENT_FROM_DEPOSITS })
   })
 
   it('최근 충전 중 실패·환불된 충전은 + 없이 기본 색으로 보여 준다', async () => {
@@ -108,6 +121,7 @@ describe('WalletPage', () => {
 
     expect(await screen.findByRole('heading', { name: '최근 충전' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: '최근 정산 입금' })).not.toBeInTheDocument()
+    expect(screen.getByText('통화별 잔액과 최근 충전을 확인하세요.')).toBeInTheDocument()
   })
 
   it.each([

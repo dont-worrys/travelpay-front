@@ -3,7 +3,12 @@ import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { HistoryTabs } from '../components/HistoryTabs'
 import { fetchMySettlements, type Settlement } from '../features/merchant/api'
-import { settlementMerchantLabel, settlementPaidTime, toMerchantMessage } from '../features/merchant/status'
+import {
+  SETTLEMENT_FROM_DEPOSITS,
+  settlementMerchantLabel,
+  settlementPaidTime,
+  toMerchantMessage,
+} from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 
@@ -58,7 +63,11 @@ export function SettlementDepositListPage() {
         <ul className="item-list">
           {result.items.map((item) => (
             <li key={item.settlementId}>
-              <Link to={`/merchant/${item.merchantId}/settlements/${item.settlementId}`} className="item">
+              <Link
+                to={`/merchant/${item.merchantId}/settlements/${item.settlementId}`}
+                state={{ from: SETTLEMENT_FROM_DEPOSITS }}
+                className="item"
+              >
                 <span className="item-main">
                   <span>{settlementMerchantLabel(item)}</span>
                   <span className="amount received">+{formatAmount(item.amount, item.currency)}</span>

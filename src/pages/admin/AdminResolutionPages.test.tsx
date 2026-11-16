@@ -93,7 +93,8 @@ describe('처리 기록', () => {
     expect(await screen.findByText('원장 기록 없음')).toBeInTheDocument()
     const detailParams = new URLSearchParams(api.calls('GET', '/api/v1/admin/exchanges/resolutions').at(-1)?.search)
     expect(detailParams.get('orderId')).toBe(ORDER_ID)
-  })
+    // UUID 두 개를 한 글자씩 입력해 전체 실행 부하 때 기본 5초를 넘길 수 있다.
+  }, 15_000)
 
   it('처리 기록 상세는 처리 담당자·처리 결과·원장 거래를 모두 보여 준다', async () => {
     mockFetch({ 'GET /api/v1/admin/payments/resolutions': () => ok(page([refundRecord])) })

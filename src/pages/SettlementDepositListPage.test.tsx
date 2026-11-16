@@ -1,5 +1,7 @@
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
+import { SETTLEMENT_FROM_DEPOSITS } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 import { mockFetch, ok, type RecordedRequest } from '../test/fetchMock'
@@ -80,5 +82,16 @@ describe('정산 입금 내역', () => {
     renderRoute('/wallet/settlements', <SettlementDepositListPage />, '/wallet/settlements')
 
     expect(await screen.findByText('정산 입금 내역이 없습니다.')).toBeInTheDocument()
+  })
+
+  it('항목을 누르면 입금 내역에서 왔다는 표시를 넘겨 상세의 돌아가기가 입금 내역으로 간다', async () => {
+    const user = userEvent.setup()
+    mockFetch({ 'GET /api/v1/payments/settlements/me': () => ok(page([settlement('cccccccc-0000-4000-8000-000000000001', {})])) })
+    const { router } = renderRoute('/wallet/settlements', <SettlementDepositListPage />, '/wallet/settlements')
+
+    await user.click(await screen.findByRole('link', { name: /입금 · 결제/ }))
+
+    expect(router.state.location.pathname).toBe(`/merchant/${MERCHANT_A}/settlements/cccccccc-0000-4000-8000-000000000001`)
+    expect(router.state.location.state).toEqual({ from: SETTLEMENT_FROM_DEPOSITS })
   })
 })

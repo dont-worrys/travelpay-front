@@ -28,7 +28,7 @@ function ChargeItem({ item }: { item: AdminCharge }) {
       </span>
       <span className="item-sub">
         <span className="hint">
-          {formatDateTime(item.createdAt)} · {item.status} · 시도 {item.attemptCount}회
+          {formatDateTime(item.createdAt)} · 시도 {item.attemptCount}회
           {item.failureCode && ` · ${item.failureCode}`}
         </span>
         <ChargeStatusBadge status={item.status} />

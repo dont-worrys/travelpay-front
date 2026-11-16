@@ -116,4 +116,15 @@ describe('ChargeNewPage', () => {
 
     expect(await screen.findByRole('link', { name: '지갑으로 이동' })).toHaveAttribute('href', '/wallet')
   })
+
+  it('처리 단계 안내는 한글 단계 이름만 보여 주고 상태 코드 원문은 보이지 않는다', async () => {
+    setup({})
+
+    const steps = await screen.findByRole('heading', { name: '충전 처리 단계' })
+    const guide = steps.closest('aside')
+    expect(guide).toHaveTextContent('접수')
+    expect(guide).toHaveTextContent('은행 출금')
+    expect(guide).not.toHaveTextContent('REQUESTED')
+    expect(guide).not.toHaveTextContent('BANK_PROCESSING')
+  })
 })

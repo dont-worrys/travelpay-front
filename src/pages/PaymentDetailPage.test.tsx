@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, ok } from '../test/fetchMock'
 import { renderRoute } from '../test/renderRoute'
 import { PaymentDetailPage } from './PaymentDetailPage'
@@ -39,6 +39,10 @@ function refundRequest(overrides: Record<string, unknown> = {}) {
 function renderDetail() {
   renderRoute('/payments/:paymentId', <PaymentDetailPage />, `/payments/${ID}`)
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('PaymentDetailPage', () => {
   it('거절된 결제는 거절 배지와 거절 사유를 보여 주고 환불 신청 버튼을 숨긴다', async () => {
@@ -155,5 +159,25 @@ describe('PaymentDetailPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('결제를 찾을 수 없습니다.')
     expect(screen.getByRole('link', { name: '결제 내역으로' })).toHaveAttribute('href', '/payments')
+  })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET ${PATH}`]: (_request, index) =>
+        index === 0 ? ok(payment({ status: 'PENDING' })) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(payment({ status: 'APPROVED' })),
+    })
+    renderDetail()
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(api.calls('GET', PATH)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(await screen.findByText('결제 완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', PATH)).toHaveLength(3)
   })
 })

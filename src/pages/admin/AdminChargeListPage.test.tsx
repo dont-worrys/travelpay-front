@@ -43,6 +43,14 @@ function setup(initialEntry = '/admin/charges') {
 }
 
 describe('AdminChargeListPage', () => {
+  it('충전 상태는 배지로만 보여 주고 상태 코드 원문을 겹쳐 쓰지 않는다', async () => {
+    setup()
+
+    const sub = (await screen.findByText(/시도 1회/)).closest('.item-sub')
+    expect(sub).toHaveTextContent('완료')
+    expect(sub).not.toHaveTextContent('COMPLETED')
+  })
+
   it('회원 UUID를 복사하고 그 회원의 충전만 다시 조회한다', async () => {
     const user = userEvent.setup()
     const writeText = vi.fn().mockResolvedValue(undefined)
