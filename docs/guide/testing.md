@@ -22,7 +22,7 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 | 공통 요청 | `api/client.test.ts` | GET에는 CSRF를 받지 않음, 변경 요청에 토큰 1회 발급·첨부, 허용 헤더(`Accept`·`Content-Type`·`Csrf-Token`·`Idempotency-Key`)만 사용, `COMMON_CSRF_INVALID` 403이면 새 토큰·같은 키로 1회 재전송, 그 밖 403은 재전송 없음, `details` 필드별 메시지, 연결 실패·5xx는 결과 모름, 공통 형식 아닌 응답, 204, 401 리스너, 요청 취소, 대기 한도(GET 기본 15초로 끊음, POST는 기본 한도 없음) |
 | 멱등성 키 | `lib/idempotency.test.ts` | UUID v4 형식, `randomUUID`가 없는 환경의 대체 생성 |
 | 금액 | `lib/money.test.ts` | 입력 → 최소 단위 정수, 환전 주 단위 문자열 변환 |
-| 공통 화면 부품 | `components/AmountPresets.test.tsx`·`RateTicker.test.tsx` | 금액 칩 더하기(빈 입력은 0부터), 거래내역 탭 링크·현재 화면 표시, 환율 티커 통화 선택(다시 조회 안 함)·실패 시 숨김(레이아웃 밖에서는 직접 조회) |
+| 공통 화면 부품 | `components/AmountPresets.test.tsx`·`RateTicker.test.tsx`·`RatesProvider.test.tsx` | 금액 칩 더하기(빈 입력은 0부터), 거래내역 탭 링크·현재 화면 표시, 환율 티커 통화 선택(다시 조회 안 함)·실패 시 숨김(레이아웃 밖에서는 직접 조회), 공유 환율 갱신 간격(공식 5분·MOCK 5초·환율 화면 열림 5초)·환율 화면과 한 번만 조회·멈춘 조회 끊고 마지막 값 유지·`useLiveRates` `enabled` 꺼짐 동안 5초 갱신 안 함 |
 | 주기 조회 | `lib/useAutoRefresh.test.ts` | 5초 주기, 앞 조회 중 새 조회 안 함, 실패 시 마지막 값 유지, 탭 숨김 중단·재개, `enabled` 전환, 화면을 떠나면 요청 취소 |
 | 라우팅·코드 스플리팅 | `router.test.tsx`·`lib/chunkReload.test.ts`·`components/RouteError.test.tsx` | 실제 라우트 표(`routes`)로 화면 청크를 받는 동안 공통 로딩(`PageLoading`) 표시 후 화면, 비로그인 직접 접근 → 로그인, 없는 주소, 메뉴 이동. 청크 로딩 실패 시 1회만 새로고침·재실패 시 `ChunkLoadError`·성공 시 표시 지움·일반 오류와 저장소 불가 시 새로고침 안 함, 브라우저별 실패 문구 판별, 재실패 안내(헤더 유지)·일반 오류는 기본 오류 화면 |
 | 로그인·역할 | `features/auth/RequireRole.test.tsx` | 비로그인 → `/login?redirect=`, 일반회원 ↔ 관리자 경로 분리, 열린 리다이렉트 차단 |

@@ -1,10 +1,11 @@
 import { act, render, screen } from '@testing-library/react'
+import { useState } from 'react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ExchangeRate } from '../features/exchange/api'
 import { ExchangeRatePage } from '../pages/ExchangeRatePage'
 import { ok } from '../test/fetchMock'
-import { RatesProvider } from './RatesProvider'
+import { RatesProvider, useLiveRates } from './RatesProvider'
 import { RateTicker } from './RateTicker'
 
 vi.mock('../features/auth/useAuth', () => ({
@@ -136,5 +137,48 @@ describe('RatesProvider', () => {
     expect(api.count()).toBe(3)
     expect(tickerValue()).toBe('100 JPY = 902 KRW')
     expect(screen.queryByText('최신 환율을 불러오지 못해 마지막으로 받은 환율을 보여 줍니다.')).not.toBeInTheDocument()
+  })
+
+  it('useLiveRates의 enabled가 false인 동안은 5초 갱신을 요청하지 않고, 켜지면 공유 조회를 5초로 당긴다', async () => {
+    function LiveProbe() {
+      const [enabled, setEnabled] = useState(false)
+      const { data } = useLiveRates({ enabled })
+      return (
+        <>
+          <p>{data?.[0] ? `값 ${data[0].midRate}` : '없음'}</p>
+          <button type="button" onClick={() => setEnabled(true)}>
+            켜기
+          </button>
+        </>
+      )
+    }
+    const api = stubRates((index) => ok([rate('KOREAEXIM', `90${index}`)]))
+    const router = createMemoryRouter([
+      {
+        path: '*',
+        element: (
+          <RatesProvider enabled>
+            <RateTicker />
+            <LiveProbe />
+          </RatesProvider>
+        ),
+      },
+    ])
+    render(<RouterProvider router={router} />)
+    await advance(0)
+    expect(api.count()).toBe(1)
+    // 꺼져 있어도 공유 값은 받는다.
+    expect(screen.getByText('값 900')).toBeInTheDocument()
+
+    await advance(5000)
+    expect(api.count()).toBe(1)
+
+    // 마지막 조회 뒤 5초가 이미 지났으므로 켜자마자 조회하고, 이후 5초마다 이어 간다.
+    act(() => screen.getByRole('button', { name: '켜기' }).click())
+    await advance(0)
+    expect(api.count()).toBe(2)
+    expect(screen.getByText('값 901')).toBeInTheDocument()
+    await advance(5000)
+    expect(api.count()).toBe(3)
   })
 })

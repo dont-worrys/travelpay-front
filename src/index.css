@@ -731,7 +731,8 @@ code {
 
 .form input:not([type='checkbox']):not([type='radio']),
 .form select,
-.form textarea {
+.form textarea,
+.input-row > input {
   width: 100%;
   min-height: var(--control-height);
   padding: 8px 14px;
@@ -751,7 +752,8 @@ code {
 
 .form input:not([type='checkbox']):not([type='radio']):focus,
 .form select:focus,
-.form textarea:focus {
+.form textarea:focus,
+.input-row > input:focus {
   border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 0.5px var(--primary);
@@ -1928,7 +1930,6 @@ button.secondary.selected {
 
 .rate-row {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px 12px;
@@ -1956,8 +1957,11 @@ button.secondary.selected {
   font-weight: 400;
 }
 
+/* 통화마다 값 길이가 달라도 같은 배치: 환율 아래에 전일 대비, 둘 다 오른쪽 정렬 */
 .rate-row .mid-rate {
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
 }
 
 /* 단위는 행 왼쪽에 이미 있다 */
