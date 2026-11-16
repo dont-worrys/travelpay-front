@@ -52,6 +52,8 @@ describe('ChargeDetailPage', () => {
 
     expect(await screen.findByText('실패')).toHaveClass('badge')
     expect(screen.getByText('계좌 잔액이 부족합니다.')).toHaveClass('error')
+    expect(screen.getByText('50,000원')).toBeInTheDocument()
+    expect(screen.queryByText('+50,000원')).not.toBeInTheDocument()
   })
 
   it('운영자 확인 중인 충전은 다시 충전하지 말라고 안내하고 자동 확인을 하지 않는다', async () => {

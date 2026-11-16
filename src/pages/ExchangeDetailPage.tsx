@@ -7,6 +7,7 @@ import {
   EXCHANGE_DESCRIPTION,
   EXCHANGE_TYPE_LABEL,
   FAILURE_REASON_LABEL,
+  exchangeAmountDisplay,
   toExchangeMessage,
 } from '../features/exchange/status'
 import { formatDateTime } from '../lib/datetime'
@@ -84,7 +85,8 @@ export function ExchangeDetailPage() {
       {justExchanged && order.status === 'COMPLETED' && <p className="notice">환전을 완료했습니다.</p>}
 
       <p className="amount-large">
-        +{formatMajorAmount(order.toAmount, order.toCurrency)} <ExchangeStatusBadge status={order.status} />
+        {exchangeAmountDisplay(order.status).sign}
+        {formatMajorAmount(order.toAmount, order.toCurrency)} <ExchangeStatusBadge status={order.status} />
       </p>
       {description && <p className="hint">{description}</p>}
       {order.failureReason && <p className="error">{FAILURE_REASON_LABEL[order.failureReason]}</p>}

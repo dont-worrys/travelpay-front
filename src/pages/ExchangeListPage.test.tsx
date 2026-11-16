@@ -83,3 +83,36 @@ describe('예약 체결 주문 표시', () => {
     expect(screen.queryByRole('link', { name: '예약 상세 보기' })).not.toBeInTheDocument()
   })
 })
+
+describe('환전 내역 금액 표시', () => {
+  it('완료된 환전만 받을 금액을 +·초록으로, 실패·처리 중·확인 중은 부호 없이 기본 색으로 보여 준다', async () => {
+    const statuses = ['COMPLETED', 'FAILED', 'PROCESSING', 'MANUAL_REVIEW']
+    const ids = statuses.map(
+      (_, index) => `bbbbbbbb-0000-4000-8000-00000000001${index}`,
+    )
+    mockFetch({
+      'GET /api/v1/exchanges': () =>
+        ok({
+          items: statuses.map((status, index) => ({ ...summary(ids[index]!, null), status })),
+          page: 0,
+          size: 20,
+          totalElements: statuses.length,
+          totalPages: 1,
+        }),
+    })
+    renderRoute('/exchanges', <ExchangeListPage />, '/exchanges')
+
+    const links = await screen.findAllByRole('link', { name: /KRW → JPY/ })
+    const amountOf = (id: string) => {
+      const link = links.find((item) => item.getAttribute('href') === `/exchanges/${id}`)!
+      return within(link).getByText((_, element) => element?.classList.contains('amount') ?? false)
+    }
+    const [completed, ...others] = ids
+    expect(amountOf(completed!)).toHaveTextContent('+590엔')
+    expect(amountOf(completed!)).toHaveClass('received')
+    for (const id of others) {
+      expect(amountOf(id)).toHaveTextContent(/^590엔$/)
+      expect(amountOf(id)).not.toHaveClass('received')
+    }
+  })
+})

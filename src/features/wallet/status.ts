@@ -22,6 +22,14 @@ export const CHARGE_DESCRIPTION: Partial<Record<ChargeStatus, string>> = {
   MANUAL_REVIEW: '자동 처리가 멈춰 운영자가 확인하고 있습니다. 다시 충전하지 말고 기다려 주세요.',
 }
 
+/**
+ * 금액 앞 부호와 글자 모양. 완료된 충전만 들어온 금액(`+`, 초록)으로 표시하고,
+ * 처리 중·실패·환불·확인 중 상태는 부호 없이 기본 글자색으로 둔다(받은 송금 `amountDisplay`와 같은 규칙).
+ */
+export function chargeAmountDisplay(status: ChargeStatus): { sign: string; className: string } {
+  return status === 'COMPLETED' ? { sign: '+', className: 'amount received' } : { sign: '', className: 'amount' }
+}
+
 /** 더 이상 바뀌지 않는 상태. */
 export function isFinalCharge(status: ChargeStatus): boolean {
   return status === 'COMPLETED' || status === 'FAILED' || status === 'REFUNDED' || status === 'MANUAL_REVIEW'

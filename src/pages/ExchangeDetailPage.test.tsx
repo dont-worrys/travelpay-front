@@ -93,6 +93,8 @@ describe('ExchangeDetailPage', () => {
 
     expect(await screen.findByText('실패')).toHaveClass('badge')
     expect(screen.getByText('잔액이 부족해 환전하지 못했습니다. 잔액이 빠지지 않았습니다.')).toHaveClass('error')
+    expect(screen.getByText('10,420엔')).toBeInTheDocument()
+    expect(screen.queryByText('+10,420엔')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '다시 환전하기' })).toHaveAttribute('href', '/exchange')
     expect(screen.queryByText('확정 시각')).not.toBeInTheDocument()
   })
