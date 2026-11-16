@@ -83,6 +83,26 @@ describe('WalletPage', () => {
     expect(query.get('size')).toBe('5')
   })
 
+  it('최근 충전 중 실패·환불된 충전은 + 없이 기본 색으로 보여 준다', async () => {
+    setup({
+      'GET /api/v1/charges': () =>
+        ok(
+          page([
+            { ...CHARGE, chargeId: 'c-failed', status: 'FAILED' },
+            { ...CHARGE, chargeId: 'c-refunded', status: 'REFUNDED' },
+          ]),
+        ),
+    })
+
+    for (const name of [/충전.*실패/, /충전.*환불됨/]) {
+      const link = await screen.findByRole('link', { name })
+      expect(link).not.toHaveTextContent('+')
+      const amount = link.querySelector('.amount')
+      expect(amount).toHaveTextContent(formatAmount(50000, 'KRW'))
+      expect(amount).not.toHaveClass('received')
+    }
+  })
+
   it('정산 입금이 없으면 정산 입금 카드를 숨긴다', async () => {
     setup({ [`GET ${SETTLEMENTS_PATH}`]: () => ok(page([])) })
 

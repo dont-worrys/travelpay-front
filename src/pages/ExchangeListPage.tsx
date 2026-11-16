@@ -5,7 +5,7 @@ import type { PageResponse } from '../api'
 import { StatusBadge } from '../components/StatusBadge'
 import { fetchExchanges, type ExchangeOrderSummary, type ExchangeType } from '../features/exchange/api'
 import { ExchangeStatusBadge } from '../features/exchange/ExchangeStatusBadge'
-import { EXCHANGE_TYPE_LABEL, toExchangeMessage } from '../features/exchange/status'
+import { EXCHANGE_TYPE_LABEL, exchangeAmountDisplay, toExchangeMessage } from '../features/exchange/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatMajorAmount } from '../lib/money'
 
@@ -98,7 +98,10 @@ export function ExchangeListPage() {
                       </>
                     )}
                   </span>
-                  <span className="amount received">+{formatMajorAmount(item.toAmount, item.toCurrency)}</span>
+                  <span className={exchangeAmountDisplay(item.status).className}>
+                    {exchangeAmountDisplay(item.status).sign}
+                    {formatMajorAmount(item.toAmount, item.toCurrency)}
+                  </span>
                 </span>
                 <span className="item-sub">
                   <span className="hint">

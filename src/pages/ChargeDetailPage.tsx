@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { fetchCharge, type Charge } from '../features/wallet/api'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
-import { CHARGE_DESCRIPTION, bankName, isFinalCharge, toWalletMessage } from '../features/wallet/status'
+import { CHARGE_DESCRIPTION, bankName, chargeAmountDisplay, isFinalCharge, toWalletMessage } from '../features/wallet/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 
@@ -77,7 +77,8 @@ export function ChargeDetailPage() {
       {justRequested && charge.status === 'COMPLETED' && <p className="notice">충전을 완료했습니다.</p>}
 
       <p className="amount-large">
-        +{formatAmount(charge.amount, charge.currency)} <ChargeStatusBadge status={charge.status} />
+        {chargeAmountDisplay(charge.status).sign}
+        {formatAmount(charge.amount, charge.currency)} <ChargeStatusBadge status={charge.status} />
       </p>
       {description && <p className={charge.status === 'FAILED' ? 'error' : 'hint'}>{description}</p>}
       {processing && !pollStopped && <p className="hint">결과를 자동으로 확인하는 중입니다…</p>}

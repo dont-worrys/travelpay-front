@@ -12,7 +12,7 @@ import {
 } from '../features/wallet/api'
 import { CURRENCY_TEXT, CurrencyMark } from '../components/CurrencyMark'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
-import { toWalletMessage } from '../features/wallet/status'
+import { chargeAmountDisplay, toWalletMessage } from '../features/wallet/status'
 import { fetchMySettlements, type Settlement } from '../features/merchant/api'
 import { settlementMerchantLabel, settlementPaidTime } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
@@ -215,7 +215,10 @@ export function WalletPage() {
                 <Link to={`/wallet/charges/${charge.chargeId}`} className="item">
                   <span className="item-main">
                     <span>충전</span>
-                    <span className="amount received">+{formatAmount(charge.amount, charge.currency)}</span>
+                    <span className={chargeAmountDisplay(charge.status).className}>
+                      {chargeAmountDisplay(charge.status).sign}
+                      {formatAmount(charge.amount, charge.currency)}
+                    </span>
                   </span>
                   <span className="item-sub">
                     <span className="hint">{formatDateTime(charge.createdAt)}</span>
