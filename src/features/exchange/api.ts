@@ -132,8 +132,15 @@ export interface ExchangeListQuery {
 }
 
 /** 공개 API(로그인 불필요). `currency`를 지정해도 응답은 목록이다. */
+/** 환율 조회 응답 대기 한도. 자동 갱신 간격(5초)과 같게 두어 요청이 멈춰도 다음 갱신이 이어지게 한다. */
+export const EXCHANGE_RATES_TIMEOUT_MS = 5000
+
 export function fetchExchangeRates(currency?: ForeignCurrency, signal?: AbortSignal): Promise<ExchangeRate[]> {
-  return apiRequest<ExchangeRate[]>('/api/v1/exchange-rates', { query: { currency }, signal })
+  return apiRequest<ExchangeRate[]>('/api/v1/exchange-rates', {
+    query: { currency },
+    signal,
+    timeoutMs: EXCHANGE_RATES_TIMEOUT_MS,
+  })
 }
 
 export function fetchExchangeLimits(signal?: AbortSignal): Promise<ExchangeLimit[]> {

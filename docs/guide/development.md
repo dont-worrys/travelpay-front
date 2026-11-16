@@ -12,7 +12,7 @@ src/
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
   components/           공통 레이아웃(AppLayout: 네이비 헤더·계정 메뉴·서랍·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
                         통화 배지(CurrencyMark), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
-                        환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분)
+                        환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분, MOCK 환율이거나 환율 화면이 열려 있으면 5초)
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
   features/wallet/      지갑·잔액·충전 API, 충전 상태·은행 목록, 테스트 계좌
   features/transfer/    송금 API·상태

@@ -14,6 +14,11 @@ export interface RequestOptions {
   /** 금전 처리 POST의 `Idempotency-Key`. 재시도할 때는 같은 값을 다시 넘긴다. */
   idempotencyKey?: string
   signal?: AbortSignal
+  /**
+   * 응답(본문 포함)을 기다리는 최대 시간(ms). 넘기면 요청을 끊고 `CLIENT_NETWORK_ERROR`(결과 모름)를 던진다.
+   * 서버·Gateway에 응답 대기 한도가 없어 조회가 멈추는 것을 막으려고 둔다. 지정하지 않으면 한도 없음.
+   */
+  timeoutMs?: number
 }
 
 /** 성공 응답과 함께 HTTP 상태가 필요할 때(예: 송금 201/202 구분) 쓴다. */
@@ -41,6 +46,36 @@ export async function apiRequestWithStatus<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> {
+  if (!options.timeoutMs) {
+    return requestOnce<T>(path, options)
+  }
+  const controller = new AbortController()
+  const outer = options.signal
+  const forwardAbort = () => controller.abort(outer?.reason)
+  if (outer?.aborted) {
+    forwardAbort()
+  } else {
+    outer?.addEventListener('abort', forwardAbort, { once: true })
+  }
+  let timedOut = false
+  const timer = setTimeout(() => {
+    timedOut = true
+    controller.abort()
+  }, options.timeoutMs)
+  try {
+    return await requestOnce<T>(path, { ...options, signal: controller.signal })
+  } catch (cause) {
+    if (timedOut && !outer?.aborted && isAbortError(cause)) {
+      throw new ApiError(0, CLIENT_ERROR_CODES.NETWORK, '서버 응답이 늦어 요청을 멈췄습니다. 잠시 후 다시 시도해 주세요.')
+    }
+    throw cause
+  } finally {
+    clearTimeout(timer)
+    outer?.removeEventListener('abort', forwardAbort)
+  }
+}
+
+async function requestOnce<T>(path: string, options: RequestOptions): Promise<ApiResult<T>> {
   const method = options.method ?? 'GET'
   const response = await send(path, method, options)
 
@@ -83,7 +118,7 @@ async function send(path: string, method: HttpMethod, options: RequestOptions): 
       signal: options.signal,
     })
   } catch (cause) {
-    if (cause instanceof DOMException && cause.name === 'AbortError') {
+    if (isAbortError(cause)) {
       throw cause
     }
     throw new ApiError(0, CLIENT_ERROR_CODES.NETWORK, '서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.')
@@ -155,6 +190,10 @@ async function readJson(response: Response): Promise<unknown> {
 
 function isEnvelope(body: unknown): body is { success: boolean; data: unknown; error: ApiErrorBody | null } {
   return typeof body === 'object' && body !== null && 'success' in body
+}
+
+function isAbortError(cause: unknown): boolean {
+  return cause instanceof DOMException && cause.name === 'AbortError'
 }
 
 function isUnsafe(method: HttpMethod): boolean {
