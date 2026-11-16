@@ -83,6 +83,14 @@ const EXCHANGE_MESSAGES: Record<string, string> = {
   EXCHANGE_RESERVATION_NOT_WAITING: '이미 체결·취소·만료된 예약이라 취소할 수 없습니다.',
 }
 
+/**
+ * 금액 앞 부호와 글자 모양. 완료된 환전의 받을 금액만 들어온 금액(`+`, 초록)으로 표시하고,
+ * 처리 중·실패·확인 중 상태는 부호 없이 기본 글자색으로 둔다(받은 송금 `amountDisplay`와 같은 규칙).
+ */
+export function exchangeAmountDisplay(status: ExchangeStatus): { sign: string; className: string } {
+  return status === 'COMPLETED' ? { sign: '+', className: 'amount received' } : { sign: '', className: 'amount' }
+}
+
 export function toExchangeMessage(error: unknown, fallback: string): string {
   if (isApiError(error) && error.code in EXCHANGE_MESSAGES) {
     return EXCHANGE_MESSAGES[error.code] ?? fallback

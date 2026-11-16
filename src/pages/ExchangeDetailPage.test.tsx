@@ -1,5 +1,5 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { act, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, ok } from '../test/fetchMock'
 import { renderRoute } from '../test/renderRoute'
 import { ExchangeDetailPage } from './ExchangeDetailPage'
@@ -37,6 +37,10 @@ function order(overrides: Record<string, unknown> = {}) {
 function renderDetail() {
   renderRoute('/exchanges/:orderId', <ExchangeDetailPage />, `/exchanges/${ID}`)
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('ExchangeDetailPage', () => {
   it('완료된 환전은 받은 금액·보낸 금액·수수료·적용 환율을 주 단위 문자열 그대로 보여 준다', async () => {
@@ -93,6 +97,8 @@ describe('ExchangeDetailPage', () => {
 
     expect(await screen.findByText('실패')).toHaveClass('badge')
     expect(screen.getByText('잔액이 부족해 환전하지 못했습니다. 잔액이 빠지지 않았습니다.')).toHaveClass('error')
+    expect(screen.getByText('10,420엔')).toBeInTheDocument()
+    expect(screen.queryByText('+10,420엔')).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: '다시 환전하기' })).toHaveAttribute('href', '/exchange')
     expect(screen.queryByText('확정 시각')).not.toBeInTheDocument()
   })
@@ -114,5 +120,25 @@ describe('ExchangeDetailPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('환전 주문을 찾을 수 없습니다.')
     expect(screen.getByRole('link', { name: '환전 내역으로' })).toHaveAttribute('href', '/exchanges')
+  })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET ${PATH}`]: (_request, index) =>
+        index === 0 ? ok(order({ status: 'PROCESSING' })) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(order({ status: 'COMPLETED' })),
+    })
+    renderDetail()
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(api.calls('GET', PATH)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(await screen.findByText('완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', PATH)).toHaveLength(3)
   })
 })

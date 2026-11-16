@@ -62,3 +62,6 @@ export function toMerchantMessage(error: unknown, fallback: string): string {
   }
   return toPaymentMessage(error, fallback)
 }
+
+/** 정산 입금 내역(지갑)에서 정산 상세로 갈 때 넘기는 `location.state.from` 값. 상세의 돌아가기 링크를 입금 내역으로 바꾼다. */
+export const SETTLEMENT_FROM_DEPOSITS = 'deposits'

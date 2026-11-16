@@ -16,6 +16,7 @@ import {
 import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
 import { toExchangeMessage } from '../features/exchange/status'
 import { fetchMyWallet, type Wallet } from '../features/wallet/api'
+import { toWalletMessage } from '../features/wallet/status'
 import { newIdempotencyKey } from '../lib/idempotency'
 import {
   CURRENCY_INFO,
@@ -64,6 +65,10 @@ export function ExchangeNewPage() {
 
   const [wallet, setWallet] = useState<Wallet | null>(null)
   const [walletProblem, setWalletProblem] = useState<'none' | 'inactive' | null>(null)
+  /** 지갑 없음·비활성 말고 조회 자체가 실패한 사유. 지갑을 몰라 환전 신청을 못 한다. */
+  const [walletError, setWalletError] = useState<string | null>(null)
+  /** 지갑 조회를 다시 하기 위한 값. */
+  const [walletReload, setWalletReload] = useState(0)
   const [limits, setLimits] = useState<ExchangeLimit[] | null>(null)
 
   const [step, setStep] = useState<Step>('form')
@@ -87,16 +92,27 @@ export function ExchangeNewPage() {
 
   useEffect(() => {
     const controller = new AbortController()
+    setWalletError(null)
     fetchMyWallet(controller.signal)
       .then((data) => {
         setWallet(data)
         setWalletProblem(data.status === 'ACTIVE' ? null : 'inactive')
       })
       .catch((cause) => {
+        if (cause instanceof DOMException && cause.name === 'AbortError') {
+          return
+        }
         if (isApiError(cause) && cause.code === 'WALLET_NOT_FOUND') {
           setWalletProblem('none')
+        } else {
+          setWalletError(toWalletMessage(cause, '지갑 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'))
         }
       })
+    return () => controller.abort()
+  }, [walletReload])
+
+  useEffect(() => {
+    const controller = new AbortController()
     // 한도는 안내용이라 실패하면 표시만 뺀다(최종 판단은 견적·환전 API).
     fetchExchangeLimits(controller.signal).then(setLimits, () => undefined)
     return () => controller.abort()
@@ -268,15 +284,15 @@ export function ExchangeNewPage() {
         )}
         {uncertain && (
           <p className="hint">
-            환전이 이미 처리되었을 수 있습니다. <strong>다시 시도</strong>는 같은 요청으로 보내므로 두 번 환전되지
-            않습니다(견적 시간이 지나도 됩니다). 새 견적으로 바꾸기 전에 <Link to="/exchanges">환전 내역</Link>을 먼저
-            확인해 주세요.
+            환전이 이미 처리되었을 수 있어 결과를 확인할 때까지 금액을 수정하거나 새 견적을 받을 수 없습니다.{' '}
+            <strong>다시 시도</strong>는 같은 요청으로 보내므로 두 번 환전되지 않습니다(견적 시간이 지나도 됩니다).
+            처리 여부는 <Link to="/exchanges">환전 내역</Link>에서도 확인할 수 있습니다.
           </p>
         )}
         {expired && !uncertain && <p className="hint">이 견적으로는 환전할 수 없습니다. 같은 금액으로 견적을 다시 받아 주세요.</p>}
 
         <div className="actions">
-          <button type="button" className="secondary" onClick={backToForm} disabled={submitting || quoting}>
+          <button type="button" className="secondary" onClick={backToForm} disabled={submitting || quoting || uncertain}>
             수정
           </button>
           {uncertain ? (
@@ -316,6 +332,14 @@ export function ExchangeNewPage() {
       {walletProblem === 'inactive' && (
         <p className="error">
           지금은 지갑을 사용할 수 없습니다. <Link to="/wallet">지갑 상태 보기</Link>
+        </p>
+      )}
+      {walletError && (
+        <p className="error" role="alert">
+          {walletError} 지갑을 확인하지 못하면 환전을 신청할 수 없습니다.{' '}
+          <button type="button" className="link-button" onClick={() => setWalletReload((value) => value + 1)}>
+            다시 불러오기
+          </button>
         </p>
       )}
 
@@ -412,7 +436,7 @@ export function ExchangeNewPage() {
             {error}
           </p>
         )}
-        <button type="submit" disabled={quoting || !amountInput || walletProblem !== null}>
+        <button type="submit" disabled={quoting || !amountInput || walletProblem !== null || walletError !== null}>
           {quoting ? '견적 받는 중…' : '견적 받기'}
         </button>
       </form>

@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router'
 import type { PageResponse } from '../api'
 import { fetchCharges, type Charge } from '../features/wallet/api'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
-import { bankName, toWalletMessage } from '../features/wallet/status'
+import { bankName, chargeAmountDisplay, toWalletMessage } from '../features/wallet/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 
@@ -62,7 +62,10 @@ export function ChargeListPage() {
                   <span>
                     {bankName(charge.bankCode)} {charge.accountNumberMask.slice(-4)}
                   </span>
-                  <span className="amount received">+{formatAmount(charge.amount, charge.currency)}</span>
+                  <span className={chargeAmountDisplay(charge.status).className}>
+                    {chargeAmountDisplay(charge.status).sign}
+                    {formatAmount(charge.amount, charge.currency)}
+                  </span>
                 </span>
                 <span className="item-sub">
                   <span className="hint">

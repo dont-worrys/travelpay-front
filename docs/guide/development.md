@@ -12,7 +12,7 @@ src/
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
   components/           공통 레이아웃(AppLayout: 네이비 헤더·계정 메뉴·서랍·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
                         통화 배지(CurrencyMark), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
-                        환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분)
+                        환율 티커(RateTicker)와 티커·홈이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분, MOCK 환율이거나 환율 화면이 열려 있으면 5초)
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
   features/wallet/      지갑·잔액·충전 API, 충전 상태·은행 목록, 테스트 계좌
   features/transfer/    송금 API·상태
@@ -41,6 +41,7 @@ vercel.json             Vercel 빌드·SPA rewrite·응답 헤더
 
 - API는 `src/api`의 `apiRequest`/`apiRequestWithStatus`로만 호출합니다. 실패는 `ApiError(status, code, message, details)`로 던지고, 분기는 `error.code`로 합니다. 화면 문구는 `toUserMessage(error)`와 기능별 `to…Message`를 씁니다.
 - 세션 쿠키(`credentials: 'include'`)와 CSRF 토큰은 공통 요청 함수가 처리합니다. 로그인·로그아웃·비밀번호 변경 뒤에는 토큰을 버리고 다시 받습니다(`AuthContext`).
+- 조회(GET)는 15초 대기 한도가 기본이고, 상태 변경 요청은 한도가 없습니다([응답 대기 한도](api-common.md#응답-대기-한도)). 처리 중 상세의 자동 재조회는 한 번 실패해도 마지막 값을 두고 다음 주기에 이어 갑니다.
 - 401을 받으면 로그인 상태를 지우고 보호된 화면은 `/login?redirect=원래경로`로 보냅니다. `redirect`는 앱 내부 경로만 허용합니다.
 - 금액은 통화별 최소 단위 정수로 다룹니다(`lib/money.ts`). 환전 API만 주 단위 소수 문자열을 주고받으므로 `majorToMinor`·`formatMajorAmount`로 문자열 변환만 하고 소수 연산을 하지 않습니다.
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { fetchCharge, type Charge } from '../features/wallet/api'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
-import { CHARGE_DESCRIPTION, bankName, isFinalCharge, toWalletMessage } from '../features/wallet/status'
+import { CHARGE_DESCRIPTION, bankName, chargeAmountDisplay, isFinalCharge, toWalletMessage } from '../features/wallet/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
 
@@ -23,21 +23,33 @@ export function ChargeDetailPage() {
     const controller = new AbortController()
     const startedAt = Date.now()
     let timer: number | undefined
+    /** 한 번이라도 받아 화면에 보여 준 값이 있는지. */
+    let loaded = false
+
+    function scheduleNext() {
+      if (Date.now() - startedAt < POLL_LIMIT_MS) {
+        timer = window.setTimeout(load, POLL_INTERVAL_MS)
+      } else {
+        setPollStopped(true)
+      }
+    }
 
     async function load() {
       try {
         const data = await fetchCharge(chargeId, controller.signal)
         setCharge(data)
+        loaded = true
         setError(null)
         if (!isFinalCharge(data.status)) {
-          if (Date.now() - startedAt < POLL_LIMIT_MS) {
-            timer = window.setTimeout(load, POLL_INTERVAL_MS)
-          } else {
-            setPollStopped(true)
-          }
+          scheduleNext()
         }
       } catch (cause) {
         if (cause instanceof DOMException && cause.name === 'AbortError') {
+          return
+        }
+        // 처리 중 다시 조회하다 실패한 것은 일시 오류로 보고 마지막 값을 둔 채 이어서 확인한다.
+        if (loaded) {
+          scheduleNext()
           return
         }
         setError(toWalletMessage(cause, '충전 내역을 불러오지 못했습니다.'))
@@ -77,7 +89,8 @@ export function ChargeDetailPage() {
       {justRequested && charge.status === 'COMPLETED' && <p className="notice">충전을 완료했습니다.</p>}
 
       <p className="amount-large">
-        +{formatAmount(charge.amount, charge.currency)} <ChargeStatusBadge status={charge.status} />
+        {chargeAmountDisplay(charge.status).sign}
+        {formatAmount(charge.amount, charge.currency)} <ChargeStatusBadge status={charge.status} />
       </p>
       {description && <p className={charge.status === 'FAILED' ? 'error' : 'hint'}>{description}</p>}
       {processing && !pollStopped && <p className="hint">결과를 자동으로 확인하는 중입니다…</p>}

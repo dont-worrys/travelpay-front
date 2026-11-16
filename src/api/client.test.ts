@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, networkError, ok } from '../test/fetchMock'
 import { CLIENT_ERROR_CODES, isOutcomeUnknown, type ApiError } from './ApiError'
-import { apiRequest, apiRequestWithStatus, setUnauthorizedListener } from './client'
+import { apiRequest, apiRequestWithStatus, DEFAULT_GET_TIMEOUT_MS, setUnauthorizedListener } from './client'
 import { clearCsrfToken } from './csrf'
 
 const CSRF_PATH = '/api/v1/auth/csrf'
@@ -192,5 +192,89 @@ describe('apiRequest', () => {
     })
 
     await expect(apiRequest('/api/v1/items')).rejects.toMatchObject({ name: 'AbortError' })
+  })
+})
+
+describe('apiRequest timeoutMs', () => {
+  /** 응답하지 않다가 signal이 끊기면 AbortError로 끝나는 fetch. */
+  function stubHangingFetch() {
+    const fetchMock = vi.fn(
+      (_input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+        }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('대기 한도를 넘기면 요청을 끊고 결과 모름(연결 오류)으로 실패한다', async () => {
+    stubHangingFetch()
+    const pending = catchError(apiRequest('/api/v1/items', { timeoutMs: 5000 }))
+
+    await vi.advanceTimersByTimeAsync(5000)
+    const error = await pending
+
+    expect(error.status).toBe(0)
+    expect(error.code).toBe(CLIENT_ERROR_CODES.NETWORK)
+    expect(isOutcomeUnknown(error)).toBe(true)
+  })
+
+  it('호출한 쪽이 취소하면 대기 한도 오류가 아니라 AbortError를 그대로 던진다', async () => {
+    stubHangingFetch()
+    const controller = new AbortController()
+    const pending = apiRequest('/api/v1/items', { timeoutMs: 5000, signal: controller.signal }).catch((e: unknown) => e)
+
+    controller.abort()
+    const error = await pending
+
+    expect(error).toBeInstanceOf(DOMException)
+    expect((error as DOMException).name).toBe('AbortError')
+  })
+
+  it('GET은 대기 한도를 주지 않아도 기본 한도에서 끊는다', async () => {
+    stubHangingFetch()
+    const pending = catchError(apiRequest('/api/v1/items'))
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_GET_TIMEOUT_MS - 1)
+    let settled = false
+    void pending.then(() => (settled = true))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(settled).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(1)
+    expect((await pending).code).toBe(CLIENT_ERROR_CODES.NETWORK)
+  })
+
+  it('POST는 기본 대기 한도가 없다(금전 요청을 끊어 결과 모름으로 만들지 않는다)', async () => {
+    // CSRF 토큰은 바로 주고 POST만 응답하지 않게 한다.
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      String(input).includes(CSRF_PATH)
+        ? Promise.resolve(ok({ headerName: 'Csrf-Token', token: 't' }))
+        : new Promise<Response>(() => undefined),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    let settled = false
+    void apiRequest('/api/v1/items', { method: 'POST', body: {} }).then(
+      () => (settled = true),
+      () => (settled = true),
+    )
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_GET_TIMEOUT_MS * 4)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(settled).toBe(false)
+  })
+
+  it('한도 안에 응답하면 그대로 돌려준다', async () => {
+    mockFetch({ 'GET /api/v1/items': () => ok({ value: 1 }) })
+    await expect(apiRequest('/api/v1/items', { timeoutMs: 5000 })).resolves.toEqual({ value: 1 })
   })
 })

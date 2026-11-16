@@ -12,9 +12,9 @@ import {
 } from '../features/wallet/api'
 import { CURRENCY_TEXT, CurrencyMark } from '../components/CurrencyMark'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
-import { toWalletMessage } from '../features/wallet/status'
+import { chargeAmountDisplay, toWalletMessage } from '../features/wallet/status'
 import { fetchMySettlements, type Settlement } from '../features/merchant/api'
-import { settlementMerchantLabel, settlementPaidTime } from '../features/merchant/status'
+import { SETTLEMENT_FROM_DEPOSITS, settlementMerchantLabel, settlementPaidTime } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { CURRENCY_INFO, formatAmount } from '../lib/money'
 
@@ -149,7 +149,11 @@ export function WalletPage() {
       <div className="page-head">
         <div>
           <h1>내 지갑</h1>
-          <p className="page-eyebrow">통화별 잔액과 최근 충전을 확인하세요.</p>
+          <p className="page-eyebrow">
+            {settlements.length > 0
+              ? '통화별 잔액과 최근 충전·정산 입금을 확인하세요.'
+              : '통화별 잔액과 최근 충전을 확인하세요.'}
+          </p>
         </div>
         <div className="actions inline">
           <Link to="/wallet/charge" className="button-link secondary">
@@ -215,7 +219,10 @@ export function WalletPage() {
                 <Link to={`/wallet/charges/${charge.chargeId}`} className="item">
                   <span className="item-main">
                     <span>충전</span>
-                    <span className="amount received">+{formatAmount(charge.amount, charge.currency)}</span>
+                    <span className={chargeAmountDisplay(charge.status).className}>
+                      {chargeAmountDisplay(charge.status).sign}
+                      {formatAmount(charge.amount, charge.currency)}
+                    </span>
                   </span>
                   <span className="item-sub">
                     <span className="hint">{formatDateTime(charge.createdAt)}</span>
@@ -239,7 +246,11 @@ export function WalletPage() {
           <ul className="item-list">
             {settlements.map((item) => (
               <li key={item.settlementId}>
-                <Link to={`/merchant/${item.merchantId}/settlements/${item.settlementId}`} className="item">
+                <Link
+                  to={`/merchant/${item.merchantId}/settlements/${item.settlementId}`}
+                  state={{ from: SETTLEMENT_FROM_DEPOSITS }}
+                  className="item"
+                >
                   <span className="item-main">
                     <span>{settlementMerchantLabel(item)}</span>
                     <span className="amount received">+{formatAmount(item.amount, item.currency)}</span>

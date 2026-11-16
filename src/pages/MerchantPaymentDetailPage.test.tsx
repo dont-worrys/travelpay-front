@@ -1,6 +1,6 @@
-import { screen } from '@testing-library/react'
+import { act, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { fail, mockFetch, ok, type RouteHandler } from '../test/fetchMock'
 import { renderRoute } from '../test/renderRoute'
 import { MerchantPaymentDetailPage } from './MerchantPaymentDetailPage'
@@ -18,6 +18,22 @@ function refund(id: string, status: string, amount: number) {
     declineReason: status === 'DECLINED' ? '잔액 부족' : null,
     createdAt: '2026-11-04T02:00:00Z',
     updatedAt: '2026-11-04T02:00:00Z',
+  }
+}
+
+function merchantPayment(status: string) {
+  return {
+    paymentId: PAYMENT_ID,
+    status,
+    amount: 5000,
+    currency: 'KRW',
+    merchantName: 'Cafe',
+    paymentInfo: 'coffee',
+    declineReason: null,
+    refunds: [],
+    refundRequest: null,
+    createdAt: '2026-11-04T01:02:03Z',
+    updatedAt: '2026-11-04T03:00:00Z',
   }
 }
 
@@ -53,6 +69,10 @@ function setup(routes: Record<string, RouteHandler> = {}) {
   )
   return api
 }
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('MerchantPaymentDetailPage', () => {
   it('거절된 환불을 빼고 남은 금액을 환불 금액에 채운다', async () => {
@@ -151,5 +171,25 @@ describe('MerchantPaymentDetailPage', () => {
     expect(await screen.findByRole('link', { name: '가맹점 관리' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /환불/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '신청 거절' })).not.toBeInTheDocument()
+  })
+
+  it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const api = mockFetch({
+      [`GET /api/v1/payments/merchants/${MERCHANT_ID}/payments/${PAYMENT_ID}`]: (_request, index) =>
+        index === 0 ? ok(merchantPayment('PENDING')) : index === 1 ? fail(503, 'COMMON_SERVICE_UNAVAILABLE') : ok(merchantPayment('APPROVED')),
+    })
+    renderRoute('/merchant/:merchantId/payments/:paymentId', <MerchantPaymentDetailPage />, `/merchant/${MERCHANT_ID}/payments/${PAYMENT_ID}`)
+
+    expect(await screen.findByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(api.calls('GET', `/api/v1/payments/merchants/${MERCHANT_ID}/payments/${PAYMENT_ID}`)).toHaveLength(2)
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByText('결과를 자동으로 확인하는 중입니다…')).toBeInTheDocument()
+
+    await act(() => vi.advanceTimersByTimeAsync(3000))
+    expect(await screen.findByText('결제 완료', { selector: '.badge' })).toBeInTheDocument()
+    expect(api.calls('GET', `/api/v1/payments/merchants/${MERCHANT_ID}/payments/${PAYMENT_ID}`)).toHaveLength(3)
   })
 })

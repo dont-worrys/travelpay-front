@@ -1,7 +1,7 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it } from 'vitest'
-import { fail, mockFetch, ok } from '../test/fetchMock'
+import { fail, mockFetch, networkError, ok } from '../test/fetchMock'
 import { renderRoute } from '../test/renderRoute'
 import { ExchangeNewPage } from './ExchangeNewPage'
 
@@ -27,7 +27,10 @@ function quote() {
   }
 }
 
-function setup(placeExchange: Parameters<typeof mockFetch>[0][string]) {
+function setup(
+  placeExchange: Parameters<typeof mockFetch>[0][string],
+  routes: Parameters<typeof mockFetch>[0] = {},
+) {
   const api = mockFetch({
     'GET /api/v1/wallets/me': () => ok({ walletId: WALLET_ID, status: 'ACTIVE', currencies: ['KRW', 'JPY', 'CNY'] }),
     'GET /api/v1/exchange-limits': () =>
@@ -48,6 +51,7 @@ function setup(placeExchange: Parameters<typeof mockFetch>[0][string]) {
       ]),
     'POST /api/v1/exchange-quotes': () => ok(quote(), 201),
     'POST /api/v1/exchanges': placeExchange,
+    ...routes,
   })
   renderRoute('/exchange', <ExchangeNewPage />, '/exchange')
   return api
@@ -119,6 +123,36 @@ describe('ExchangeNewPage', () => {
     expect(second?.headers['Idempotency-Key']).toBe(first?.headers['Idempotency-Key'])
   })
 
+  it('결과를 모르는 동안에는 수정·새 견적을 막고 같은 요청 재시도와 환전 내역 확인만 남긴다', async () => {
+    const user = userEvent.setup()
+    const api = setup(() => fail(503, 'EXCHANGE_LEDGER_UNAVAILABLE', '지금은 환전할 수 없습니다.'))
+
+    await requestQuote(user, '10000')
+    await user.click(screen.getByRole('button', { name: '환전하기' }))
+
+    expect(await screen.findByRole('button', { name: '다시 시도' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '수정' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: '견적 다시 받기' })).not.toBeInTheDocument()
+    expect(screen.getByText(/결과를 확인할 때까지 금액을 수정하거나 새 견적을 받을 수 없습니다/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '환전 내역' })).toHaveAttribute('href', '/exchanges')
+
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    expect(screen.getByRole('heading', { name: '환전 확인' })).toBeInTheDocument()
+    expect(api.calls('POST', '/api/v1/exchange-quotes')).toHaveLength(1)
+  })
+
+  it('결과를 알 때(정상 견적)는 수정으로 입력 화면에 돌아가 다시 견적을 받을 수 있다', async () => {
+    const user = userEvent.setup()
+    const api = setup(() => ok({}))
+
+    await requestQuote(user, '10000')
+    await user.click(screen.getByRole('button', { name: '수정' }))
+    await user.click(await screen.findByRole('button', { name: '견적 받기' }))
+
+    expect(await screen.findByRole('heading', { name: '환전 확인' })).toBeInTheDocument()
+    expect(api.calls('POST', '/api/v1/exchange-quotes')).toHaveLength(2)
+  })
+
   it('서버가 견적 만료로 거절하면 견적을 다시 받게 한다', async () => {
     const user = userEvent.setup()
     setup(() => fail(409, 'EXCHANGE_QUOTE_EXPIRED', '견적이 만료되었습니다. 견적을 다시 받아 주세요.'))
@@ -128,5 +162,44 @@ describe('ExchangeNewPage', () => {
 
     expect(await screen.findByRole('button', { name: '견적 다시 받기' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '환전하기' })).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['연결 실패', () => networkError(), '서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.'],
+    ['잔액 원장 장애', () => fail(503, 'WALLET_LEDGER_UNAVAILABLE'), '잔액을 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.'],
+  ])('지갑 조회가 %s로 실패하면 사유와 함께 환전을 신청할 수 없다고 안내한다', async (_label, handler, message) => {
+    setup(() => ok({}), { 'GET /api/v1/wallets/me': handler })
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent(message)
+    expect(alert).toHaveTextContent('지갑을 확인하지 못하면 환전을 신청할 수 없습니다.')
+    expect(screen.queryByText(/지갑이 필요합니다/)).not.toBeInTheDocument()
+  })
+
+  it('지갑이 없으면(WALLET_NOT_FOUND) 조회 실패가 아니라 지갑 만들기를 안내한다', async () => {
+    setup(() => ok({}), { 'GET /api/v1/wallets/me': () => fail(404, 'WALLET_NOT_FOUND') })
+
+    expect(await screen.findByRole('link', { name: '지갑 만들기' })).toHaveAttribute('href', '/wallet')
+    expect(screen.queryByText(/지갑을 확인하지 못하면/)).not.toBeInTheDocument()
+  })
+
+  it('지갑 조회가 실패하면 견적을 막고, 다시 불러오기로 지갑을 받으면 안내를 지운다', async () => {
+    const user = userEvent.setup()
+    const api = setup(() => ok({}), {
+      'GET /api/v1/wallets/me': (_request, index) =>
+        index === 0
+          ? fail(503, 'COMMON_SERVICE_UNAVAILABLE')
+          : ok({ walletId: WALLET_ID, status: 'ACTIVE', currencies: ['KRW', 'JPY', 'CNY'] }),
+    })
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('지갑을 확인하지 못하면 환전을 신청할 수 없습니다.')
+    await user.type(screen.getByPlaceholderText('0'), '10000')
+    expect(screen.getByRole('button', { name: '견적 받기' })).toBeDisabled()
+
+    await user.click(screen.getByRole('button', { name: '다시 불러오기' }))
+
+    await waitFor(() => expect(screen.queryByText(/지갑을 확인하지 못하면/)).not.toBeInTheDocument())
+    expect(screen.getByRole('button', { name: '견적 받기' })).toBeEnabled()
+    expect(api.calls('GET', '/api/v1/wallets/me')).toHaveLength(2)
   })
 })
