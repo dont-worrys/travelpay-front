@@ -4,7 +4,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
 import {
   fetchExchangeLimits,
-  fetchExchangeRates,
   FOREIGN_CURRENCIES,
   issueQuote,
   placeExchange,
@@ -28,7 +27,7 @@ import {
   toAmountInput,
   type Currency,
 } from '../lib/money'
-import { useAutoRefresh } from '../lib/useAutoRefresh'
+import { useLiveRates } from '../components/RatesProvider'
 
 type Step = 'form' | 'confirm'
 
@@ -40,10 +39,6 @@ interface PendingRequest {
 
 function isForeign(value: string | null): value is ForeignCurrency {
   return value === 'JPY' || value === 'CNY'
-}
-
-function loadRates(signal: AbortSignal) {
-  return fetchExchangeRates(undefined, signal)
 }
 
 /** 남은 시간을 "4:59"처럼 표시한다. */
@@ -88,7 +83,7 @@ export function ExchangeNewPage() {
 
   // 참고 환율은 견적 받기 전에만 5초마다 갱신한다. 견적 이후에는 견적 환율(5분 보장)만 보여 준다.
   // 안내용이라 실패하면 마지막 값을 두고, 처음부터 실패하면 표시만 뺀다(최종 판단은 견적·환전 API).
-  const { data: rates, error: ratesError } = useAutoRefresh(loadRates, { enabled: step === 'form' })
+  const { data: rates, error: ratesError } = useLiveRates({ enabled: step === 'form' })
 
   useEffect(() => {
     const controller = new AbortController()
