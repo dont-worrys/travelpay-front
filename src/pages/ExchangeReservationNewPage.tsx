@@ -4,7 +4,6 @@ import { isApiError, isOutcomeUnknown } from '../api'
 import {
   createReservation,
   fetchExchangeLimits,
-  fetchExchangeRates,
   FOREIGN_CURRENCIES,
   type ExchangeLimit,
   type ExchangeType,
@@ -27,7 +26,7 @@ import {
   toAmountInput,
   type Currency,
 } from '../lib/money'
-import { useAutoRefresh } from '../lib/useAutoRefresh'
+import { useLiveRates } from '../components/RatesProvider'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const RESERVATION_PERIOD_DAYS = [1, 3, 7, 30] as const
@@ -45,10 +44,6 @@ function expiryFrom(now: number, days: PeriodDays): Date {
 
 function isForeign(value: string | null): value is ForeignCurrency {
   return value === 'JPY' || value === 'CNY'
-}
-
-function loadRates(signal: AbortSignal) {
-  return fetchExchangeRates(undefined, signal)
 }
 
 /** 응답을 받지 못한 예약 요청. 다시 보낼 때는 키와 본문(만료 시각 포함)을 그대로 쓴다. */
@@ -75,7 +70,7 @@ export function ExchangeReservationNewPage() {
   const [walletProblem, setWalletProblem] = useState<'none' | 'inactive' | null>(null)
   const [limits, setLimits] = useState<ExchangeLimit[] | null>(null)
   // 지금 매매기준율은 5초마다 갱신한다. 안내용이라 실패하면 마지막 값을 두고, 처음부터 실패하면 표시만 뺀다.
-  const { data: rates, error: ratesError } = useAutoRefresh(loadRates)
+  const { data: rates, error: ratesError } = useLiveRates()
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)

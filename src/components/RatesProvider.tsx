@@ -73,16 +73,17 @@ export function useSharedRates(): ExchangeRate[] | null {
 }
 
 /**
- * 5초마다 갱신되는 환율(환율 화면용). 레이아웃 안이면 공통 조회를 5초로 당겨 같이 쓰므로
+ * 5초마다 갱신되는 환율(환율·환전·예약 입력 화면용). 레이아웃 안이면 공통 조회를 5초로 당겨 같이 쓰므로
  * 티커와 값·시점이 같고 요청도 한 번만 나간다. 밖이면 직접 5초마다 조회한다.
+ * `enabled`가 false인 동안은 5초 갱신을 요청하지 않는다(환전 견적 확인 단계 등). 공유 값은 그대로 돌려준다.
  */
-export function useLiveRates(): AutoRefreshResult<ExchangeRate[]> {
+export function useLiveRates({ enabled = true }: { enabled?: boolean } = {}): AutoRefreshResult<ExchangeRate[]> {
   const shared = useContext(RatesContext)
   const standalone = shared === undefined
   const subscribeLive = shared?.subscribeLive
-  const own = useAutoRefresh(loadRates, { intervalMs: LIVE_INTERVAL_MS, enabled: standalone })
+  const own = useAutoRefresh(loadRates, { intervalMs: LIVE_INTERVAL_MS, enabled: standalone && enabled })
 
-  useEffect(() => subscribeLive?.(), [subscribeLive])
+  useEffect(() => (enabled ? subscribeLive?.() : undefined), [subscribeLive, enabled])
 
   if (standalone) {
     return own
