@@ -1534,20 +1534,26 @@ section > .notice-warn {
   }
 }
 
-/* 거래내역 탭 이름 뒤 "내역"은 넓은 화면에서만(HistoryTabs.tsx). 칸 앞 공백은 사라지므로 여백으로 띄운다 */
-.history-tabs-suffix {
-  display: none;
-  margin-left: 0.3em;
-}
-
 @media (min-width: 768px) {
   .tab,
   .history-tabs a {
     padding: 0 20px;
   }
+}
 
-  .history-tabs-suffix {
-    display: inline;
+/* 거래내역 탭(HistoryTabs): 좁은 화면에서도 "○○ 내역" 다섯 개가 한 줄에 다 보이도록 같은 폭으로 나누고
+ * 트랙 안쪽 여백·탭 사이·글씨를 줄인다. 이보다 더 좁아 넘치면 트랙의 가로 스크롤로 넘긴다. */
+@media (max-width: 767px) {
+  .history-tabs {
+    gap: 2px;
+    padding: 6px;
+  }
+
+  .history-tabs a {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 4px;
+    font-size: var(--fs-xs);
   }
 }
 

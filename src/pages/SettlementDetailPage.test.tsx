@@ -101,19 +101,18 @@ describe('SettlementDetailPage', () => {
     )
   })
 
-  it('정산 입금 내역에서 들어오면 돌아가기 링크가 정산 입금 내역으로 간다', async () => {
+  it('지갑의 정산 내역에서 들어오면 돌아가기 링크가 가맹점 정산이 아니라 지갑의 정산 내역으로 간다', async () => {
     setup(() => ok(detail()), { from: SETTLEMENT_FROM_DEPOSITS })
 
     expect(await screen.findByText('입금 완료')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('href', '/wallet/settlements')
-    expect(screen.queryByRole('link', { name: '정산 내역' })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: '정산 내역' })).toHaveAttribute('href', '/wallet/settlements')
   })
 
-  it('정산 입금 내역에서 들어와 조회에 실패해도 정산 입금 내역으로 돌아간다', async () => {
+  it('지갑의 정산 내역에서 들어와 조회에 실패해도 지갑의 정산 내역으로 돌아간다', async () => {
     setup(() => fail(404, 'PAYMENT_SETTLEMENT_NOT_FOUND'), { from: SETTLEMENT_FROM_DEPOSITS })
 
     expect(await screen.findByRole('alert')).toHaveTextContent('정산을 찾을 수 없습니다.')
-    expect(screen.getByRole('link', { name: '정산 입금 내역으로' })).toHaveAttribute('href', '/wallet/settlements')
+    expect(screen.getByRole('link', { name: '정산 내역으로' })).toHaveAttribute('href', '/wallet/settlements')
   })
 
   it('처리 중 다시 조회가 한 번 실패해도 마지막 값을 두고 이어서 확인한다', async () => {

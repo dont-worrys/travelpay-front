@@ -10,7 +10,7 @@ import { RatesProvider } from './RatesProvider'
 import { RateTicker } from './RateTicker'
 
 /**
- * 거래 기록 화면: 내역 탭의 목록(충전·송금·환전·결제·정산 입금)과 각 기록의 상세. 송금하기·결제하기 같은 작성 화면(`/new`)은 빼고,
+ * 거래 기록 화면: 내역 탭의 목록(충전·송금·환전·결제·정산)과 각 기록의 상세. 송금하기·결제하기 같은 작성 화면(`/new`)은 빼고,
  * 송금·결제를 마친 뒤 넘어가는 상세도 기록이라 "내역"으로 표시한다.
  */
 function isHistoryPath(path: string): boolean {
@@ -33,7 +33,7 @@ const HISTORY_HOME = HISTORY_TABS[0]?.to ?? '/wallet/charges'
 
 /**
  * 모바일 하단 탭바(일반회원). 송금·환전은 바로 그 일을 하는 화면으로, "내역"은 거래내역 도메인 탭
- * (충전·송금·환전·결제·정산 입금 내역)으로 가며 충전 내역에서 시작한다.
+ * (충전·송금·환전·결제·정산 내역)으로 가며 충전 내역에서 시작한다.
  */
 const USER_TABS: { to: string; label: string; icon: IconName; isActive: (path: string) => boolean }[] = [
   { to: '/', label: '홈', icon: 'home', isActive: IS_ACTIVE.home },

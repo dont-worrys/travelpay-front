@@ -35,7 +35,7 @@ function page(items: unknown[]) {
   return { items, page: 0, size: 20, totalElements: items.length, totalPages: 1 }
 }
 
-describe('정산 입금 내역', () => {
+describe('정산 내역', () => {
   it('내 정산 중 PAID만 요청하고 서버 순서대로 가맹점 이름·입금 시각·금액을 보여 준다', async () => {
     const requests: RecordedRequest[] = []
     mockFetch({
@@ -74,14 +74,14 @@ describe('정산 입금 내역', () => {
 
     const query = new URLSearchParams(requests[0]?.search)
     expect(query.get('status')).toBe('PAID')
-    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: '정산 내역' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('정산이 없으면 빈 목록 문구를 보여 준다', async () => {
     mockFetch({ 'GET /api/v1/payments/settlements/me': () => ok(page([])) })
     renderRoute('/wallet/settlements', <SettlementDepositListPage />, '/wallet/settlements')
 
-    expect(await screen.findByText('정산 입금 내역이 없습니다.')).toBeInTheDocument()
+    expect(await screen.findByText('정산 내역이 없습니다.')).toBeInTheDocument()
   })
 
   it('항목을 누르면 입금 내역에서 왔다는 표시를 넘겨 상세의 돌아가기가 입금 내역으로 간다', async () => {

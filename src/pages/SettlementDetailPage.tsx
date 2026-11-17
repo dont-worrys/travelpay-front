@@ -14,7 +14,7 @@ export function SettlementDetailPage() {
   const location = useLocation()
   const state = location.state as { justRequested?: boolean; from?: string } | null
   const justRequested = state?.justRequested === true
-  // 지갑의 정산 입금 내역에서 들어왔으면 돌아갈 곳도 입금 내역이다(가맹점 정산 화면 아님).
+  // 지갑의 정산 내역에서 들어왔으면 돌아갈 곳도 지갑의 정산 내역이다(가맹점 정산 화면 아님). 문구는 같고 가는 곳만 다르다.
   const fromDeposits = state?.from === SETTLEMENT_FROM_DEPOSITS
 
   const [detail, setDetail] = useState<SettlementDetail | null>(null)
@@ -68,7 +68,7 @@ export function SettlementDetailPage() {
   }, [merchantId, settlementId])
 
   const listLink = fromDeposits ? '/wallet/settlements' : `/merchant/${merchantId}/settlements`
-  const listLabel = fromDeposits ? '정산 입금 내역' : '정산 내역'
+  const listLabel = '정산 내역'
 
   if (error) {
     return (
@@ -77,7 +77,7 @@ export function SettlementDetailPage() {
         <p className="error" role="alert">
           {error}
         </p>
-        <Link to={listLink}>{fromDeposits ? '정산 입금 내역으로' : '정산으로'}</Link>
+        <Link to={listLink}>{fromDeposits ? '정산 내역으로' : '정산으로'}</Link>
       </section>
     )
   }

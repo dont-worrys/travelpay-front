@@ -41,11 +41,10 @@ describe('HistoryTabs', () => {
     const router = createMemoryRouter([{ path: '*', element: <HistoryTabs /> }], { initialEntries: ['/transfers'] })
     render(<RouterProvider router={router} />)
 
-    // 테스트 환경은 CSS를 적용하지 않아 넓은 화면처럼 " 내역"까지 이름에 들어간다.
     expect(screen.getByRole('link', { name: '충전 내역' })).toHaveAttribute('href', '/wallet/charges')
     expect(screen.getByRole('link', { name: '환전 내역' })).toHaveAttribute('href', '/exchanges')
     expect(screen.getByRole('link', { name: '결제 내역' })).toHaveAttribute('href', '/payments')
-    expect(screen.getByRole('link', { name: '정산 입금 내역' })).toHaveAttribute('href', '/wallet/settlements')
+    expect(screen.getByRole('link', { name: '정산 내역' })).toHaveAttribute('href', '/wallet/settlements')
     expect(screen.getByRole('link', { name: '송금 내역' })).toHaveAttribute('aria-current', 'page')
   })
 })
