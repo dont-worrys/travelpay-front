@@ -78,12 +78,14 @@ function MenuLinks({ items }: { items: MenuItem[] }) {
 }
 
 /** 계정 메뉴 항목(헤더 아바타 메뉴와 서랍 아래에 같은 항목). */
-function AccountLinks({ loggingOut, onLogout }: { loggingOut: boolean; onLogout: () => void }) {
+function AccountLinks({ isUser, loggingOut, onLogout }: { isUser: boolean; loggingOut: boolean; onLogout: () => void }) {
   return (
     <>
-      <NavLink to="/me">
-        <Icon name="user" />내 정보
-      </NavLink>
+      {isUser && (
+        <NavLink to="/me">
+          <Icon name="user" />내 정보
+        </NavLink>
+      )}
       <NavLink to="/account/password">
         <Icon name="lock" />
         비밀번호 변경
@@ -201,7 +203,7 @@ export function AppLayout() {
                   </button>
                   {accountOpen && (
                     <nav className="app-account-menu" id="app-account-menu" aria-label="계정 메뉴">
-                      <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
+                      <AccountLinks isUser={isUser} loggingOut={loggingOut} onLogout={handleLogout} />
                     </nav>
                   )}
                 </div>
@@ -229,7 +231,7 @@ export function AppLayout() {
               </nav>
               {authenticated && (
                 <nav className="app-drawer-nav app-drawer-account" aria-label="계정 메뉴">
-                  <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
+                  <AccountLinks isUser={isUser} loggingOut={loggingOut} onLogout={handleLogout} />
                 </nav>
               )}
             </div>

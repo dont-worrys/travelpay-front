@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { AmountInput } from '../components/AmountInput'
 import { StatusBadge } from '../components/StatusBadge'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
@@ -386,18 +387,9 @@ export function ExchangeNewPage() {
         <label>
           보내는 금액 ({CURRENCY_INFO[fromCurrency].label})
           <div className="input-row">
-            <input
-              inputMode={CURRENCY_INFO[fromCurrency].decimals > 0 ? 'decimal' : 'numeric'}
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              placeholder="0"
-              autoComplete="off"
-            />
+            <AmountInput currency={fromCurrency} value={amountInput} onChange={setAmountInput} />
             <span>{CURRENCY_INFO[fromCurrency].unit}</span>
           </div>
-          {amountInput && parsedAmount.ok && (
-            <span className="hint">{formatAmount(parsedAmount.minor, fromCurrency)}</span>
-          )}
           {minMinor !== null && maxMinor !== null && (
             <span className="hint">
               1회 {formatAmount(minMinor, fromCurrency)} ~ {formatAmount(maxMinor, fromCurrency)}, 수수료(

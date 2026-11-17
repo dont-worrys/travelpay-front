@@ -72,6 +72,22 @@ describe('SignupPage', () => {
     expect(api.calls('POST', SIGNUP_PATH)).toHaveLength(0)
   })
 
+  it('흔한 이메일 형식(도메인에 점)이 아니면 약관에 동의해도 가입 버튼이 꺼져 있고, 칸을 벗어나면 이유를 보여 준다', async () => {
+    const { api } = setup({})
+    const user = userEvent.setup()
+    const email = await screen.findByLabelText('이메일')
+    await user.type(email, 'new@gmail')
+    await user.type(screen.getByLabelText(/^비밀번호/), FORM.password)
+    await user.click(await screen.findByRole('checkbox', { name: /\[필수\] 서비스 이용약관/ }))
+
+    expect(screen.getByText(/이메일 형식을 확인해 주세요/)).toHaveClass('field-error')
+    expect(screen.getByRole('button', { name: '가입하기' })).toBeDisabled()
+
+    await user.type(email, '.com')
+    expect(screen.getByRole('button', { name: '가입하기' })).toBeEnabled()
+    expect(api.calls('POST', SIGNUP_PATH)).toHaveLength(0)
+  })
+
   it('입력값과 동의한 약관만 보내고, 성공하면 가입 완료 표시와 redirect를 붙여 로그인으로 보낸다', async () => {
     const { api, router } = setup(
       {
@@ -93,6 +109,22 @@ describe('SignupPage', () => {
     // 동의하지 않은 선택 약관은 빠지고, 회원 ID 같은 다른 필드는 없다.
     expect(request?.body).toEqual({ ...FORM, consents: [{ termsCode: 'SERVICE', termsVersion: '1.0' }] })
     expect(request?.headers['Csrf-Token']).toBe('test-csrf')
+  })
+
+  it('휴대폰 번호는 숫자만 넣어도 하이픈을 붙여 보여 주고 서버가 받는 형식으로 보낸다', async () => {
+    const { api } = setup({
+      [`POST ${SIGNUP_PATH}`]: () =>
+        ok({ userId: '11111111-1111-4111-8111-111111111111', status: 'ACTIVE', loginRequired: true }, 201),
+    })
+    const user = await fillForm()
+    const phone = screen.getByLabelText('휴대폰 번호')
+    await user.clear(phone)
+    await user.type(phone, '01098765432')
+    expect(phone).toHaveValue('010-9876-5432')
+
+    await agreeRequiredAndSubmit(user)
+    expect(await screen.findByTestId('navigated')).toBeInTheDocument()
+    expect(api.calls('POST', SIGNUP_PATH)[0]?.body).toMatchObject({ phone: '010-9876-5432' })
   })
 
   it('외부 주소로 가는 redirect는 로그인 링크에 넘기지 않는다', async () => {

@@ -14,7 +14,7 @@ import { formatAmount } from '../lib/money'
 
 const PAGE_SIZE = 20
 
-/** 정산 입금 내역: 내 가맹점 정산 중 지갑에 입금된(`PAID`) 것. 순서는 서버 정렬(요청 시각 최신순) 그대로 둔다. */
+/** 정산 내역: 내 가맹점 정산 중 지갑에 입금된(`PAID`) 것. 순서는 서버 정렬(요청 시각 최신순) 그대로 둔다. */
 export function SettlementDepositListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const page = Math.max(0, Number.parseInt(searchParams.get('page') ?? '0', 10) || 0)
@@ -30,7 +30,7 @@ export function SettlementDepositListPage() {
       .then(setResult)
       .catch((cause) => {
         if (!(cause instanceof DOMException && cause.name === 'AbortError')) {
-          setError(toMerchantMessage(cause, '정산 입금 내역을 불러오지 못했습니다.'))
+          setError(toMerchantMessage(cause, '정산 내역을 불러오지 못했습니다.'))
         }
       })
     return () => controller.abort()
@@ -44,7 +44,7 @@ export function SettlementDepositListPage() {
     <section>
       <HistoryTabs />
       <div className="title-row">
-        <h1>정산 입금 내역</h1>
+        <h1>정산 내역</h1>
       </div>
       <p className="hint">
         내 가맹점의 정산금이 지갑에 들어온 내역입니다. 정산을 요청한 순서로 보여 주며, 운영자 확인을 거친 정산은
@@ -57,7 +57,7 @@ export function SettlementDepositListPage() {
         </p>
       )}
       {!result && !error && <p className="loading">불러오는 중입니다…</p>}
-      {result && result.items.length === 0 && <p className="hint empty">정산 입금 내역이 없습니다.</p>}
+      {result && result.items.length === 0 && <p className="hint empty">정산 내역이 없습니다.</p>}
 
       {result && result.items.length > 0 && (
         <ul className="item-list">

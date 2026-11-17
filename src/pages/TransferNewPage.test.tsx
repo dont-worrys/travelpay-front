@@ -75,6 +75,18 @@ async function fillAndConfirm(user: ReturnType<typeof userEvent.setup>, amount: 
 }
 
 describe('TransferNewPage', () => {
+  it('금액 칸에는 숫자만 들어가고 칸 안에서 쉼표로 읽히며, 칸 아래에 금액을 다시 적어 칸 높이를 바꾸지 않는다', async () => {
+    setup()
+    const user = userEvent.setup()
+    const amount = await screen.findByPlaceholderText('0')
+
+    await user.type(amount, '-50abc000')
+
+    expect(amount).toHaveValue('50,000')
+    const label = amount.closest('label')!
+    expect(label).not.toHaveTextContent('50,000원')
+  })
+
   it('본인 회원 ID는 수취인 조회 없이 막는다', async () => {
     const user = userEvent.setup()
     const api = setup()

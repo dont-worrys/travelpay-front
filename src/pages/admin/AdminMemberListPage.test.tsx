@@ -92,6 +92,7 @@ describe('AdminMemberListPage', () => {
 
     await user.clear(screen.getByLabelText('휴대폰 번호'))
     await user.type(screen.getByLabelText('휴대폰 번호'), '01012345678')
+    expect(screen.getByLabelText('휴대폰 번호')).toHaveValue('010-1234-5678')
     await user.type(screen.getByLabelText('로그인 이메일'), '  Member@Example.com ')
     await user.selectOptions(screen.getByLabelText('상태'), 'SUSPENDED')
     await user.click(screen.getByRole('button', { name: '검색' }))
@@ -101,7 +102,7 @@ describe('AdminMemberListPage', () => {
     const params = new URLSearchParams(last.search)
     expect(Object.fromEntries(params)).toEqual({
       loginEmail: 'Member@Example.com',
-      phone: '01012345678',
+      phone: '010-1234-5678',
       status: 'SUSPENDED',
       page: '0',
       size: '20',
