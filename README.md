@@ -14,7 +14,7 @@ Vite + React 19 + TypeScript, 라우팅은 react-router 7입니다. 모든 API�
 | **내 지갑** | **관리자 대시보드** |
 | ![내 지갑](docs/verification/screenshots/06-wallet.jpg) | ![관리자 대시보드](docs/verification/screenshots/13-admin-dashboard.jpg) |
 
-로컬 테스트 데이터로 찍은 화면입니다. 전체 16장은 [브라우저 화면 확인 › 화면 스크린샷](docs/verification/browser-check.md#화면-스크린샷-2026-11-13)에 있습니다.
+로컬 테스트 데이터로 찍은 화면입니다. 전체 17장은 [브라우저 화면 확인 › 화면 스크린샷](docs/verification/browser-check.md#화면-스크린샷-2026-11-17)에 있습니다.
 
 ## 빠른 시작
 

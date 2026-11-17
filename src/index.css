@@ -1230,6 +1230,12 @@ button.on-navy,
   font-size: var(--fs-sm);
 }
 
+/* 안내 문구 속 짧은 동작 링크(충전하기·최대 등)는 글자 중간에서 줄을 바꾸지 않는다 */
+.hint a,
+.hint .link-button {
+  white-space: nowrap;
+}
+
 .error,
 .field-error {
   color: var(--status-failed-text);

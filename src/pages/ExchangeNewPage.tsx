@@ -408,7 +408,7 @@ export function ExchangeNewPage() {
                 >
                   최대
                 </button>
-              )}
+              )}{' '}
               {fromCurrency === 'KRW' && <Link to="/wallet/charge">충전하기</Link>}
             </span>
           )}

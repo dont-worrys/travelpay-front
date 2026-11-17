@@ -4,14 +4,15 @@
 
 ```text
 src/
-  main.tsx              진입점 (AuthProvider + RouterProvider)
+  main.tsx              진입점 (AuthProvider + RouterProvider + PagePreloader, 부드러운 휠 스크롤 설치)
   router.tsx            경로 정의. 로그인이 필요한 화면은 RequireAuth, 역할별 화면은 RequireRole 아래에 둔다.
                         화면은 lazyPage(React.lazy)로 라우트별 청크가 되고, 로딩 표시는 AppLayout의 Suspense(PageLoading)가 맡는다.
                         청크를 못 받으면 lib/chunkReload가 1회 새로고침, 그래도 실패하면 RouteError(경로 없는 묶음의 errorElement)가 안내한다
   index.css             전역 스타일(공통 클래스 + 화면별 구역, 색·글씨 크기·배율은 :root 변수, 규칙은 docs/convention/style.md)
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
-  components/           공통 레이아웃(AppLayout: 네이비 헤더·계정 메뉴·서랍·하단 탭바), 상태 배지(StatusBadge), 선 아이콘(Icon),
-                        통화 배지(CurrencyMark), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
+  components/           공통 레이아웃(AppLayout: 그라디언트 헤더·계정 메뉴·서랍·하단 탭바·푸터), 로고 마크(BrandMark), 상태 배지(StatusBadge),
+                        선 아이콘(Icon), 통화 배지(CurrencyMark), 금액 칸(AmountInput), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
+                        비로그인 홈 송금 배너(SendBanner), 화면 코드 미리 받기(PagePreloader),
                         환율 티커(RateTicker)와 티커·홈·환율·환전 입력·예약 신청이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분,
                         MOCK 환율이거나 useLiveRates를 쓰는 화면이 열려 있으면 5초)
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
@@ -20,10 +21,11 @@ src/
   features/payment/     결제·환불 신청 API·상태
   features/merchant/    가맹점 잔액·결제·환불 실행·정산 API, 최근 연 가맹점(localStorage),
                         환불 실행·거절 공통 UI(RefundActions, 가맹점·관리자 화면 공용), 결제 상세 조회 훅(useMerchantPayment)
-  features/exchange/    환율·한도·견적·환전·예약 환전 API·상태, 전일 대비·수수료율 표시(rateDisplay)
+  features/exchange/    환율·한도·견적·환전·예약 환전 API·상태, 전일 대비·수수료율 표시(rateDisplay), 홈 환율 표(RateTable)
   features/admin/       관리자 API(가맹점·MANUAL_REVIEW·송금·충전·대사·처리 기록·회원·약관), 처리 대기·처리 기록 화면용 변환
-  lib/                  금액 변환(money), 멱등성 키(idempotency), 시각 표시(datetime), 주기 조회 훅(useAutoRefresh),
-                        청크 로딩 실패 시 1회 새로고침(chunkReload)
+  lib/                  금액 변환·입력 정리(money), 멱등성 키(idempotency), 시각 표시(datetime), 주기 조회 훅(useAutoRefresh),
+                        청크 로딩 실패 시 1회 새로고침(chunkReload), 라우트 청크·미리 받기(lazyPage), 화면 전환(viewTransition),
+                        부드러운 휠 스크롤(smoothWheel), 이메일 형식(email), 휴대폰 번호 하이픈(phone)
   pages/                화면 단위 컴포넌트
   test/                 테스트 도우미(fetch 모의, 메모리 라우터)
 docs/
