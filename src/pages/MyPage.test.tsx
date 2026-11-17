@@ -43,6 +43,25 @@ describe('MyPage', () => {
     expect(screen.getByRole('link', { name: '비밀번호 변경' })).toHaveAttribute('href', '/account/password')
   })
 
+  it('관리자도 내 정보를 보고, 송금 안내 문구는 보이지 않는다', async () => {
+    setup(() =>
+      ok({
+        userId: USER_ID,
+        realName: '관리자',
+        phone: '010-1234-5678',
+        loginEmail: 'admin@example.com',
+        status: 'ACTIVE',
+        role: 'MASTER',
+        loginMethods: ['PASSWORD'],
+        createdAt: '2026-11-01T00:00:00Z',
+      }),
+    )
+
+    expect(await screen.findByText(USER_ID)).toBeInTheDocument()
+    expect(screen.getByText('admin@example.com')).toBeInTheDocument()
+    expect(screen.queryByText(/송금을 받으려면/)).not.toBeInTheDocument()
+  })
+
   it('복사 버튼을 누르면 회원 ID를 클립보드에 넣고 복사됨으로 바꾼다', async () => {
     setup()
     const user = userEvent.setup()

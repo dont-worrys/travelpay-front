@@ -66,7 +66,6 @@ const WalletPage = lazyPage(() => import('./pages/WalletPage'), 'WalletPage')
 
 /** 일반회원 화면. 관리자(`MASTER`)에게는 제공하지 않는다. */
 const userRoutes: RouteObject[] = [
-  { path: 'me', element: <MyPage /> },
   { path: 'transfers', element: <TransferListPage /> },
   { path: 'transfers/new', element: <TransferNewPage /> },
   { path: 'transfers/:transferId', element: <TransferDetailPage /> },
@@ -109,6 +108,7 @@ export const routes: RouteObject[] = [
             element: <RequireAuth />,
             children: [
               // 일반회원·관리자 공통
+              { path: 'me', element: <MyPage /> },
               { path: 'account/password', element: <PasswordChangePage /> },
               {
                 path: 'admin',

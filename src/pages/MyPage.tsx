@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { useAuth } from '../features/auth/useAuth'
 
-/** 내 정보. 송금을 받으려면 회원 ID를 보내는 분에게 알려 준다. */
+/** 내 정보(일반회원·관리자 공통). 일반회원은 송금을 받으려면 회원 ID를 보내는 분에게 알려 준다. */
 export function MyPage() {
   const { state } = useAuth()
   const [copied, setCopied] = useState(false)
@@ -37,8 +37,12 @@ export function MyPage() {
           <button type="button" className="link-button" onClick={copyUserId}>
             {copied ? '복사됨' : '복사'}
           </button>
-          <br />
-          <span className="hint">송금을 받으려면 보내는 분에게 이 회원 ID를 알려 주세요.</span>
+          {me.role !== 'MASTER' && (
+            <>
+              <br />
+              <span className="hint">송금을 받으려면 보내는 분에게 이 회원 ID를 알려 주세요.</span>
+            </>
+          )}
         </dd>
       </dl>
       <div className="actions">
