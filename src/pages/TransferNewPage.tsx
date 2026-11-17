@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { AmountInput } from '../components/AmountInput'
 import { StatusBadge } from '../components/StatusBadge'
 import { AmountPresets } from '../components/AmountPresets'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -265,18 +266,9 @@ export function TransferNewPage() {
         <label>
           금액
           <div className="amount-input">
-            <input
-              inputMode={CURRENCY_INFO[currency].decimals > 0 ? 'decimal' : 'numeric'}
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              placeholder="0"
-              autoComplete="off"
-            />
+            <AmountInput currency={currency} value={amountInput} onChange={setAmountInput} />
             <span className="amount-input-code">{currency}</span>
           </div>
-          {amountInput && parsedAmount.ok && (
-            <span className="hint">{formatAmount(parsedAmount.minor, currency)}</span>
-          )}
           {available !== undefined && (
             <span className="hint">
               보낼 수 있는 금액: {formatAmount(available, currency)}{' '}

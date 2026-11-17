@@ -95,6 +95,35 @@ describe('LoginPage', () => {
     expect(api.calls('POST', LOGIN_PATH)).toHaveLength(0)
   })
 
+  it('이메일 형식이 아니면 로그인 버튼이 꺼져 요청하지 않고, 칸을 벗어나면 이유를 보여 준다', async () => {
+    const api = setup({ [`POST ${LOGIN_PATH}`]: () => ok({ userId: USER_ID, role: 'USER' }) }).api
+    const user = userEvent.setup()
+    const email = await screen.findByLabelText('이메일')
+    const button = screen.getByRole('button', { name: '로그인' })
+
+    await user.type(email, 'member')
+    // 입력하는 동안에는 재촉하지 않는다.
+    expect(screen.queryByText(/이메일 형식을 확인해 주세요/)).not.toBeInTheDocument()
+    await user.type(screen.getByLabelText('비밀번호'), 'Travelpay-2026!')
+
+    expect(screen.getByText(/이메일 형식을 확인해 주세요/)).toHaveClass('field-error')
+    expect(button).toBeDisabled()
+
+    await user.type(email, '@example.com')
+    expect(screen.queryByText(/이메일 형식을 확인해 주세요/)).not.toBeInTheDocument()
+    await user.click(button)
+    expect(await screen.findByTestId('navigated')).toBeInTheDocument()
+    expect(api.calls('POST', LOGIN_PATH)).toHaveLength(1)
+  })
+
+  it('이메일 앞뒤 공백은 지우고 보낸다', async () => {
+    const { api } = setup({ [`POST ${LOGIN_PATH}`]: () => ok({ userId: USER_ID, role: 'USER' }) })
+    await fillAndSubmit('  member@example.com  ')
+
+    expect(await screen.findByTestId('navigated')).toBeInTheDocument()
+    expect(api.calls('POST', LOGIN_PATH)[0]?.body).toMatchObject({ loginEmail: 'member@example.com' })
+  })
+
   it('이메일·비밀번호가 틀리면 서버 문구를 보여 주고 이동하지 않는다', async () => {
     setup({
       [`POST ${LOGIN_PATH}`]: () => fail(401, 'USER_INVALID_CREDENTIALS', '이메일 또는 비밀번호가 올바르지 않습니다.'),

@@ -5,6 +5,7 @@ import { createPayment, type PaymentCreateInput } from '../features/payment/api'
 import { toPaymentMessage } from '../features/payment/status'
 import { fetchMyBalances, type Balance } from '../features/wallet/api'
 import { newIdempotencyKey } from '../lib/idempotency'
+import { AmountInput } from '../components/AmountInput'
 import { CURRENCIES, CURRENCY_INFO, formatAmount, isCurrency, parseAmount, type Currency } from '../lib/money'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -218,18 +219,9 @@ export function PaymentNewPage() {
         <label>
           금액
           <div className="input-row">
-            <input
-              inputMode={CURRENCY_INFO[currency].decimals > 0 ? 'decimal' : 'numeric'}
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              placeholder="0"
-              autoComplete="off"
-            />
+            <AmountInput currency={currency} value={amountInput} onChange={setAmountInput} />
             <span>{CURRENCY_INFO[currency].unit}</span>
           </div>
-          {amountInput && parsedAmount.ok && (
-            <span className="hint">{formatAmount(parsedAmount.minor, currency)}</span>
-          )}
           {available !== undefined && (
             <span className="hint">
               결제할 수 있는 금액: {formatAmount(available, currency)}{' '}

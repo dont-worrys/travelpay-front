@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { isApiError, isOutcomeUnknown } from '../api'
 import { useAuth } from '../features/auth/useAuth'
+import { AmountInput } from '../components/AmountInput'
 import { AmountPresets } from '../components/AmountPresets'
 import { createCharge, type ChargeCreateInput, type ChargeStatus } from '../features/wallet/api'
 import { ChargeStatusBadge } from '../features/wallet/ChargeStatusBadge'
@@ -146,16 +147,9 @@ export function ChargeNewPage() {
             <span className="amount-input-symbol" aria-hidden="true">
               ₩
             </span>
-            <input
-              inputMode="numeric"
-              value={amountInput}
-              onChange={(e) => setAmountInput(e.target.value)}
-              placeholder="0"
-              autoComplete="off"
-            />
+            <AmountInput currency="KRW" value={amountInput} onChange={setAmountInput} />
             <span className="amount-input-code">KRW</span>
           </div>
-          {amountInput && parsedAmount.ok && <span className="hint">{formatAmount(parsedAmount.minor, 'KRW')}</span>}
           {fieldErrors.amount && <span className="field-error">{fieldErrors.amount}</span>}
         </label>
         <AmountPresets value={amountInput} onChange={setAmountInput} />

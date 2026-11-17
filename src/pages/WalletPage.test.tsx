@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { SETTLEMENT_FROM_DEPOSITS } from '../features/merchant/status'
 import { formatDateTime } from '../lib/datetime'
 import { formatAmount } from '../lib/money'
@@ -143,5 +143,24 @@ describe('WalletPage', () => {
     expect(screen.queryByRole('heading', { name: '보유 통화' })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /충전.*완료/ })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '최근 정산 입금' })).toBeInTheDocument()
+  })
+
+  it('지갑 확인을 기다리지 않고 잔액·충전·정산 조회를 함께 시작한다(왕복 한 번)', async () => {
+    const api = setup({ 'GET /api/v1/wallets/me': () => new Promise<Response>(() => undefined) })
+
+    await vi.waitFor(() => {
+      expect(api.calls('GET', '/api/v1/wallets/me/balances')).toHaveLength(1)
+      expect(api.calls('GET', '/api/v1/charges')).toHaveLength(1)
+      expect(api.calls('GET', SETTLEMENTS_PATH)).toHaveLength(1)
+    })
+    expect(api.calls('GET', '/api/v1/wallets/me')).toHaveLength(1)
+  })
+
+  it('지갑이 없으면 함께 받은 잔액·충전 결과는 쓰지 않고 지갑 만들기를 보여 준다', async () => {
+    setup({ 'GET /api/v1/wallets/me': () => fail(404, 'WALLET_NOT_FOUND') })
+
+    expect(await screen.findByRole('button', { name: '지갑 만들기' })).toBeInTheDocument()
+    expect(screen.queryByText(formatAmount(150000, 'KRW'))).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: '최근 충전' })).not.toBeInTheDocument()
   })
 })

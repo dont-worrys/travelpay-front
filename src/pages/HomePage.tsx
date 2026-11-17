@@ -4,8 +4,9 @@ import { isApiError } from '../api'
 import { CURRENCY_TEXT, CurrencyMark } from '../components/CurrencyMark'
 import { Icon, type IconName } from '../components/Icon'
 import { useSharedRates } from '../components/RatesProvider'
+import { SendBanner } from '../components/SendBanner'
 import { useAuth } from '../features/auth/useAuth'
-import { formatFeeRate, MidRate, PRE_QUOTE_FEE_RATE } from '../features/exchange/rateDisplay'
+import { RateTable } from '../features/exchange/RateTable'
 import { fetchMyBalances, type Balance } from '../features/wallet/api'
 import { toWalletMessage } from '../features/wallet/status'
 import { CURRENCY_INFO, formatAmount } from '../lib/money'
@@ -15,14 +16,7 @@ const QUICK_ACTIONS: { to: string; label: string; icon: IconName; primary?: bool
   { to: '/transfers/new', label: '송금하기', icon: 'send', primary: true },
   { to: '/wallet/charge', label: '충전하기', icon: 'plus' },
   { to: '/exchange', label: '환전하기', icon: 'swap' },
-  { to: '/payments/new', label: '결제', icon: 'card' },
-]
-
-const FEATURES: { label: string; icon: IconName }[] = [
-  { label: '원화 충전', icon: 'plus' },
-  { label: '회원 간 송금', icon: 'send' },
-  { label: '가맹점 결제', icon: 'card' },
-  { label: '엔화·위안화 환전', icon: 'swap' },
+  { to: '/payments/new', label: '결제하기', icon: 'card' },
 ]
 
 const SHORTCUTS: { to: string; label: string }[] = [
@@ -39,13 +33,17 @@ type BalanceState =
 
 /**
  * 홈(docs/convention/style.md 6-1). 네이비 히어로에 원화 잔액(통화 합산은 환산이 필요해 하지 않음)과 주요 기능,
- * 오른쪽에 오늘의 환율 카드(레이아웃과 같은 응답을 공유). 아래로 내 지갑 통화 카드와 바로가기.
- * 비로그인은 같은 히어로에 소개와 로그인 입구.
+ * 오른쪽에 환율표(레이아웃과 같은 응답을 공유). 아래로 내 지갑 통화 카드와 바로가기.
+ * 비로그인은 소개 히어로 아래에 환율표(환전하기는 로그인으로 이어짐) → 송금 배너 순서로 보여 준다
+ * (환율 조회는 공개 API라 로그인이 필요 없다).
  */
 export function HomePage() {
   const { state } = useAuth()
   const isUser = state.status === 'authenticated' && state.me.role !== 'MASTER'
   const [balance, setBalance] = useState<BalanceState>({ kind: 'loading' })
+  // 오늘의 환율(로그인 여부와 관계없이). 레이아웃 안이면 상단 티커와 같은 응답을 공유한다.
+  const rates = useSharedRates()
+  const hasRates = rates !== null && rates.length > 0
   useEffect(() => {
     if (!isUser) {
       return
@@ -78,50 +76,20 @@ export function HomePage() {
   if (state.status === 'anonymous') {
     return (
       <section className="home">
-        <div className="home-hero">
-          <div className="home-hero-inner has-side">
+        <div className="home-hero intro">
+          <div className="home-hero-inner narrow">
             <div>
               <p className="home-hero-label">TravelPay</p>
               <h1 className="home-hero-title">여행 경비를 지갑 하나로</h1>
               <p className="home-hero-sub">
                 원화 충전부터 회원 간 송금, 가맹점 결제, 엔화·위안화 환전까지 한곳에서 관리하세요.
               </p>
-              <div className="home-actions">
-                <Link to="/login" className="button-link">
-                  로그인
-                </Link>
-                <Link to="/signup" className="button-link on-navy">
-                  회원가입
-                </Link>
-              </div>
             </div>
-            <section className="card raised home-side" aria-labelledby="home-features">
-              <div className="card-head">
-                <h2 id="home-features">TravelPay로 할 수 있는 일</h2>
-              </div>
-              <ul className="feature-list">
-                {FEATURES.map((feature) => (
-                  <li key={feature.label}>
-                    <span className="feature-icon">
-                      <Icon name={feature.icon} />
-                    </span>
-                    {feature.label}
-                  </li>
-                ))}
-              </ul>
-            </section>
           </div>
         </div>
-        <div className="home-body">
-          <section className="card" aria-labelledby="home-rates-link">
-            <div className="card-head">
-              <h2 id="home-rates-link">오늘의 환율</h2>
-              <Link to="/exchange-rates" className="link-more">
-                환율 보기
-              </Link>
-            </div>
-            <p className="rate-meta">엔화·위안화의 매매기준율과 전일 대비를 로그인 없이 볼 수 있어요.</p>
-          </section>
+        <div className={hasRates ? 'home-body stacked' : 'home-body stacked plain'}>
+          {hasRates && <RateTable rates={rates} anonymous />}
+          <SendBanner />
         </div>
       </section>
     )
@@ -136,7 +104,7 @@ export function HomePage() {
         <div className="home-hero-inner">
           <div>
             <p className="home-greeting">안녕하세요, {state.me.realName}님</p>
-            {balance.kind === 'loading' && <p className="home-hero-label">잔액을 불러오는 중입니다…</p>}
+            {balance.kind === 'loading' && <p className="home-hero-label loading-delay">잔액을 불러오는 중입니다…</p>}
             {balance.kind === 'no-wallet' && (
               <>
                 <p className="home-hero-label">원화 잔액</p>
@@ -164,7 +132,7 @@ export function HomePage() {
               ))}
             </nav>
           </div>
-          <TodayRates />
+          {hasRates && <RateTable rates={rates} className="home-side" />}
         </div>
       </div>
 
@@ -235,48 +203,6 @@ export function HomePage() {
           </nav>
         </section>
       </div>
-    </section>
-  )
-}
-
-/** 오늘의 환율 카드(매매기준율 강조·전일 대비). 레이아웃이 조회한 환율을 함께 쓰므로 요청이 늘지 않는다. */
-function TodayRates() {
-  const rates = useSharedRates()
-  if (!rates || rates.length === 0) {
-    return null
-  }
-  return (
-    <section className="card raised home-side home-rates" aria-labelledby="home-rates">
-      <div className="card-head">
-        <div>
-          <h2 id="home-rates">오늘의 환율</h2>
-          <p className="card-sub">매매기준율 · 기준일 {rates[0]?.rateDate}</p>
-        </div>
-        <Link to="/exchange-rates" className="link-more">
-          환율 전체
-        </Link>
-      </div>
-      <ul className="row-list">
-        {rates.map((rate) => {
-          const unitLabel = `${rate.unit.toLocaleString('ko-KR')}${CURRENCY_INFO[rate.currency].unit}`
-          return (
-            <li key={rate.currency} className="rate-row">
-              <span className="rate-row-name">
-                <CurrencyMark currency={rate.currency} small />
-                <span>
-                  {rate.currency}
-                  <span>{unitLabel}당</span>
-                </span>
-              </span>
-              <MidRate rate={rate} unitLabel={`${unitLabel}당`} chip={false} size="md" />
-            </li>
-          )
-        })}
-      </ul>
-      <p className="rate-meta">환전 수수료 {formatFeeRate(PRE_QUOTE_FEE_RATE)}는 견적에서 더해져요.</p>
-      <Link to="/exchange" className="button-link block">
-        환전하기
-      </Link>
     </section>
   )
 }

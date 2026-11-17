@@ -2,7 +2,7 @@
 
 ## 테스트
 
-Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(52파일 286건, 2026-11-16). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
+Vitest + Testing Library 컴포넌트·단위 테스트가 `src/**/*.test.ts(x)`에 있습니다(59파일 375건, 2026-11-17). 백엔드 없이 돌아갑니다. API는 `src/test/fetchMock.ts`로 가짜 응답을 주고, 화면이 보내는 본문·헤더(CSRF, `Idempotency-Key`)를 확인합니다.
 
 테스트 의존성(Vitest·jsdom·Testing Library)은 `devDependencies`에 있어 `npm install`로 함께 설치됩니다. 테스트 파일은 `tsconfig.app.json`에서 제외해 앱 빌드에 들어가지 않고, `tsconfig.test.json`으로 따로 타입 검사합니다.
 
@@ -21,7 +21,9 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 |---|---|---|
 | 공통 요청 | `api/client.test.ts` | GET에는 CSRF를 받지 않음, 변경 요청에 토큰 1회 발급·첨부, 허용 헤더(`Accept`·`Content-Type`·`Csrf-Token`·`Idempotency-Key`)만 사용, `COMMON_CSRF_INVALID` 403이면 새 토큰·같은 키로 1회 재전송, 그 밖 403은 재전송 없음, `details` 필드별 메시지, 연결 실패·5xx는 결과 모름, 공통 형식 아닌 응답, 204, 401 리스너, 요청 취소, 대기 한도(GET 기본 15초로 끊음, POST는 기본 한도 없음) |
 | 멱등성 키 | `lib/idempotency.test.ts` | UUID v4 형식, `randomUUID`가 없는 환경의 대체 생성 |
-| 금액 | `lib/money.test.ts` | 입력 → 최소 단위 정수, 환전 주 단위 문자열 변환 |
+| 금액 | `lib/money.test.ts`·`components/AmountInput.test.tsx` | 입력 → 최소 단위 정수, 환전 주 단위 문자열 변환, 금액 칸은 숫자만(CNY 소수 둘째 자리까지)·칸 안 쉼표 표시 |
+| 입력 형식 | `lib/email.test.ts`·`lib/phone.test.ts` | 로그인용(서버 규칙)·가입용(흔한 형식) 이메일 검사, 휴대폰 번호 자동 하이픈 |
+| 레이아웃·전환 | `components/AppLayout.test.tsx`·`lib/lazyPage.test.tsx`·`lib/viewTransition.test.tsx`·`lib/smoothWheel.test.ts` | 상단 메뉴·서랍·하단 탭 선택 표시 규칙, 화면 코드 미리 받기, 화면 전환 적용·제외 조건(replace·검색어만·뒤로 가기), 휠 스크롤 나눠 움직이기·브라우저 기본 동작에 맡기는 경우 |
 | 공통 화면 부품 | `components/AmountPresets.test.tsx`·`RateTicker.test.tsx`·`RatesProvider.test.tsx` | 금액 칩 더하기(빈 입력은 0부터), 거래내역 탭 링크·현재 화면 표시, 환율 티커 통화 선택(다시 조회 안 함)·실패 시 숨김(레이아웃 밖에서는 직접 조회), 공유 환율 갱신 간격(공식 5분·MOCK 5초·환율 화면 열림 5초)·환율 화면과 한 번만 조회·멈춘 조회 끊고 마지막 값 유지·`useLiveRates` `enabled` 꺼짐 동안 5초 갱신 안 함 |
 | 주기 조회 | `lib/useAutoRefresh.test.ts` | 5초 주기, 앞 조회 중 새 조회 안 함, 실패 시 마지막 값 유지, 탭 숨김 중단·재개, `enabled` 전환, 화면을 떠나면 요청 취소 |
 | 라우팅·코드 스플리팅 | `router.test.tsx`·`lib/chunkReload.test.ts`·`components/RouteError.test.tsx` | 실제 라우트 표(`routes`)로 화면 청크를 받는 동안 공통 로딩(`PageLoading`) 표시 후 화면, 비로그인 직접 접근 → 로그인, 없는 주소, 메뉴 이동. 청크 로딩 실패 시 1회만 새로고침·재실패 시 `ChunkLoadError`·성공 시 표시 지움·일반 오류와 저장소 불가 시 새로고침 안 함, 브라우저별 실패 문구 판별, 재실패 안내(헤더 유지)·일반 오류는 기본 오류 화면 |
@@ -29,7 +31,7 @@ npx vitest                                 # 감시 모드(파일 저장 시 다
 | 테스트 계좌 | `features/wallet/testAccounts.test.ts` | `VITE_LOCAL_TEST_ACCOUNT` 형식 해석 |
 | 금전 요청 화면 | `ChargeNewPage`·`TransferNewPage`·`PaymentNewPage`·`ExchangeNewPage`·`ExchangeReservationNewPage` | 보내는 본문(최소 단위, 사용자 ID 없음), 결과 모름이면 같은 키 재전송, 서버가 비교하는 내용을 바꾸거나 4xx 뒤에는 새 키, 환전 지갑 조회 실패 사유·다시 불러오기·견적 막음, 충전 처리 단계 안내에 상태 코드 원문 없음 |
 | 가입·로그인·내 정보 | `SignupPage`·`LoginPage`·`MyPage` | 필수 약관 동의 전 가입 막음·동의한 약관만 전송·약관 조회 실패, 로그인 뒤 CSRF 재발급·redirect(외부 주소 무시)·오류 문구, 회원 ID 복사(권한 없으면 그대로), 관리자도 내 정보 표시(송금 안내 문구 숨김) |
-| 상세 화면 | `ChargeDetailPage`·`TransferDetailPage`·`ExchangeDetailPage`·`PaymentDetailPage`·`SettlementDetailPage`·`MerchantPaymentDetailPage` | 상태별 배지·안내, 처리 중 재조회가 한 번 실패해도 마지막 값 유지·계속 확인, 처리 중 충전 재조회·`MANUAL_REVIEW`는 재조회 안 함, 송금 취소 버튼 없음(API 제거), 예약 체결 주문 표시, 환불 신청(키 없음)·신청 취소(DELETE)·환불 중 409 재조회, 정산 `paidAt`·거절 사유, 정산 입금 내역에서 온 정산 상세의 돌아가기, 없는 ID 404 |
+| 상세 화면 | `ChargeDetailPage`·`TransferDetailPage`·`ExchangeDetailPage`·`PaymentDetailPage`·`SettlementDetailPage`·`MerchantPaymentDetailPage` | 상태별 배지·안내, 처리 중 재조회가 한 번 실패해도 마지막 값 유지·계속 확인, 처리 중 충전 재조회·`MANUAL_REVIEW`는 재조회 안 함, 송금 취소 버튼 없음(API 제거), 예약 체결 주문 표시, 환불 신청(키 없음)·신청 취소(DELETE)·환불 중 409 재조회, 정산 `paidAt`·거절 사유, 정산 내역(지갑)에서 온 정산 상세의 돌아가기, 없는 ID 404 |
 | 지갑·가맹점·정산 | `WalletPage`·`MerchantEntryPage`·`SettlementListPage`·`SettlementDepositListPage` | 통화별 잔액·최근 충전·최근 정산 입금(없으면 숨김, 잔액 실패해도 나머지 표시), 가맹점 주인 확인·최근 5개 기억, 정산 요청 키 규칙(결과 모름 같은 키·4xx 뒤 새 키), 정산 입금 `PAID`만, 입금 내역·지갑 카드에서 상세로 갈 때 출처 표시(`location.state`), 지갑 부제 |
 | 일반회원 화면 | `HomePage`·`PasswordChangePage`·`TransferListPage`·`ExchangeListPage`·`ExchangeRatePage`·`ExchangeReservationDetailPage`·`MerchantPaymentDetailPage` | 홈 원화 잔액 영역·자주 쓰는 기능 링크·보유 통화·오늘의 환율, 지갑 없음, 환율 실패 시 구역 숨김, 비로그인은 요청 없음, 비밀번호 변경 뒤 CSRF 재발급·오류 표시, 받은 실패 송금 표시·송금 실패 사유별 안내, 예약 체결 주문 표시, 전일 대비 4가지 표시·수수료율 변환, 예약 취소, 환불 가능 금액 계산·환불 실행 키·거절 |
 | 관리자 화면 | `pages/admin/*.test.tsx` 14개 | 처리 대기·송금·처리 기록·지연 환불 목록(탭·필터·주소 반영·잘못된 UUID·페이지 이동·403), MANUAL_REVIEW 처리, 송금 미리보기 → 확정, 충전 보정 키 규칙·재개 안내, 충전 목록 회원 복사·필터·잘못된 userId, 대사 합계 안내, 처리 기록, 회원 정지·세션 종료, 약관 등록, 가맹점 생성 안내, 지연 환불 대리 실행·거절·직접 환불(키·오류 코드), 가맹점 결제 조회 |

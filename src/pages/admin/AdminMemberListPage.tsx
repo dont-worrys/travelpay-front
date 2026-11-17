@@ -14,6 +14,7 @@ import {
   type SlicePage,
 } from '../../features/admin/memberApi'
 import { toAdminMessage } from '../../features/admin/reviews'
+import { formatPhoneInput } from '../../lib/phone'
 
 const PAGE_SIZE = 20
 const PHONE_PATTERN = /^010-?\d{4}-?\d{4}$/
@@ -205,7 +206,7 @@ export function AdminMemberListPage() {
           휴대폰 번호
           <input
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
             placeholder="010-1234-5678"
             inputMode="tel"
             autoComplete="off"

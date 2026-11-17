@@ -51,14 +51,21 @@ describe('HomePage', () => {
     expect(within(actions).getByRole('link', { name: '송금하기' })).toHaveAttribute('href', '/transfers/new')
     expect(within(actions).getByRole('link', { name: '충전하기' })).toHaveAttribute('href', '/wallet/charge')
     expect(within(actions).getByRole('link', { name: '환전하기' })).toHaveAttribute('href', '/exchange')
-    expect(within(actions).getByRole('link', { name: '결제' })).toHaveAttribute('href', '/payments/new')
+    expect(within(actions).getByRole('link', { name: '결제하기' })).toHaveAttribute('href', '/payments/new')
 
     expect(screen.getByText('142,500엔')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '원화로 환전' })).toHaveAttribute(
       'href',
       '/exchange?type=RE_EXCHANGE&currency=JPY',
     )
-    expect(await screen.findByText('100엔당 매매기준율 900.2원')).toBeInTheDocument()
+    // 환율표: 값은 "100엔당 900.2원", 머리에는 기준일만 적고 "매매기준율" 말은 쓰지 않는다. 환전하기는 해당 통화 환전 화면으로.
+    expect(await screen.findByText('100엔당 900.2원')).toBeInTheDocument()
+    expect(screen.getByText('기준일 2026-11-12')).toBeInTheDocument()
+    expect(screen.getByText('환전 수수료는 1%입니다.')).toBeInTheDocument()
+    expect(screen.queryByText(/매매기준율/)).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'JPY 환전하기' })).toHaveAttribute('href', '/exchange?currency=JPY')
+    // 로그인 후 홈에는 송금 배너가 없다(송금하기는 위 기능 버튼).
+    expect(screen.queryByRole('heading', { name: '더 편리하게 보내세요' })).not.toBeInTheDocument()
   })
 
   it('지갑이 없으면 지갑 만들기로 안내한다', async () => {
@@ -86,12 +93,47 @@ describe('HomePage', () => {
     expect(screen.queryByRole('heading', { name: '오늘의 환율' })).not.toBeInTheDocument()
   })
 
-  it('비로그인이면 잔액을 부르지 않고 로그인 입구를 보여 준다', () => {
+  it('비로그인이면 잔액을 부르지 않고 환율표 → 송금 배너 순서로, 모든 버튼은 로그인으로 이어 준다', async () => {
     auth.state = { status: 'anonymous' }
-    const api = mockFetch({})
+    const api = mockFetch({ 'GET /api/v1/exchange-rates': () => ok(RATES) })
     renderRoute('/', <HomePage />, '/')
 
-    expect(screen.getByRole('link', { name: '로그인' })).toHaveAttribute('href', '/login')
-    expect(api.requests).toHaveLength(0)
+    // 로그인 입구는 상단 헤더에만 있고 홈 본문에는 로그인·회원가입 링크를 따로 두지 않는다.
+    expect(screen.queryByRole('link', { name: '로그인' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: '회원가입' })).not.toBeInTheDocument()
+
+    // 환율 조회는 공개 API라 로그인 없이 표가 보이고, 환전하기는 로그인 뒤 해당 통화 환전 화면으로 이어진다.
+    const ratesHeading = await screen.findByRole('heading', { name: '오늘의 환율' })
+    expect(screen.getByRole('link', { name: 'JPY 환전하기' })).toHaveAttribute(
+      'href',
+      '/login?redirect=%2Fexchange%3Fcurrency%3DJPY',
+    )
+    expect(screen.getByText('환전 수수료는 1%입니다.')).toBeInTheDocument()
+    expect(screen.queryByText(/매매기준율/)).not.toBeInTheDocument()
+
+    // 아래에 송금 배너: 지금 송금하기(로그인 뒤 송금 화면), 환율 보기.
+    const sendHeading = screen.getByRole('heading', { name: '더 편리하게 보내세요' })
+    expect(ratesHeading.compareDocumentPosition(sendHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByRole('link', { name: /지금 송금하기/ })).toHaveAttribute(
+      'href',
+      '/login?redirect=%2Ftransfers%2Fnew',
+    )
+    expect(screen.getByRole('link', { name: /환율 보기/ })).toHaveAttribute('href', '/exchange-rates')
+
+    expect(api.calls('GET', '/api/v1/wallets/me/balances')).toHaveLength(0)
+    expect(api.calls('GET', '/api/v1/exchange-rates')).toHaveLength(1)
+  })
+
+  it('비로그인이고 환율을 못 불러오면 환율표를 숨기고 송금 배너만 보여 준다', async () => {
+    auth.state = { status: 'anonymous' }
+    const api = mockFetch({ 'GET /api/v1/exchange-rates': () => fail(503, 'COMMON_SERVICE_UNAVAILABLE') })
+    renderRoute('/', <HomePage />, '/')
+
+    await vi.waitFor(() => expect(api.calls('GET', '/api/v1/exchange-rates')).toHaveLength(1))
+    expect(screen.getByRole('link', { name: /지금 송금하기/ })).toHaveAttribute(
+      'href',
+      '/login?redirect=%2Ftransfers%2Fnew',
+    )
+    expect(screen.queryByRole('heading', { name: '오늘의 환율' })).not.toBeInTheDocument()
   })
 })
