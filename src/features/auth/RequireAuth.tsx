@@ -8,7 +8,7 @@ export function RequireAuth() {
   const location = useLocation()
 
   if (state.status === 'loading') {
-    return <p>로그인 상태를 확인하는 중입니다…</p>
+    return <p className="loading-delay">로그인 상태를 확인하는 중입니다…</p>
   }
   if (state.status === 'anonymous') {
     return <Navigate to={loginPathFor(location.pathname, location.search)} replace />

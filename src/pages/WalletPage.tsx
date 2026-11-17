@@ -40,6 +40,14 @@ export function WalletPage() {
   const [openError, setOpenError] = useState<string | null>(null)
 
   const load = useCallback(async (signal?: AbortSignal) => {
+    // 잔액·충전·정산 조회를 지갑 확인과 함께 시작해 왕복을 한 번으로 줄인다(기다리면 두 번).
+    // 지갑이 없거나 ACTIVE가 아니면 이 결과는 쓰지 않는다. allSettled라 실패해도 처리되지 않은 거절이 남지 않는다.
+    // 잔액(원장)이 실패해도 충전 내역은 보여 준다. 정산 입금은 가맹점 주인만 있어 실패하면 카드를 숨긴다.
+    const details = Promise.allSettled([
+      fetchMyBalances(signal),
+      fetchCharges({ size: RECENT_CHARGES }, signal),
+      fetchMySettlements({ status: 'PAID', size: RECENT_SETTLEMENTS }, signal),
+    ])
     let wallet: Wallet
     try {
       wallet = await fetchMyWallet(signal)
@@ -58,12 +66,7 @@ export function WalletPage() {
       setLoaded({ kind: 'wallet', wallet, balances: null, balanceError: null, charges: [], settlements: [] })
       return
     }
-    // 잔액(원장)이 실패해도 충전 내역은 보여 준다. 정산 입금은 가맹점 주인만 있어 실패하면 카드를 숨긴다.
-    const [balances, charges, settlements] = await Promise.allSettled([
-      fetchMyBalances(signal),
-      fetchCharges({ size: RECENT_CHARGES }, signal),
-      fetchMySettlements({ status: 'PAID', size: RECENT_SETTLEMENTS }, signal),
-    ])
+    const [balances, charges, settlements] = await details
     if (signal?.aborted) {
       return
     }

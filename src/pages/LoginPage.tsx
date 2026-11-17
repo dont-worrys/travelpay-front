@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate, useSearchParams } from 'react-router'
 import { toUserMessage } from '../api'
 import { safeRedirectPath } from '../features/auth/redirect'
 import { useAuth } from '../features/auth/useAuth'
+import { isLoginEmail } from '../lib/email'
 
 export function LoginPage() {
   const { state, login } = useAuth()
@@ -13,8 +14,13 @@ export function LoginPage() {
 
   const [loginEmail, setLoginEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [emailTouched, setEmailTouched] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 형식이 틀리면 로그인 버튼을 꺼서 요청을 보내지 않는다. 안내는 칸을 벗어난 뒤에 보여 입력 중에 재촉하지 않는다.
+  const emailValid = isLoginEmail(loginEmail)
+  const showEmailError = emailTouched && loginEmail.trim() !== '' && !emailValid
 
   if (state.status === 'authenticated') {
     return <Navigate to={redirect} replace />
@@ -25,7 +31,7 @@ export function LoginPage() {
     setSubmitting(true)
     setError(null)
     try {
-      await login({ loginEmail, password })
+      await login({ loginEmail: loginEmail.trim(), password })
       navigate(redirect, { replace: true })
     } catch (cause) {
       setError(toUserMessage(cause, '로그인하지 못했습니다.'))
@@ -35,7 +41,7 @@ export function LoginPage() {
   }
 
   return (
-    <section>
+    <section className="auth-page">
       <h1>로그인</h1>
       {signedUp && <p className="notice">가입이 완료되었습니다. 로그인해 주세요.</p>}
       <form className="form" onSubmit={handleSubmit} noValidate>
@@ -46,8 +52,11 @@ export function LoginPage() {
             autoComplete="username"
             value={loginEmail}
             onChange={(e) => setLoginEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            aria-invalid={showEmailError}
             required
           />
+          {showEmailError && <span className="field-error">이메일 형식을 확인해 주세요. (예: name@example.com)</span>}
         </label>
         <label>
           비밀번호
@@ -64,7 +73,7 @@ export function LoginPage() {
             {error}
           </p>
         )}
-        <button type="submit" disabled={submitting || !loginEmail || !password}>
+        <button type="submit" disabled={submitting || !emailValid || !password}>
           {submitting ? '로그인 중…' : '로그인'}
         </button>
       </form>

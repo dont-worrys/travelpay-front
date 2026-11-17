@@ -3,9 +3,11 @@ import {
   compareDecimalText,
   formatAmount,
   formatMajorAmount,
+  groupAmountInput,
   majorToMinor,
   parseAmount,
   parseRate,
+  sanitizeAmountInput,
   toAmountInput,
 } from './money'
 
@@ -68,5 +70,48 @@ describe('예약 환전 목표 환율', () => {
     expect(compareDecimalText('929.99', '930')).toBe(-1)
     expect(compareDecimalText('930.1', '930.09')).toBe(1)
     expect(compareDecimalText('abc', '1')).toBeNull()
+  })
+})
+
+describe('금액 칸 입력 거르기·쉼표', () => {
+  it('숫자만 남기고 마이너스·문자·쉼표는 들어가지 않는다', () => {
+    expect(sanitizeAmountInput('-5000', 'KRW')).toBe('5000')
+    expect(sanitizeAmountInput('1,000원', 'KRW')).toBe('1000')
+    expect(sanitizeAmountInput('abc', 'KRW')).toBe('')
+    expect(sanitizeAmountInput('1e5', 'JPY')).toBe('15')
+  })
+
+  it('소수가 없는 통화는 소수점을 받지 않고, 붙여 넣은 소수는 소수점 앞만 남긴다', () => {
+    expect(sanitizeAmountInput('125', 'KRW')).toBe('125')
+    expect(sanitizeAmountInput('12.50', 'KRW')).toBe('12')
+    expect(sanitizeAmountInput('12.', 'JPY')).toBe('12')
+  })
+
+  it('소수가 있는 통화(CNY)는 소수점 하나와 둘째 자리까지 둔다', () => {
+    expect(sanitizeAmountInput('12.345', 'CNY')).toBe('12.34')
+    expect(sanitizeAmountInput('1.2.3', 'CNY')).toBe('1.23')
+    expect(sanitizeAmountInput('.5', 'CNY')).toBe('0.5')
+    expect(sanitizeAmountInput('12.', 'CNY')).toBe('12.')
+  })
+
+  it('앞쪽 0은 하나만 두고, 정수는 15자리에서 자른다', () => {
+    expect(sanitizeAmountInput('000120', 'KRW')).toBe('120')
+    expect(sanitizeAmountInput('0', 'KRW')).toBe('0')
+    expect(sanitizeAmountInput('00.5', 'CNY')).toBe('0.5')
+    expect(sanitizeAmountInput('1'.repeat(20), 'KRW')).toHaveLength(15)
+  })
+
+  it('보일 때는 정수 부분에 세 자리마다 쉼표를 넣고 소수는 그대로 둔다', () => {
+    expect(groupAmountInput('')).toBe('')
+    expect(groupAmountInput('100')).toBe('100')
+    expect(groupAmountInput('1000')).toBe('1,000')
+    expect(groupAmountInput('1000000')).toBe('1,000,000')
+    expect(groupAmountInput('1234.5')).toBe('1,234.5')
+    expect(groupAmountInput('1234.')).toBe('1,234.')
+  })
+
+  it('거른 값은 parseAmount가 그대로 읽는다', () => {
+    expect(parseAmount(sanitizeAmountInput('1,000원', 'KRW'), 'KRW')).toEqual({ ok: true, minor: 1000 })
+    expect(parseAmount(sanitizeAmountInput('12.5', 'CNY'), 'CNY')).toEqual({ ok: true, minor: 1250 })
   })
 })
