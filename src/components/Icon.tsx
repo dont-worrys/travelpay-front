@@ -109,6 +109,12 @@ const PATHS = {
   arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
   arrowRight: <path d="M5 12h14M13 6l6 6-6 6" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  bell: (
+    <>
+      <path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15Z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </>
+  ),
   alert: (
     <>
       <path d="M12 3.5 2.5 20h19L12 3.5Z" />

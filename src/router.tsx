@@ -44,6 +44,7 @@ const MerchantEntryPage = lazyPage(() => import('./pages/MerchantEntryPage'), 'M
 const MerchantHomePage = lazyPage(() => import('./pages/MerchantHomePage'), 'MerchantHomePage', 'user')
 const MerchantPaymentDetailPage = lazyPage(() => import('./pages/MerchantPaymentDetailPage'), 'MerchantPaymentDetailPage', 'user')
 const MyPage = lazyPage(() => import('./pages/MyPage'), 'MyPage', 'user')
+const NotificationListPage = lazyPage(() => import('./pages/NotificationListPage'), 'NotificationListPage', 'user')
 const NotFoundPage = lazyPage(() => import('./pages/NotFoundPage'), 'NotFoundPage', 'public')
 const PaymentDetailPage = lazyPage(() => import('./pages/PaymentDetailPage'), 'PaymentDetailPage', 'user')
 const PaymentListPage = lazyPage(() => import('./pages/PaymentListPage'), 'PaymentListPage', 'user')
@@ -82,6 +83,7 @@ const userRoutes: RouteObject[] = [
   { path: 'wallet/charges', element: <ChargeListPage /> },
   { path: 'wallet/settlements', element: <SettlementDepositListPage /> },
   { path: 'wallet/charges/:chargeId', element: <ChargeDetailPage /> },
+  { path: 'notifications', element: <NotificationListPage /> },
 ]
 
 // 로그인이 필요한 화면은 RequireAuth 아래, 역할에 맞는 RequireRole 아래에 경로를 추가한다.
