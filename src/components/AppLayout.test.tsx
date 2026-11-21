@@ -31,7 +31,10 @@ describe('AppLayout 헤더', () => {
 describe('AppLayout 일반회원 메뉴', () => {
   function renderAsUser(path: string) {
     auth.state = { status: 'authenticated', me: { userId: 'u-1', realName: '김여행', role: 'USER' } }
-    mockFetch({ 'GET /api/v1/exchange-rates': () => ok([]) })
+    mockFetch({
+      'GET /api/v1/exchange-rates': () => ok([]),
+      'GET /api/v1/users/me/notifications/unread-count': () => ok({ count: 0 }),
+    })
     renderRoute('*', <AppLayout />, path)
   }
 
@@ -83,5 +86,49 @@ describe('AppLayout 푸터', () => {
     renderRoute('/', <AppLayout />, '/')
 
     expect(within(screen.getByRole('contentinfo')).getByText('© 2026 DontWorry. All rights reserved.')).toBeInTheDocument()
+  })
+})
+
+describe('AppLayout 알림 아이콘', () => {
+  it('일반회원은 헤더에 알림 아이콘과 읽지 않은 개수 배지를 보고, 누르면 알림 목록으로 간다', async () => {
+    auth.state = { status: 'authenticated', me: { userId: 'u-1', realName: '김여행', role: 'USER' } }
+    mockFetch({
+      'GET /api/v1/exchange-rates': () => ok([]),
+      'GET /api/v1/users/me/notifications/unread-count': () => ok({ count: 3 }),
+    })
+    renderRoute('*', <AppLayout />, '/')
+
+    const bell = await within(screen.getByRole('banner')).findByRole('link', { name: '알림, 읽지 않은 알림 3개' })
+    expect(bell).toHaveAttribute('href', '/notifications')
+    expect(bell).toHaveTextContent('3')
+  })
+
+  it('읽지 않은 알림이 100개 이상이면 배지는 99+로 줄인다', async () => {
+    auth.state = { status: 'authenticated', me: { userId: 'u-1', realName: '김여행', role: 'USER' } }
+    mockFetch({
+      'GET /api/v1/exchange-rates': () => ok([]),
+      'GET /api/v1/users/me/notifications/unread-count': () => ok({ count: 120 }),
+    })
+    renderRoute('*', <AppLayout />, '/')
+
+    expect(await screen.findByRole('link', { name: '알림, 읽지 않은 알림 120개' })).toHaveTextContent('99+')
+  })
+
+  it('관리자(MASTER)에게는 알림 아이콘을 보이지 않고 개수도 조회하지 않는다', () => {
+    auth.state = { status: 'authenticated', me: { userId: 'm-1', realName: '관리자', role: 'MASTER' } }
+    const api = mockFetch({ 'GET /api/v1/exchange-rates': () => ok([]) })
+    renderRoute('*', <AppLayout />, '/admin')
+
+    expect(screen.queryByRole('link', { name: /^알림/ })).not.toBeInTheDocument()
+    expect(api.calls('GET', '/api/v1/users/me/notifications/unread-count')).toHaveLength(0)
+  })
+
+  it('비로그인에게는 알림 아이콘을 보이지 않는다', () => {
+    auth.state = { status: 'anonymous' }
+    const api = mockFetch({ 'GET /api/v1/exchange-rates': () => ok([]) })
+    renderRoute('/', <AppLayout />, '/')
+
+    expect(screen.queryByRole('link', { name: /^알림/ })).not.toBeInTheDocument()
+    expect(api.calls('GET', '/api/v1/users/me/notifications/unread-count')).toHaveLength(0)
   })
 })

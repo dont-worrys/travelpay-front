@@ -2,6 +2,8 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router'
 import { homePathFor } from '../features/auth/RequireRole'
 import { useAuth } from '../features/auth/useAuth'
+import { NotificationBell } from '../features/notification/NotificationBell'
+import { NotificationProvider } from '../features/notification/NotificationProvider'
 import { BrandMark } from './BrandMark'
 import { HISTORY_TABS } from './HistoryTabs'
 import { Icon, type IconName } from './Icon'
@@ -207,110 +209,114 @@ export function AppLayout() {
 
   return (
     <RatesProvider enabled={!isMaster && state.status !== 'loading'}>
-      <div className={isUser ? 'app with-tabbar' : 'app'}>
-        <header className="app-header">
-          <div className="app-header-inner">
-            <Link to={homePath} className="app-logo">
-              <BrandMark className="app-logo-mark" size={40} />
-              <span className="app-logo-name">TravelPay</span>
-            </Link>
-            <nav className="app-nav" aria-label="전체 메뉴">
-              {navMenu}
-            </nav>
-            <div className="app-header-right">
-              {!isMaster && <RateTicker />}
-              {anonymous && (
-                <nav className="app-auth" aria-label="로그인">
-                  <NavLink to="/login" className="app-auth-primary">
-                    로그인
-                  </NavLink>
-                </nav>
-              )}
-              {authenticated && (
-                <div className="app-account" ref={accountRef}>
-                  <button
-                    type="button"
-                    className="app-profile"
-                    aria-expanded={accountOpen}
-                    aria-controls="app-account-menu"
-                    onClick={() => setAccountOpen((open) => !open)}
-                  >
-                    <span className="app-user-name">
-                      {realName} 님{isMaster && <span className="app-user-role">(관리자)</span>}
-                    </span>
-                    <Icon name="chevron" className="app-profile-caret" />
-                  </button>
-                  {accountOpen && (
-                    <nav className="app-account-menu" id="app-account-menu" aria-label="계정 메뉴">
-                      <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
-                    </nav>
-                  )}
-                </div>
-              )}
-              <button
-                type="button"
-                className="app-menu-button"
-                aria-expanded={menuOpen}
-                aria-controls="app-drawer"
-                onClick={() => setMenuOpen((open) => !open)}
-              >
-                <Icon name="menu" />
-                <span className="visually-hidden">메뉴</span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {menuOpen && (
-          <>
-            <div className="app-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-            <div className="app-drawer" id="app-drawer">
-              <nav className="app-drawer-nav" aria-label="전체 메뉴">
-                {drawerMenu}
+      {/* 알림은 일반회원만(MASTER는 서버가 403). 읽지 않은 개수를 헤더 배지와 알림 목록이 같이 쓴다. */}
+      <NotificationProvider enabled={isUser}>
+        <div className={isUser ? 'app with-tabbar' : 'app'}>
+          <header className="app-header">
+            <div className="app-header-inner">
+              <Link to={homePath} className="app-logo">
+                <BrandMark className="app-logo-mark" size={40} />
+                <span className="app-logo-name">TravelPay</span>
+              </Link>
+              <nav className="app-nav" aria-label="전체 메뉴">
+                {navMenu}
               </nav>
-              {authenticated && (
-                <nav className="app-drawer-nav app-drawer-account" aria-label="계정 메뉴">
-                  <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
-                </nav>
-              )}
-            </div>
-          </>
-        )}
-
-        <main className="app-main">
-          {/* 화면 코드는 라우트별 청크라(router.tsx) 처음 열 때 내려받는 동안 본문 자리에만 로딩을 보인다. */}
-          <Suspense fallback={<PageLoading />}>
-            <Outlet />
-          </Suspense>
-        </main>
-
-        <footer className="app-footer">
-          <div className="app-footer-inner">
-            <p className="app-footer-tagline">TravelPay</p>
-            <p>원화 충전, 회원 간 송금, 가맹점 결제, 엔화·위안화 환전을 한곳에서.</p>
-            <p className="app-footer-copyright">© 2026 DontWorry. All rights reserved.</p>
-          </div>
-        </footer>
-
-        {isUser && (
-          <nav className="app-tabbar" aria-label="주요 메뉴">
-            {USER_TABS.map((tab) => {
-              const active = tab.isActive(pathname)
-              return (
-                <Link
-                  key={tab.label}
-                  to={tab.to}
-                  className={active ? 'active' : undefined}
-                  aria-current={active ? 'page' : undefined}
+              <div className="app-header-right">
+                {!isMaster && <RateTicker />}
+                {anonymous && (
+                  <nav className="app-auth" aria-label="로그인">
+                    <NavLink to="/login" className="app-auth-primary">
+                      로그인
+                    </NavLink>
+                  </nav>
+                )}
+                {isUser && <NotificationBell />}
+                {authenticated && (
+                  <div className="app-account" ref={accountRef}>
+                    <button
+                      type="button"
+                      className="app-profile"
+                      aria-expanded={accountOpen}
+                      aria-controls="app-account-menu"
+                      onClick={() => setAccountOpen((open) => !open)}
+                    >
+                      <span className="app-user-name">
+                        {realName} 님{isMaster && <span className="app-user-role">(관리자)</span>}
+                      </span>
+                      <Icon name="chevron" className="app-profile-caret" />
+                    </button>
+                    {accountOpen && (
+                      <nav className="app-account-menu" id="app-account-menu" aria-label="계정 메뉴">
+                        <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
+                      </nav>
+                    )}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="app-menu-button"
+                  aria-expanded={menuOpen}
+                  aria-controls="app-drawer"
+                  onClick={() => setMenuOpen((open) => !open)}
                 >
-                  <Icon name={tab.icon} />
-                  {tab.label}
-                </Link>
-              )
-            })}
-          </nav>
-        )}
-      </div>
+                  <Icon name="menu" />
+                  <span className="visually-hidden">메뉴</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {menuOpen && (
+            <>
+              <div className="app-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+              <div className="app-drawer" id="app-drawer">
+                <nav className="app-drawer-nav" aria-label="전체 메뉴">
+                  {drawerMenu}
+                </nav>
+                {authenticated && (
+                  <nav className="app-drawer-nav app-drawer-account" aria-label="계정 메뉴">
+                    <AccountLinks loggingOut={loggingOut} onLogout={handleLogout} />
+                  </nav>
+                )}
+              </div>
+            </>
+          )}
+
+          <main className="app-main">
+            {/* 화면 코드는 라우트별 청크라(router.tsx) 처음 열 때 내려받는 동안 본문 자리에만 로딩을 보인다. */}
+            <Suspense fallback={<PageLoading />}>
+              <Outlet />
+            </Suspense>
+          </main>
+
+          <footer className="app-footer">
+            <div className="app-footer-inner">
+              <p className="app-footer-tagline">TravelPay</p>
+              <p>원화 충전, 회원 간 송금, 가맹점 결제, 엔화·위안화 환전을 한곳에서.</p>
+              <p className="app-footer-copyright">© 2026 DontWorry. All rights reserved.</p>
+            </div>
+          </footer>
+
+          {isUser && (
+            <nav className="app-tabbar" aria-label="주요 메뉴">
+              {USER_TABS.map((tab) => {
+                const active = tab.isActive(pathname)
+                return (
+                  <Link
+                    key={tab.label}
+                    to={tab.to}
+                    className={active ? 'active' : undefined}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <Icon name={tab.icon} />
+                    {tab.label}
+                  </Link>
+                )
+              })}
+            </nav>
+          )}
+        </div>
+      </NotificationProvider>
     </RatesProvider>
   )
 }

@@ -581,6 +581,52 @@ code {
   height: 24px;
 }
 
+/* 알림 아이콘(일반회원): 메뉴 버튼과 같은 40px 원, 읽지 않은 개수는 오른쪽 위 빨간 알약 배지 */
+.app-bell {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: var(--on-navy);
+  transition: background-color 0.15s;
+}
+
+.app-bell[aria-current='page'] {
+  background: var(--navy-soft);
+}
+
+@media (hover: hover) {
+  .app-bell:hover {
+    background: var(--navy-soft);
+    color: var(--on-navy);
+  }
+}
+
+.app-bell .icon {
+  width: 24px;
+  height: 24px;
+}
+
+.app-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--status-failed-strong);
+  color: var(--on-navy);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 18px;
+  text-align: center;
+}
+
 /* 서랍 메뉴(1024px 미만) */
 .app-backdrop {
   position: fixed;
