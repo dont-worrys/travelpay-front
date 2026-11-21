@@ -10,7 +10,7 @@ src/
                         청크를 못 받으면 lib/chunkReload가 1회 새로고침, 그래도 실패하면 RouteError(경로 없는 묶음의 errorElement)가 안내한다
   index.css             전역 스타일(공통 클래스 + 화면별 구역, 색·글씨 크기·배율은 :root 변수, 규칙은 docs/convention/style.md)
   api/                  공통 요청 함수, CSRF, 오류 타입·문구
-  components/           공통 레이아웃(AppLayout: 그라디언트 헤더·계정 메뉴·서랍·하단 탭바·푸터), 로고 마크(BrandMark), 상태 배지(StatusBadge),
+  components/           공통 레이아웃(AppLayout: 그라디언트 헤더·알림 아이콘·계정 메뉴·서랍·하단 탭바·푸터), 로고 마크(BrandMark), 상태 배지(StatusBadge),
                         선 아이콘(Icon), 통화 배지(CurrencyMark), 금액 칸(AmountInput), 금액 칩(AmountPresets), 거래내역 탭(HistoryTabs),
                         비로그인 홈 송금 배너(SendBanner), 화면 코드 미리 받기(PagePreloader),
                         환율 티커(RateTicker)와 티커·홈·환율·환전 입력·예약 신청이 함께 쓰는 환율(RatesProvider: 처음 1회 + 5분,
@@ -18,6 +18,8 @@ src/
   features/auth/        로그인 상태, 인증 API, 로그인·역할(USER·MASTER) 경로 보호
   features/wallet/      지갑·잔액·충전 API, 충전 상태·은행 목록, 테스트 계좌
   features/transfer/    송금 API·상태
+  features/notification/ 송금 완료 알림 API(목록·읽지 않은 개수·읽음·모두 읽음, 삭제된 알림 404는 'NOT_FOUND'),
+                        읽지 않은 개수 공유 조회(NotificationProvider: 일반회원만 30초), 헤더 아이콘(NotificationBell), 알림 문구(message)
   features/payment/     결제·환불 신청 API·상태
   features/merchant/    가맹점 잔액·결제·환불 실행·정산 API, 최근 연 가맹점(localStorage),
                         환불 실행·거절 공통 UI(RefundActions, 가맹점·관리자 화면 공용), 결제 상세 조회 훅(useMerchantPayment)
@@ -36,7 +38,7 @@ docs/
 vercel.json             Vercel 빌드·SPA rewrite·응답 헤더
 ```
 
-기능별 API 명세와 오류 코드는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다. 환전·예약 환전은 `exchange-service.md`와 맞춰 두었습니다. 관리자 충전 보정·대사처럼 가이드에 절이 없는 API는 해당 서비스의 컨트롤러·DTO 코드를 기준으로 했습니다.
+기능별 API 명세와 오류 코드는 백엔드 `docs/guide/<서비스>.md`를 기준으로 합니다. 환전·예약 환전은 `exchange-service.md`와 맞춰 두었습니다. 관리자 충전 보정·대사처럼 가이드에 절이 없는 API는 해당 서비스의 컨트롤러·DTO 코드를 기준으로 했습니다. 송금 완료 알림은 user-service `UserNotificationController`·`UserNotificationResponse`와 백엔드 `docs/guide/user-service.md` 「화면 알림 (송금 완료)」을 기준으로 합니다.
 
 ## 개발 규칙 요약
 

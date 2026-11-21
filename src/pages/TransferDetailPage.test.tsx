@@ -64,6 +64,22 @@ describe('TransferDetailPage', () => {
     expect(screen.queryByRole('link', { name: '같은 분에게 또 보내기' })).not.toBeInTheDocument()
   })
 
+  it('상대방 이름(counterpartName)이 있으면 이름과 회원 ID를 함께 보여 준다', async () => {
+    mockFetch({ [`GET ${PATH}`]: () => ok(transfer({ direction: 'RECEIVED', senderId: OTHER, receiverId: ME, counterpartName: '홍*동' })) })
+    renderDetail()
+
+    expect(await screen.findByText('홍*동')).toBeInTheDocument()
+    expect(screen.getByText('보낸 분')).toBeInTheDocument()
+    expect(screen.getByText(OTHER)).toHaveClass('hint')
+  })
+
+  it('상대방 이름이 null이면 회원 ID만 보여 준다', async () => {
+    mockFetch({ [`GET ${PATH}`]: () => ok(transfer({ counterpartName: null })) })
+    renderDetail()
+
+    expect(await screen.findByText(OTHER)).not.toHaveClass('hint')
+  })
+
   it('운영자가 실패로 확정한 송금은 실패 배지와 사유 안내를 보여 준다', async () => {
     mockFetch({ [`GET ${PATH}`]: () => ok(transfer({ status: 'FAILED', failureReason: 'NOT_PROCESSED' })) })
     renderDetail()

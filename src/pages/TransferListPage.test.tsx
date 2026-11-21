@@ -59,6 +59,29 @@ describe('받은 송금 금액 표시', () => {
     expect(screen.getByText(`-${formatAmount(3000, 'KRW')}`)).toHaveClass('amount', 'sent')
   })
 
+  it('상대방 이름이 있으면 보냄·받음 옆에 붙이고, 없으면 붙이지 않는다', async () => {
+    mockFetch({
+      'GET /api/v1/transfers': () =>
+        ok(
+          page([
+            transfer('aaaaaaaa-0000-4000-8000-000000000011', { counterpartName: '홍*동' }),
+            transfer('aaaaaaaa-0000-4000-8000-000000000012', {
+              direction: 'SENT',
+              senderId: ME,
+              receiverId: OTHER,
+              counterpartName: '김*수',
+            }),
+            transfer('aaaaaaaa-0000-4000-8000-000000000013', { counterpartName: null }),
+          ]),
+        ),
+    })
+    renderRoute('/transfers', <TransferListPage />, '/transfers')
+
+    expect(await screen.findByText('받음 · 홍*동')).toBeInTheDocument()
+    expect(screen.getByText('보냄 · 김*수')).toBeInTheDocument()
+    expect(screen.getByText('받음')).toBeInTheDocument()
+  })
+
   it('수취인이 보는 실패 송금 상세는 받는 분 기준 안내를 보여 준다', async () => {
     const id = 'aaaaaaaa-0000-4000-8000-000000000001'
     mockFetch({ [`GET /api/v1/transfers/${id}`]: () => ok(transfer(id, { amount: 1000000, status: 'FAILED' })) })

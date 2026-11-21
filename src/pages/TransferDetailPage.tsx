@@ -106,7 +106,16 @@ export function TransferDetailPage() {
         <dd>{sent ? '보낸 송금' : '받은 송금'}</dd>
         <dt>{sent ? '받는 분' : '보낸 분'}</dt>
         <dd>
-          <code>{sent ? transfer.receiverId : transfer.senderId}</code>
+          {/* 이름은 보조 정보라 없으면(조회 실패·예전 서버) 회원 ID만 보여 준다. */}
+          {transfer.counterpartName ? (
+            <>
+              {transfer.counterpartName}
+              <br />
+              <code className="hint">{sent ? transfer.receiverId : transfer.senderId}</code>
+            </>
+          ) : (
+            <code>{sent ? transfer.receiverId : transfer.senderId}</code>
+          )}
         </dd>
         <dt>메모</dt>
         <dd>{transfer.memo ?? '-'}</dd>
