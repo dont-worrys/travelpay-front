@@ -93,7 +93,10 @@ export function TransferListPage() {
               <li key={item.transferId}>
                 <Link to={`/transfers/${item.transferId}`} className="item">
                   <span className="item-main">
-                    <span>{sent ? '보냄' : '받음'}</span>
+                    <span>
+                      {sent ? '보냄' : '받음'}
+                      {item.counterpartName ? ` · ${item.counterpartName}` : ''}
+                    </span>
                     <span className={amount.className}>
                       {amount.sign}
                       {formatAmount(item.amount, item.currency)}

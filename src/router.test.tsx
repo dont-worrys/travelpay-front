@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -65,5 +65,33 @@ describe('라우트 코드 스플리팅', () => {
     await user.click(screen.getByRole('link', { name: '환율' }))
 
     expect(await screen.findByRole('heading', { name: '환율' })).toBeInTheDocument()
+  })
+})
+
+describe('관리자(MASTER) 알림', () => {
+  it('MASTER가 알림 주소에 들어오면 관리자 첫 화면으로 보내고, 알림 아이콘·개수 조회가 없다', async () => {
+    const api = mockFetch({
+      'GET /api/v1/users/me': () =>
+        ok({
+          userId: 'm-1',
+          realName: '관리자',
+          phone: '010-0000-0000',
+          loginEmail: 'admin@example.com',
+          status: 'ACTIVE',
+          role: 'MASTER',
+          loginMethods: ['PASSWORD'],
+          createdAt: '2026-11-01T00:00:00Z',
+        }),
+    })
+    const router = createMemoryRouter(routes, { initialEntries: ['/notifications'] })
+    render(
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>,
+    )
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/admin'))
+    expect(screen.queryByRole('link', { name: /^알림/ })).not.toBeInTheDocument()
+    expect(api.calls('GET', '/api/v1/users/me/notifications/unread-count')).toHaveLength(0)
   })
 })

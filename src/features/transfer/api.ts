@@ -23,6 +23,12 @@ export interface Transfer {
   failureReason?: TransferFailureReason | null
   memo: string | null
   createdAt: string
+  /**
+   * 상대방 마스킹 이름(`SENT`면 받는 분, `RECEIVED`면 보낸 분, 예: 홍*동). 송금 요청·상세·내역 응답에 있다.
+   * 회원 서비스 조회 실패·회원 없음이면 null이고, 이 필드가 없는 예전 서버도 있어 선택 필드로 둔다.
+   * 없으면 화면은 회원 ID로 대신 표시한다.
+   */
+  counterpartName?: string | null
 }
 
 /** 수취인 확인 결과. 이름은 서버가 마스킹한 값이다. */
